@@ -10,7 +10,14 @@ A working version of the PlateWise food-photo calorie and weight tracker, built 
   oil-heavy dishes, and a total shown as a likely range.
 - **Daily budget** from Mifflin–St Jeor with safety floors (1,200 / 1,500 kcal), pace capped at
   1% of body weight a week, and no underweight goals.
-- **Progress**: weigh-ins, a smoothed (7-day EMA) weight trend, and a weekly check-in that
+- **Log anything**: photo, voice (English, Twi or Pidgin; uses the browser's speech input or
+  the phone keyboard's microphone), barcode or nutrition-label photo (products are remembered),
+  typed description, search, saved meals, recent meals and "same as yesterday".
+- **Meal check** after saving, **daily habits** (protein, greens, water, steps), smart in-app
+  reminders, a widget-style glance view (`#glance`) and a hide-numbers mode.
+- **Coach**: chat grounded in your logs, flex plans for events (saved only when you approve),
+  and "What fits now" meal ideas you can log in one tap.
+- **Progress**: a weekly story, weigh-ins, a smoothed (7-day EMA) weight trend, and a weekly check-in that
   learns your real daily burn from your logs and scale.
 
 Open `index.html` in a browser to use it with search logging; data stays in that browser.

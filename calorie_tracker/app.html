@@ -19,19 +19,20 @@
   --amber-text: #b54708;
   --danger: #d92d20;
   --on-ink: #ffffff;
+  --water: #2e90fa;
   --font: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #0c111d; --surface: #161b26; --line: #263040; --ink: #f5f5f6; --muted: #a4adbd;
     --mint: #32d583; --mint-text: #6ce9a6; --mint-tint: #0f2a1e; --amber-bg: #2b1d08; --amber-text: #fec84b;
-    --danger: #f97066; --on-ink: #0c111d; color-scheme: dark;
+    --danger: #f97066; --on-ink: #0c111d; --water: #53b1fd; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #0c111d; --surface: #161b26; --line: #263040; --ink: #f5f5f6; --muted: #a4adbd;
   --mint: #32d583; --mint-text: #6ce9a6; --mint-tint: #0f2a1e; --amber-bg: #2b1d08; --amber-text: #fec84b;
-  --danger: #f97066; --on-ink: #0c111d; color-scheme: dark;
+  --danger: #f97066; --on-ink: #0c111d; --water: #53b1fd; color-scheme: dark;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -42,6 +43,7 @@ body {
   padding-block: 18px calc(110px + env(safe-area-inset-bottom, 0px));
 }
 .app { max-width: 520px; margin: 0 auto; display: grid; gap: 14px; }
+.stack { display: grid; gap: 14px; }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
 :focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; }
@@ -62,26 +64,28 @@ p { margin: 0; }
 .between { justify-content: space-between; }
 .wrap { flex-wrap: wrap; }
 .grow { flex: 1; min-width: 0; }
-.btn { height: 50px; padding: 0 22px; border-radius: 25px; border: 0; background: var(--ink); color: var(--on-ink); font-weight: 700; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.btn { min-height: 50px; padding: 0 22px; border-radius: 25px; border: 0; background: var(--ink); color: var(--on-ink); font-weight: 700; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-align: center; }
 .btn:disabled { opacity: 0.45; cursor: default; }
 .btn.full { width: 100%; }
 .btn.ghost { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
-.btn.sm { height: 38px; padding: 0 14px; font-size: 14px; border-radius: 19px; }
+.btn.sm { min-height: 38px; padding: 0 14px; font-size: 14px; border-radius: 19px; }
 .btn.danger { background: transparent; color: var(--danger); border: 1px solid var(--line); }
-.chip { height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid var(--line); background: var(--bg); font-size: 14px; font-weight: 600; white-space: nowrap; }
+.chip { min-height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid var(--line); background: var(--bg); font-size: 14px; font-weight: 600; white-space: nowrap; }
 .chip[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
-.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.chip.long { white-space: normal; text-align: left; padding-block: 7px; max-width: 100%; }
 .icon-btn { width: 40px; height: 40px; border-radius: 20px; border: 1px solid var(--line); background: var(--bg); display: inline-flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0; }
 .icon-btn svg { width: 18px; height: 18px; }
 .x-btn { width: 32px; height: 32px; border-radius: 16px; border: 0; background: transparent; color: var(--muted); font-size: 18px; line-height: 1; flex-shrink: 0; }
 .x-btn:hover { background: var(--line); color: var(--danger); }
 label.field { display: grid; gap: 5px; font-size: 12.5px; font-weight: 600; color: var(--muted); }
-input[type=text], input[type=number], input[type=date], input[type=search], select, textarea {
+input[type=text], input[type=number], input[type=date], input[type=time], input[type=search], select, textarea {
   width: 100%; min-height: 46px; padding: 10px 14px; border-radius: 14px; border: 1px solid var(--line);
   background: var(--bg); font-size: 15px; font-weight: 500; color: var(--ink);
 }
 textarea { min-height: 96px; resize: vertical; }
 .grid2 { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid3 { display: grid; gap: 10px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .badge { font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
 .badge.ok { background: var(--mint-tint); color: var(--mint-text); }
 .badge.check { background: var(--amber-bg); color: var(--amber-text); border: 1.5px solid var(--amber); }
@@ -89,6 +93,8 @@ textarea { min-height: 96px; resize: vertical; }
 .notice { padding: 12px 14px; border-radius: 16px; background: var(--amber-bg); color: var(--amber-text); font-size: 13.5px; line-height: 1.45; }
 .good { padding: 12px 14px; border-radius: 16px; background: var(--mint-tint); color: var(--mint-text); font-size: 13.5px; line-height: 1.45; }
 .err { color: var(--danger); font-size: 13.5px; font-weight: 600; }
+.switch { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 14px; font-weight: 600; }
+.switch input { width: 22px; height: 22px; accent-color: var(--mint); flex-shrink: 0; }
 
 /* today */
 .ring-wrap { display: flex; align-items: center; gap: 18px; }
@@ -99,9 +105,13 @@ textarea { min-height: 96px; resize: vertical; }
 .ring.over .big { color: var(--danger); }
 .kv { display: grid; gap: 8px; }
 .kv b { display: block; font-size: 18px; }
-.macros { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.macro { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 11px; display: grid; gap: 7px; min-width: 0; }
-.macro b { font-size: 13px; }
+.habits { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.habit { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 11px 12px; display: grid; gap: 7px; min-width: 0; }
+.habit .top { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.habit b { font-size: 13px; }
+.step { display: flex; gap: 4px; }
+.step button { width: 30px; height: 30px; border-radius: 15px; border: 1px solid var(--line); background: var(--bg); font-weight: 700; padding: 0; line-height: 1; }
+.habit input { min-height: 34px; padding: 4px 10px; font-size: 14px; border-radius: 10px; }
 .bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
 .bar i { display: block; height: 100%; border-radius: 3px; background: var(--mint); }
 .meal { display: flex; align-items: center; gap: 12px; padding: 10px 8px 10px 10px; border-radius: 20px; background: var(--surface); border: 1px solid var(--line); }
@@ -110,9 +120,16 @@ textarea { min-height: 96px; resize: vertical; }
 .meal .kcal { font-weight: 700; white-space: nowrap; }
 .add-tile { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 20px; border: 2px dashed var(--line); background: transparent; text-align: left; width: 100%; }
 .date-nav { display: flex; align-items: center; gap: 6px; }
+.remind { border-radius: 20px; padding: 14px; background: var(--ink); color: var(--on-ink); display: grid; gap: 10px; }
+.remind .btn.sm { background: var(--bg); color: var(--ink); }
+.remind .btn.sm.alt { background: transparent; color: var(--on-ink); border: 1px solid currentColor; }
 
-/* log */
-.drop { display: grid; place-items: center; gap: 8px; text-align: center; min-height: 220px; border-radius: 24px; border: 2px dashed var(--line); background: var(--surface); padding: 20px; cursor: pointer; position: relative; overflow: hidden; }
+/* log hub */
+.hub { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.hub button { display: grid; justify-items: center; gap: 6px; padding: 12px 6px; border-radius: 18px; border: 1px solid var(--line); background: var(--surface); font-size: 13px; font-weight: 700; text-align: center; }
+.hub button[aria-pressed="true"] { border: 2px solid var(--ink); background: var(--bg); }
+.hub svg { width: 24px; height: 24px; }
+.drop { display: grid; place-items: center; gap: 8px; text-align: center; min-height: 200px; border-radius: 24px; border: 2px dashed var(--line); background: var(--surface); padding: 20px; cursor: pointer; position: relative; overflow: hidden; }
 .drop img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .drop .cam { width: 64px; height: 64px; border-radius: 32px; background: var(--ink); display: grid; place-items: center; }
@@ -122,6 +139,9 @@ textarea { min-height: 96px; resize: vertical; }
 .scanning { display: grid; place-items: center; gap: 14px; padding: 30px 10px; text-align: center; }
 .spark { width: 70px; height: 70px; border-radius: 50%; border: 6px solid var(--line); border-top-color: var(--mint); animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+.mic { width: 84px; height: 84px; border-radius: 42px; border: 0; background: var(--ink); display: grid; place-items: center; justify-self: center; }
+.mic.on { background: var(--danger); animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 10px color-mix(in srgb, var(--danger) 25%, transparent); } }
 
 /* review */
 .item { background: var(--bg); border: 1px solid var(--line); border-radius: 18px; padding: 12px 12px 12px 14px; display: grid; gap: 8px; }
@@ -134,6 +154,19 @@ textarea { min-height: 96px; resize: vertical; }
 .suggest button { text-align: left; border: 0; background: transparent; padding: 9px 10px; border-radius: 10px; display: flex; justify-content: space-between; gap: 8px; }
 .suggest button:hover { background: var(--surface); }
 .suggest small { color: var(--muted); }
+.insight { display: flex; gap: 12px; align-items: flex-start; }
+.insight .dot { width: 34px; height: 34px; border-radius: 17px; flex-shrink: 0; display: grid; place-items: center; font-weight: 800; }
+
+/* coach */
+.chat { display: grid; gap: 10px; }
+.bubble { max-width: 86%; padding: 11px 14px; font-size: 15px; line-height: 1.45; overflow-wrap: anywhere; }
+.bubble.me { justify-self: end; background: var(--mint-text); color: var(--bg); border-radius: 18px 18px 6px 18px; }
+.bubble.ai { justify-self: start; background: var(--surface); border: 1px solid var(--line); border-radius: 18px 18px 18px 6px; }
+.composer { display: flex; gap: 8px; align-items: flex-end; }
+.composer label { min-width: 0; }
+.composer textarea { min-height: 50px; height: 50px; border-radius: 25px; padding: 13px 18px; resize: none; }
+.idea { border-radius: 20px; border: 1px solid var(--line); background: var(--bg); padding: 14px; display: grid; gap: 10px; }
+.idea.best { border: 2px solid var(--mint); }
 
 /* progress */
 .chart svg { width: 100%; height: auto; display: block; }
@@ -143,19 +176,24 @@ textarea { min-height: 96px; resize: vertical; }
 .stat b { font-size: 18px; letter-spacing: -0.02em; }
 .list { display: grid; }
 .list > div { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+
+/* glance */
+.glance { border-radius: 28px; background: var(--surface); border: 1px solid var(--line); padding: 18px; display: grid; gap: 14px; }
 
 /* tab bar */
 nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--surface); border-top: 1px solid var(--line);
-  padding: 8px max(12px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)); }
+  padding: 8px max(8px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)); }
 nav.tabs .in { max-width: 520px; margin: 0 auto; display: flex; justify-content: space-around; align-items: center; }
-nav.tabs button { border: 0; background: none; display: grid; justify-items: center; gap: 2px; min-width: 60px; font-size: 11.5px; font-weight: 600; color: var(--muted); padding: 4px; }
+nav.tabs button { border: 0; background: none; display: grid; justify-items: center; gap: 2px; min-width: 54px; font-size: 11.5px; font-weight: 600; color: var(--muted); padding: 4px; }
 nav.tabs button[aria-current="page"] { color: var(--mint-text); font-weight: 700; }
 nav.tabs button svg { width: 24px; height: 24px; }
 nav.tabs .snap { width: 60px; height: 60px; border-radius: 30px; background: var(--ink); margin-top: -26px; display: grid; place-items: center; min-width: 0; }
 nav.tabs .snap svg { stroke: var(--on-ink); }
 .toast { position: fixed; left: 50%; bottom: calc(100px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 30; background: var(--ink); color: var(--on-ink); padding: 9px 16px; border-radius: 999px; font-size: 14px; font-weight: 600; max-width: calc(100vw - 32px); text-align: center; }
 @media (prefers-reduced-motion: no-preference) { .ring circle, .bar i { transition: stroke-dashoffset .5s cubic-bezier(.2,.8,.2,1), width .5s cubic-bezier(.2,.8,.2,1); } }
-@media (prefers-reduced-motion: reduce) { .spark { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .spark, .mic.on { animation: none; } }
 </style>
 
 <div class="app">
@@ -169,8 +207,9 @@ nav.tabs .snap svg { stroke: var(--on-ink); }
 <nav class="tabs" id="tabs" aria-label="Main" hidden>
   <div class="in">
     <button data-tab="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 8 8h-8z"/></svg>Today</button>
-    <button data-tab="log" class="snap" aria-label="Log a meal"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
     <button data-tab="progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19h16"/><path d="M5 15l4-4 4 3 6-7"/></svg>Progress</button>
+    <button data-tab="log" class="snap" aria-label="Log a meal"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+    <button data-tab="coach"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5h14v10H9l-4 4z"/><path d="M9 10h6"/></svg>Coach</button>
     <button data-tab="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Me</button>
   </div>
 </nav>
@@ -180,82 +219,91 @@ nav.tabs .snap svg { stroke: var(--on-ink); }
 (() => {
   // ---------- food table: per 100 g [kcal, protein, carbs, fat]; portion = typical grams ----------
   // Values are approximate, compiled from USDA FoodData Central and the FAO/INFOODS West Africa table.
+  // Flags: o = usually oily, g = counts as a serving of greens/veg.
   const FOODS = [
-    ["waakye", "Waakye (rice and beans)", [150, 5, 29, 1.5], 300, "1 plate", false],
-    ["jollof", "Jollof rice", [175, 3.5, 28, 5.5], 300, "1 plate", true],
-    ["rice", "Plain rice, cooked", [130, 2.7, 28, 0.3], 200, "1 cup", false],
-    ["friedrice", "Fried rice", [165, 4, 25, 5.5], 250, "1 plate", true],
-    ["riceballs", "Omo tuo (rice balls)", [130, 2.5, 29, 0.3], 250, "2 balls", false],
-    ["banku", "Banku", [115, 2, 25, 0.8], 350, "1 ball", false],
-    ["kenkey", "Kenkey", [105, 2, 23, 0.6], 330, "1 ball", false],
-    ["fufu", "Fufu", [130, 1, 32, 0.3], 300, "1 ball", false],
-    ["tuozaafi", "Tuo zaafi", [100, 2.5, 22, 0.5], 300, "1 portion", false],
-    ["kokonte", "Kokonte", [120, 1, 29, 0.3], 300, "1 ball", false],
-    ["yam", "Yam, boiled", [116, 1.5, 27, 0.1], 200, "2 slices", false],
-    ["ampesi", "Plantain, boiled (ampesi)", [122, 1.3, 32, 0.4], 200, "1 finger", false],
-    ["kelewele", "Kelewele (spiced fried plantain)", [230, 1.2, 32, 11], 150, "1 wrap", true],
-    ["friedplantain", "Fried ripe plantain", [230, 1.2, 32, 11], 100, "6 slices", true],
-    ["redred", "Red-red (beans in palm oil)", [180, 7, 18, 9], 250, "1 bowl", true],
-    ["gari", "Gari", [360, 1, 87, 0.5], 30, "2 tbsp", false],
-    ["spaghetti", "Spaghetti (talia), cooked", [158, 5.8, 31, 0.9], 120, "1 portion", false],
-    ["noodles", "Instant noodles, prepared", [140, 3, 19, 6], 250, "1 pack", true],
-    ["bread", "Bread (tea or sugar bread)", [290, 8, 55, 4], 60, "2 slices", false],
-    ["lightsoup", "Light soup", [55, 5, 4, 2], 350, "1 bowl", false],
-    ["groundnutsoup", "Groundnut soup", [120, 6, 5, 9], 350, "1 bowl", true],
-    ["palmnutsoup", "Palm nut soup", [140, 5, 5, 11], 350, "1 bowl", true],
-    ["okro", "Okro soup or stew", [90, 5, 6, 5], 250, "1 bowl", true],
-    ["kontomire", "Kontomire stew", [130, 6, 6, 10], 200, "1 ladle", true],
-    ["gardenegg", "Garden egg stew", [110, 3, 7, 8], 200, "1 ladle", true],
-    ["stew", "Tomato stew", [140, 2, 8, 11], 100, "1 ladle", true],
-    ["shito", "Shito (black pepper sauce)", [550, 10, 10, 52], 15, "1 tbsp", true],
-    ["pepper", "Fresh pepper sauce", [35, 1.5, 7, 0.4], 50, "1 small dish", false],
-    ["hausakoko", "Hausa koko (millet porridge)", [60, 1.5, 12, 0.6], 300, "1 cup", false],
-    ["koose", "Koose (bean fritters)", [290, 10, 22, 18], 80, "4 pieces", true],
-    ["bofrot", "Bofrot (puff-puff)", [330, 6, 45, 14], 50, "1 piece", true],
-    ["ricewater", "Rice water (rice porridge)", [50, 1, 11, 0.1], 300, "1 cup", false],
-    ["oats", "Oats porridge", [71, 2.5, 12, 1.5], 250, "1 bowl", false],
-    ["tilapia", "Grilled tilapia", [130, 26, 0, 2.7], 200, "1 fish", false],
-    ["friedfish", "Fried fish", [230, 22, 5, 13], 120, "1 piece", true],
-    ["chicken", "Chicken, grilled or stewed", [190, 27, 0, 9], 120, "1 piece", false],
-    ["friedchicken", "Fried chicken", [260, 25, 8, 15], 120, "1 piece", true],
-    ["goat", "Goat meat", [140, 27, 0, 3], 100, "3 pieces", false],
-    ["beef", "Beef, stewed", [220, 28, 0, 12], 100, "3 pieces", false],
-    ["wele", "Wele (cow skin)", [220, 40, 0, 6], 60, "3 pieces", false],
-    ["chichinga", "Chichinga (beef kebab)", [250, 25, 3, 15], 80, "1 stick", true],
-    ["egg", "Egg, boiled", [155, 13, 1.1, 11], 50, "1 egg", false],
-    ["friedegg", "Egg, fried or omelette", [196, 14, 1, 15], 60, "1 egg", true],
-    ["beans", "Beans, boiled", [127, 8.7, 22, 0.5], 150, "1 cup", false],
-    ["salad", "Salad with cream dressing", [150, 1, 10, 12], 80, "1 side", true],
-    ["avocado", "Avocado", [160, 2, 9, 15], 100, "half", false],
-    ["groundnuts", "Groundnuts, roasted", [585, 24, 21, 50], 30, "1 handful", false],
-    ["banana", "Banana", [89, 1.1, 23, 0.3], 118, "1 medium", false],
-    ["orange", "Orange", [47, 0.9, 12, 0.1], 130, "1 medium", false],
-    ["pineapple", "Pineapple", [50, 0.5, 13, 0.1], 150, "1 cup", false],
-    ["pawpaw", "Pawpaw", [43, 0.5, 11, 0.3], 150, "1 cup", false],
-    ["mango", "Mango", [60, 0.8, 15, 0.4], 165, "1 cup", false],
-    ["apple", "Apple", [52, 0.3, 14, 0.2], 180, "1 medium", false],
-    ["milo", "Milo with milk", [80, 3, 12, 2.5], 250, "1 mug", false],
-    ["malt", "Malt drink", [55, 0.4, 13, 0], 330, "1 bottle", false],
-    ["soda", "Soft drink (cola, Fanta)", [42, 0, 11, 0], 330, "1 can", false],
-    ["sobolo", "Sobolo (hibiscus drink)", [45, 0, 11, 0], 300, "1 cup", false],
-    ["yogurt", "Yogurt, sweetened", [95, 3.5, 16, 2], 200, "1 cup", false],
-    ["pizza", "Pizza", [266, 11, 33, 10], 110, "1 slice", true],
-    ["burger", "Burger with bun", [254, 13, 24, 12], 180, "1 burger", true],
-    ["fries", "Chips (fries)", [312, 3.4, 41, 15], 120, "1 portion", true],
-  ].map(([id, name, per, portion, unit, oily]) => ({ id, name, per, portion, unit, oily }));
+    ["waakye", "Waakye (rice and beans)", [150, 5, 29, 1.5], 300, "1 plate", ""],
+    ["jollof", "Jollof rice", [175, 3.5, 28, 5.5], 300, "1 plate", "o"],
+    ["rice", "Plain rice, cooked", [130, 2.7, 28, 0.3], 200, "1 cup", ""],
+    ["friedrice", "Fried rice", [165, 4, 25, 5.5], 250, "1 plate", "o"],
+    ["riceballs", "Omo tuo (rice balls)", [130, 2.5, 29, 0.3], 250, "2 balls", ""],
+    ["banku", "Banku", [115, 2, 25, 0.8], 350, "1 ball", ""],
+    ["kenkey", "Kenkey", [105, 2, 23, 0.6], 330, "1 ball", ""],
+    ["fufu", "Fufu", [130, 1, 32, 0.3], 300, "1 ball", ""],
+    ["tuozaafi", "Tuo zaafi", [100, 2.5, 22, 0.5], 300, "1 portion", ""],
+    ["kokonte", "Kokonte", [120, 1, 29, 0.3], 300, "1 ball", ""],
+    ["yam", "Yam, boiled", [116, 1.5, 27, 0.1], 200, "2 slices", ""],
+    ["ampesi", "Plantain, boiled (ampesi)", [122, 1.3, 32, 0.4], 200, "1 finger", ""],
+    ["kelewele", "Kelewele (spiced fried plantain)", [230, 1.2, 32, 11], 150, "1 wrap", "o"],
+    ["friedplantain", "Fried ripe plantain", [230, 1.2, 32, 11], 100, "6 slices", "o"],
+    ["redred", "Red-red (beans in palm oil)", [180, 7, 18, 9], 250, "1 bowl", "o"],
+    ["gari", "Gari", [360, 1, 87, 0.5], 30, "2 tbsp", ""],
+    ["spaghetti", "Spaghetti (talia), cooked", [158, 5.8, 31, 0.9], 120, "1 portion", ""],
+    ["noodles", "Instant noodles, prepared", [140, 3, 19, 6], 250, "1 pack", "o"],
+    ["bread", "Bread (tea or sugar bread)", [290, 8, 55, 4], 60, "2 slices", ""],
+    ["lightsoup", "Light soup", [55, 5, 4, 2], 350, "1 bowl", ""],
+    ["groundnutsoup", "Groundnut soup", [120, 6, 5, 9], 350, "1 bowl", "o"],
+    ["palmnutsoup", "Palm nut soup", [140, 5, 5, 11], 350, "1 bowl", "o"],
+    ["okro", "Okro soup or stew", [90, 5, 6, 5], 250, "1 bowl", "og"],
+    ["kontomire", "Kontomire stew", [130, 6, 6, 10], 200, "1 ladle", "og"],
+    ["gardenegg", "Garden egg stew", [110, 3, 7, 8], 200, "1 ladle", "og"],
+    ["stew", "Tomato stew", [140, 2, 8, 11], 100, "1 ladle", "o"],
+    ["shito", "Shito (black pepper sauce)", [550, 10, 10, 52], 15, "1 tbsp", "o"],
+    ["pepper", "Fresh pepper sauce", [35, 1.5, 7, 0.4], 50, "1 small dish", ""],
+    ["veg", "Mixed vegetables", [35, 2, 7, 0.3], 100, "1 cup", "g"],
+    ["salad", "Salad with cream dressing", [150, 1, 10, 12], 80, "1 side", "og"],
+    ["hausakoko", "Hausa koko (millet porridge)", [60, 1.5, 12, 0.6], 300, "1 cup", ""],
+    ["koose", "Koose (bean fritters)", [290, 10, 22, 18], 80, "4 pieces", "o"],
+    ["bofrot", "Bofrot (puff-puff)", [330, 6, 45, 14], 50, "1 piece", "o"],
+    ["ricewater", "Rice water (rice porridge)", [50, 1, 11, 0.1], 300, "1 cup", ""],
+    ["oats", "Oats porridge", [71, 2.5, 12, 1.5], 250, "1 bowl", ""],
+    ["tilapia", "Grilled tilapia", [130, 26, 0, 2.7], 200, "1 fish", ""],
+    ["friedfish", "Fried fish", [230, 22, 5, 13], 120, "1 piece", "o"],
+    ["chicken", "Chicken, grilled or stewed", [190, 27, 0, 9], 120, "1 piece", ""],
+    ["friedchicken", "Fried chicken", [260, 25, 8, 15], 120, "1 piece", "o"],
+    ["goat", "Goat meat", [140, 27, 0, 3], 100, "3 pieces", ""],
+    ["beef", "Beef, stewed", [220, 28, 0, 12], 100, "3 pieces", ""],
+    ["wele", "Wele (cow skin)", [220, 40, 0, 6], 60, "3 pieces", ""],
+    ["chichinga", "Chichinga (beef kebab)", [250, 25, 3, 15], 80, "1 stick", "o"],
+    ["egg", "Egg, boiled", [155, 13, 1.1, 11], 50, "1 egg", ""],
+    ["friedegg", "Egg, fried or omelette", [196, 14, 1, 15], 60, "1 egg", "o"],
+    ["beans", "Beans, boiled", [127, 8.7, 22, 0.5], 150, "1 cup", ""],
+    ["avocado", "Avocado", [160, 2, 9, 15], 100, "half", ""],
+    ["groundnuts", "Groundnuts, roasted", [585, 24, 21, 50], 30, "1 handful", ""],
+    ["banana", "Banana", [89, 1.1, 23, 0.3], 118, "1 medium", ""],
+    ["orange", "Orange", [47, 0.9, 12, 0.1], 130, "1 medium", ""],
+    ["pineapple", "Pineapple", [50, 0.5, 13, 0.1], 150, "1 cup", ""],
+    ["pawpaw", "Pawpaw", [43, 0.5, 11, 0.3], 150, "1 cup", ""],
+    ["mango", "Mango", [60, 0.8, 15, 0.4], 165, "1 cup", ""],
+    ["apple", "Apple", [52, 0.3, 14, 0.2], 180, "1 medium", ""],
+    ["milo", "Milo with milk", [80, 3, 12, 2.5], 250, "1 mug", ""],
+    ["tea", "Tea with milk and sugar", [40, 1, 7, 1], 250, "1 mug", ""],
+    ["malt", "Malt drink", [55, 0.4, 13, 0], 330, "1 bottle", ""],
+    ["soda", "Soft drink (cola, Fanta)", [42, 0, 11, 0], 330, "1 can", ""],
+    ["sobolo", "Sobolo (hibiscus drink)", [45, 0, 11, 0], 300, "1 cup", ""],
+    ["yogurt", "Yogurt, sweetened", [95, 3.5, 16, 2], 200, "1 cup", ""],
+    ["pizza", "Pizza", [266, 11, 33, 10], 110, "1 slice", "o"],
+    ["burger", "Burger with bun", [254, 13, 24, 12], 180, "1 burger", "o"],
+    ["fries", "Chips (fries)", [312, 3.4, 41, 15], 120, "1 portion", "o"],
+  ].map(([id, name, per, portion, unit, fl]) => ({ id, name, per, portion, unit, oily: fl.includes("o"), green: fl.includes("g") }));
   const FOOD = Object.fromEntries(FOODS.map((f) => [f.id, f]));
   const MEALS = ["Breakfast", "Lunch", "Dinner", "Snack"];
   const ACTIVITY = [[1.2, "Mostly sitting"], [1.375, "Lightly active"], [1.55, "Active"], [1.725, "Very active"], [1.9, "Athlete or manual work"]];
   const PACES = [[0, "Keep my weight"], [0.25, "Gentle · 0.25 kg a week"], [0.5, "Steady · 0.5 kg a week"], [0.75, "Faster · 0.75 kg a week"]];
   const OIL = { light: 0.85, normal: 1, heavy: 1.25 };
   const KCAL_PER_KG = 7700;
+  const TARGETS = { water: 8, greens: 3, steps: 8000 };
+  const DEFAULT_REMIND = { on: true, Breakfast: "08:00", Lunch: "13:00", Dinner: "19:30", weighDay: 1 };
+  const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const LANGS = [["en", "English", "en-GH"], ["tw", "Twi", "ak-GH"], ["pcm", "Pidgin", "en-GH"]];
   const LOCAL_KEY = "platewise-v1";
   const $ = (s, el = document) => el.querySelector(s);
 
   const state = {
-    ready: false, docs: {}, tab: "today", date: dayKey(), sample: null, canImages: false,
-    log: { mode: "photo", file: null, preview: null, note: "", text: "", q: "", meal: defaultMeal(), error: "" },
-    scan: null, review: null, editingProfile: false, confirmDelete: false,
+    ready: false, docs: {}, tab: "today", date: dayKey(), glance: location.hash === "#glance",
+    sample: null, canImages: false, canTools: false,
+    log: { mode: "photo", file: null, preview: null, note: "", text: "", q: "", meal: defaultMeal(), error: "", lang: "en", listening: false, bfile: null, bpreview: null, product: null },
+    scan: null, review: null, lastMeal: null, editingProfile: false, confirmDelete: false,
+    coach: { mode: "chat", busy: false, ctl: null, live: "", pending: null, error: "", fits: null, fitsFilter: "All", fitsBusy: false },
   };
   let store = null;
 
@@ -268,20 +316,33 @@ nav.tabs .snap svg { stroke: var(--on-ink); }
   const fmt = (n) => r(n).toLocaleString();
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const nowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
+  const toMin = (hhmm) => { const [h, m] = String(hhmm || "0:0").split(":").map(Number); return h * 60 + (m || 0); };
+  const shortDay = (k) => keyDate(k).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
   function defaultMeal() { const h = new Date().getHours(); return h < 11 ? "Breakfast" : h < 16 ? "Lunch" : h < 21 ? "Dinner" : "Snack"; }
   let toastT;
-  function toast(m) { const t = $("#toast"); t.textContent = m; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => (t.hidden = true), 2400); }
+  function toast(m) { const t = $("#toast"); t.textContent = m; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => (t.hidden = true), 2600); }
+  function md(s) { return esc(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/\n/g, "<br>"); }
 
   // ---------- storage: one document per thing ----------
   const profile = () => state.docs.profile || null;
   const dayDoc = (k) => state.docs["d" + k] || { meals: [] };
   const weights = () => (state.docs.weights?.entries || []).slice().sort((a, b) => (a.date < b.date ? -1 : 1));
   const saved = () => state.docs.saved?.meals || [];
+  const products = () => state.docs.products?.items || {};
+  const overrides = () => state.docs.plans?.days || {};
+  const remind = () => ({ ...DEFAULT_REMIND, ...(profile()?.remind || {}) });
+  const hide = () => !!profile()?.hideNumbers;
 
   async function put(id, body) {
     state.docs = { ...state.docs };
     if (body) state.docs[id] = body; else delete state.docs[id];
     try { await store.write(id, body); } catch (e) { console.warn(e); toast(e?.code === "quota_exceeded" ? "Storage is full. Delete some old meals." : "Couldn't save. Check your connection and try again."); }
+  }
+  function putDay(k, patch) {
+    const next = { ...dayDoc(k), date: k, ...patch };
+    const empty = !next.meals?.length && !next.habits && !next.skipped?.length;
+    put("d" + k, empty ? null : next);
   }
 
   function localStore() {
@@ -290,7 +351,7 @@ nav.tabs .snap svg { stroke: var(--on-ink); }
     return {
       mode: "local",
       start(cb) { cb(docs); },
-      async write(id) { try { localStorage.setItem(LOCAL_KEY, JSON.stringify(state.docs)); } catch (e) {} },
+      async write() { try { localStorage.setItem(LOCAL_KEY, JSON.stringify(state.docs)); } catch (e) {} },
     };
   }
   function dbStore(db, userId) {
@@ -320,16 +381,29 @@ nav.tabs .snap svg { stroke: var(--on-ink); }
     if (db && user) { try { userId = await user.id(); } catch (e) {} }
     if (sample) {
       state.sample = sample;
-      try { state.canImages = !!(await sample.limits())?.images; } catch (e) {}
+      try { const lim = await sample.limits(); state.canImages = !!lim?.images; state.canTools = !!lim?.tools; } catch (e) {}
     }
     store = db && userId ? dbStore(db, userId) : localStore();
     store.start((docs) => {
       state.docs = docs; state.ready = true;
       setStatus(store.mode === "db" ? "Synced to your Claude account" : "Saved on this device");
-      if (state.tab !== "review") render(); else renderTabs();
+      // Don't clobber a screen the person is typing or dragging on.
+      if (["review", "coach"].includes(state.tab) && !state.glance) renderTabs(); else render();
     });
   }
   function setStatus(t) { $("#status").textContent = t; }
+
+  // ---------- foods, including scanned products ----------
+  function productFoods() {
+    return Object.entries(products()).map(([key, p]) => ({ id: "p:" + key, name: p.name, per: p.per, portion: p.serving || 100, unit: p.unit || "1 serving", oily: false, green: false, code: p.code }));
+  }
+  const allFoods = () => FOODS.concat(productFoods());
+  const getFood = (id) => FOOD[id] || productFoods().find((f) => f.id === id) || null;
+  function searchFoods(q) {
+    q = q.trim().toLowerCase(); if (!q) return [];
+    const words = q.split(/\s+/);
+    return allFoods().filter((f) => words.every((w) => (f.name + " " + f.id).toLowerCase().includes(w))).slice(0, 8);
+  }
 
   // ---------- energy maths ----------
   function plan(p, tdeeOverride) {
@@ -344,10 +418,13 @@ nav.tabs .snap svg { stroke: var(--on-ink); }
     const floor = male ? 1500 : 1200;
     let budget = lose ? tdee - daily : gain ? tdee + Math.min(daily, 500) : tdee;
     const floored = budget < floor;
-    budget = Math.max(budget, floor);
-    budget = Math.round(budget / 10) * 10;
+    budget = Math.round(Math.max(budget, floor) / 10) * 10;
     return { bmr, guess, tdee, budget, floor, floored, pace, paceCapped: p.pace > maxPace, lose, gain,
       protein: r((budget * 0.25) / 4), carbs: r((budget * 0.47) / 4), fat: r((budget * 0.28) / 9) };
+  }
+  function budgetFor(k) {
+    const pl = plan(profile()), o = overrides()[k];
+    return o ? Math.max(o.kcal, pl.floor) : pl.budget;
   }
   function validateProfile(p) {
     if (!(p.age >= 18 && p.age <= 100)) return "PlateWise is for adults 18 and over.";
@@ -358,7 +435,6 @@ nav.tabs .snap svg { stroke: var(--on-ink); }
     if (bmi < 18.5) return `A goal of ${p.goal} kg is in the underweight range for your height. Choose ${Math.ceil(18.5 * (p.height / 100) ** 2)} kg or more.`;
     return "";
   }
-
   function itemCalc(it, oil) {
     const f = it.per;
     let kcal = (f[0] * it.grams) / 100, p = (f[1] * it.grams) / 100, c = (f[2] * it.grams) / 100, fat = (f[3] * it.grams) / 100;
@@ -368,6 +444,11 @@ nav.tabs .snap svg { stroke: var(--on-ink); }
   function dayTotals(k) {
     return dayDoc(k).meals.reduce((t, m) => ({ kcal: t.kcal + m.kcal, p: t.p + m.p, c: t.c + m.c, f: t.f + m.f }), { kcal: 0, p: 0, c: 0, f: 0 });
   }
+  function greensFor(k) {
+    const d = dayDoc(k);
+    const auto = d.meals.reduce((n, m) => n + m.items.filter((i) => i.green).length, 0);
+    return auto + (d.habits?.greens || 0);
+  }
   function ema(list) {
     let out = [], prev = null;
     for (const w of list) {
@@ -376,6 +457,11 @@ nav.tabs .snap svg { stroke: var(--on-ink); }
       out.push({ date: w.date, kg: w.kg, trend: prev.v });
     }
     return out;
+  }
+  function weeklyChange() {
+    const tr = ema(weights()); if (tr.length < 2) return null;
+    const last = tr[tr.length - 1], ref = tr.find((t) => daysBetween(t.date, last.date) <= 14) || tr[0], sp = daysBetween(ref.date, last.date);
+    return sp >= 5 ? ((last.trend - ref.trend) / sp) * 7 : null;
   }
   // Back-solve true daily burn from logged intake and the smoothed weight trend.
   function learnBurn() {
@@ -392,23 +478,40 @@ nav.tabs .snap svg { stroke: var(--on-ink); }
     const tdee = sum / n - (change * KCAL_PER_KG) / span;
     return { tdee: Math.min(Math.max(tdee, 1200), 5000), avg: sum / n, span, change };
   }
+  const loggedDays = () => Object.keys(state.docs).filter((k) => k[0] === "d" && state.docs[k].meals?.length).length;
+  function mealStreak(type) {
+    let n = 0, k = shift(dayKey(), -1);
+    while (dayDoc(k).meals.some((m) => m.type === type)) { n++; k = shift(k, -1); }
+    return n;
+  }
 
-  // ---------- AI scan ----------
-  function foodList() { return FOODS.map((f) => `${f.id}: ${f.name} (typical ${f.portion} g = ${f.unit})`).join("\n"); }
-  function scanPrompt(kind, text, note) {
-    return `You are the food-recognition step of a calorie tracker used mainly in Ghana. ${kind === "photo" ? "Look at the meal photo." : "Read the meal description below."}
-Split the meal into separate foods. For each food, estimate the edible portion in grams, using the plate size, cutlery, hands and typical Ghanaian serving sizes (a ball of banku or kenkey, a chop-bar bowl) as scale. Do not compute calories for foods you match; the app computes those from its own table.
+  // ---------- AI: shared prompt pieces ----------
+  function foodList() { return allFoods().map((f) => `${f.id}: ${f.name} (typical ${f.portion} g = ${f.unit})`).join("\n"); }
+  function scanPrompt(kind, text, note, lang) {
+    const langName = LANGS.find((l) => l[0] === lang)?.[1] || "English";
+    const src = kind === "photo" ? "Look at the meal photo." : kind === "voice" ? `Read what the person said about their meal. It may be in ${langName} (Ghanaian Twi or Ghanaian Pidgin are common), may mix languages, and may contain speech-to-text errors; interpret it.` : "Read the meal description below.";
+    return `You are the food-recognition step of a calorie tracker used mainly in Ghana. ${src}
+Split the meal into separate foods. For each food, estimate the edible portion in grams. Convert spoken or written amounts ("two balls", "one ladle", "a small bowl", "3 pieces") using the typical portions in the table below; for photos, use the plate, cutlery and hands as scale. Do not compute calories for foods you match; the app computes those from its own table.
 
 Match each food to one id from this table when it fits; otherwise use null and give your own per-100 g nutrition estimate:
 ${foodList()}
 
-${text ? `Meal description: "${text.slice(0, 600)}"\n` : ""}${note ? `User note: "${note.slice(0, 200)}"\n` : ""}
+${text ? `What they said or wrote: "${text.slice(0, 800)}"\n` : ""}${note ? `User note: "${note.slice(0, 200)}"\n` : ""}
 Reply with only JSON in this shape:
-{"is_food": true, "items": [{"name": "Waakye", "id": "waakye", "grams": 320, "grams_low": 250, "grams_high": 400, "confidence": "high", "per100g": null}], "note": "one short sentence for the user, or empty"}
-- confidence is "high", "medium" or "low"; use "low" when portion or identity is unclear.
+{"is_food": true, "items": [{"name": "Kenkey", "id": "kenkey", "grams": 660, "grams_low": 550, "grams_high": 750, "confidence": "high", "per100g": null}], "note": "one short sentence for the user in English, or empty"}
+- confidence is "high", "medium" or "low"; use "low" when the amount or the food is unclear (for example "some pepper").
 - per100g is null when id is set; otherwise {"kcal": n, "protein": n, "carbs": n, "fat": n}.
-- If the ${kind === "photo" ? "photo shows" : "text describes"} no food, reply {"is_food": false, "items": [], "note": "why"}.`;
+- If there is no food, reply {"is_food": false, "items": [], "note": "why"}.`;
   }
+  const aiErr = (e) => ({
+    cancelled: "", not_granted: "PlateWise needs your permission to use Claude for this. You can still search foods.",
+    rate_limited: "Too many requests right now. Wait a minute, then try again.", image_rejected: "That image couldn't be read. Try a JPEG or PNG photo.",
+    images_unavailable: "Photos can't be sent from here. Describe the meal instead.", invalid_json: "The answer came back unreadable. Try again.",
+    refused: "That couldn't be analysed. Try a different photo or wording.", session_expired: "Sign in to Claude again, then retry.",
+    sampling_disabled: "Claude isn't available for this account.",
+  }[e?.code] ?? "That didn't finish. Check your connection and try again.");
+  function aiGone(e) { if (["not_granted", "sampling_disabled", "not_declared", "capability_disabled"].includes(e?.code)) state.sample = null; }
+
   async function runScan(kind) {
     const L = state.log;
     if (!state.sample) return;
@@ -419,40 +522,172 @@ Reply with only JSON in this shape:
     try {
       const opts = { signal: ctl.signal };
       if (kind === "photo") opts.images = [L.file];
-      const res = await state.sample.json(scanPrompt(kind, kind === "text" ? L.text : "", L.note), opts);
+      const res = await state.sample.json(scanPrompt(kind, kind === "photo" ? "" : L.text, L.note, L.lang), opts);
       if (!res || res.is_food === false || !Array.isArray(res.items) || !res.items.length) {
         L.error = res?.note ? `No food found: ${res.note}` : "No food found. Try a clearer photo, or describe the meal.";
         state.scan = null; render(); return;
       }
       const items = res.items.slice(0, 12).map((x) => {
-        const f = FOOD[x.id];
-        const grams = Math.max(1, Math.min(Number(x.grams) || f?.portion || 100, 2000));
-        if (f) return newItem(f, grams, x.confidence, x.name);
+        const f = getFood(x.id);
+        const grams = Math.max(1, Math.min(Number(x.grams) || f?.portion || 100, 3000));
+        if (f) return newItem(f, grams, x.confidence);
         const p = x.per100g || {};
         const per = [Number(p.kcal) || 0, Number(p.protein) || 0, Number(p.carbs) || 0, Number(p.fat) || 0];
-        return { key: uid(), fid: null, name: String(x.name || "Food").slice(0, 60), per, grams: r(grams), aiGrams: r(grams), oily: false, conf: x.confidence || "low", aiPer: true, unit: "", portion: r(grams) };
+        return { key: uid(), fid: null, name: String(x.name || "Food").slice(0, 60), per, grams: r(grams), aiGrams: r(grams), oily: false, green: false, conf: x.confidence || "low", aiPer: true, unit: "", portion: r(grams) };
       });
       state.scan = null;
       openReview(items, kind, typeof res.note === "string" ? res.note : "");
     } catch (e) {
-      state.scan = null;
-      const msg = {
-        cancelled: "", not_granted: "PlateWise needs your permission to use Claude for photo and text logging. You can still search foods.",
-        rate_limited: "Too many scans right now. Wait a minute, then try again.", image_rejected: "That image couldn't be read. Try a JPEG or PNG photo.",
-        images_unavailable: "Photo scanning isn't available here. Describe the meal instead.", invalid_json: "The scan came back unreadable. Try again.",
-        refused: "That couldn't be analysed. Try a different photo or description.", session_expired: "Sign in to Claude again, then retry.",
-      }[e?.code];
-      L.error = msg ?? "The scan didn't finish. Check your connection and try again.";
-      if (e?.code === "not_granted" || e?.code === "sampling_disabled") state.sample = null;
-      render();
+      state.scan = null; L.error = aiErr(e); aiGone(e); render();
     }
   }
-  function newItem(f, grams, conf = "high", aiName) {
-    return { key: uid(), fid: f.id, name: f.name, aiName, per: f.per, grams: r(grams), aiGrams: r(grams), oily: f.oily, conf, unit: f.unit, portion: f.portion };
+  function newItem(f, grams, conf = "high") {
+    return { key: uid(), fid: f.id, name: f.name, per: f.per, grams: r(grams), aiGrams: r(grams), oily: f.oily, green: f.green, conf, unit: f.unit, portion: f.portion };
   }
   function openReview(items, source, note, meal) {
     state.review = { items, source, note, oil: "normal", meal: meal || state.log.meal, fav: false, favName: "", q: "", preview: source === "photo" ? state.log.preview : null };
     state.tab = "review"; render(); window.scrollTo(0, 0);
+  }
+  function fromSaved(items) {
+    return items.map((i) => { const f = i.fid && getFood(i.fid); return { key: uid(), fid: i.fid, name: i.name, per: i.per, grams: i.grams, aiGrams: i.grams, oily: i.oily, green: !!(i.green || f?.green), conf: "high", unit: i.unit, portion: i.portion || i.grams }; });
+  }
+
+  // ---------- barcode ----------
+  async function readBarcode(file) {
+    if (!("BarcodeDetector" in window)) return null;
+    try {
+      const det = new window.BarcodeDetector({ formats: ["ean_13", "ean_8", "upc_a", "upc_e", "code_128"] });
+      const bmp = await createImageBitmap(file);
+      const codes = await det.detect(bmp);
+      return codes[0]?.rawValue || null;
+    } catch (e) { return null; }
+  }
+  async function scanPackage() {
+    const L = state.log;
+    const ctl = new AbortController();
+    state.scan = { kind: "barcode", ctl, preview: L.bpreview };
+    L.error = ""; render();
+    const code = await readBarcode(L.bfile);
+    const known = code && products()[code];
+    if (known) { state.scan = null; L.product = null; openReview([newItem(getFood("p:" + code), known.serving || 100)], "barcode", `Found ${known.name} from an earlier scan.`); return; }
+    if (!state.sample || !state.canImages) {
+      state.scan = null; L.product = { code: code || "", name: "", kcal: "", p: "", c: "", f: "", serving: "" };
+      L.error = code ? `Barcode ${code} is new. Enter the label's values once and PlateWise remembers it.` : "Couldn't read a barcode. Enter the label's values below.";
+      render(); return;
+    }
+    try {
+      const res = await state.sample.json(`This photo shows a packaged food or drink: its barcode, its nutrition label, or the front of the pack. ${code ? `The barcode reads ${code}.` : "If a barcode number is visible, read its digits."}
+Read the nutrition label if visible and give values per 100 g (or per 100 ml for drinks). If the label is not visible but you recognise the product, give typical values and set "source": "estimate".
+Reply with only JSON: {"barcode": "digits or empty", "name": "Brand and product", "per100g": {"kcal": n, "protein": n, "carbs": n, "fat": n}, "serving_g": n, "serving_label": "1 sachet", "source": "label" or "estimate", "found": true}
+If it is not a food product, reply {"found": false}.`, { images: [L.bfile], signal: ctl.signal });
+      state.scan = null;
+      if (!res?.found) { L.error = "That doesn't look like a food package. Try a photo of the nutrition label."; render(); return; }
+      const p = res.per100g || {};
+      L.product = { code: code || String(res.barcode || "").replace(/\D/g, ""), name: res.name || "", kcal: p.kcal ?? "", p: p.protein ?? "", c: p.carbs ?? "", f: p.fat ?? "", serving: res.serving_g || 100, unit: res.serving_label || "1 serving", source: res.source };
+      render();
+    } catch (e) { state.scan = null; L.error = aiErr(e); aiGone(e); L.product = { code: code || "", name: "", kcal: "", p: "", c: "", f: "", serving: "" }; render(); }
+  }
+
+  // ---------- voice ----------
+  let recog = null;
+  function startListening() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const L = state.log;
+    if (!SR) { L.error = "Voice input isn't available in this view. Tap the microphone on your phone's keyboard in the box below and speak."; render(); $("#logText")?.focus(); return; }
+    try {
+      recog = new SR();
+      recog.lang = LANGS.find((l) => l[0] === L.lang)[2];
+      recog.interimResults = true; recog.continuous = false;
+      const base = L.text ? L.text.trim() + " " : "";
+      recog.onresult = (ev) => { L.text = base + Array.from(ev.results).map((x) => x[0].transcript).join(" "); const ta = $("#logText"); if (ta) ta.value = L.text; const b = $('[data-act="scanVoice"]'); if (b) b.disabled = !L.text.trim(); };
+      recog.onerror = (ev) => { L.listening = false; L.error = ev.error === "not-allowed" || ev.error === "service-not-allowed" ? "The microphone isn't available in this view. Tap the microphone on your phone's keyboard in the box below and speak." : ev.error === "language-not-supported" ? "Your browser can't transcribe this language. Use your keyboard's microphone instead." : ""; render(); };
+      recog.onend = () => { L.listening = false; render(); };
+      recog.start(); L.listening = true; L.error = ""; render();
+    } catch (e) { L.listening = false; L.error = "Couldn't start listening. Use your keyboard's microphone instead."; render(); }
+  }
+
+  // ---------- coach ----------
+  function coachContext() {
+    const p = profile(), pl = plan(p), today = dayKey(), t = dayTotals(today), bud = budgetFor(today);
+    const days = Array.from({ length: 7 }, (_, i) => shift(today, i - 6)).map((k) => {
+      const d = dayDoc(k), tt = dayTotals(k);
+      return `${WEEKDAYS[keyDate(k).getDay()]} ${k}: ${d.meals.length ? `${r(tt.kcal)} kcal of ${budgetFor(k)}; protein ${r(tt.p)} g; ${d.meals.map((m) => `${m.type}: ${m.items.map((i) => i.name).join(", ")}`).join(" | ")}` : "nothing logged"}`;
+    }).join("\n");
+    const next = Array.from({ length: 10 }, (_, i) => shift(today, i)).map((k) => `${WEEKDAYS[keyDate(k).getDay()]} ${k}${overrides()[k] ? ` (planned ${overrides()[k].kcal})` : ""}`).join(", ");
+    const tr = ema(weights()), wk = weeklyChange();
+    return `PERSON: ${p.sex}, ${p.age} y, ${p.height} cm, ${p.weight} kg at start, goal ${p.goal} kg, pace ${pl.pace} kg/week.
+DAILY BUDGET: ${pl.budget} kcal (safety floor ${pl.floor}); estimated burn ${r(pl.tdee)} kcal. Targets: protein ${pl.protein} g, carbs ${pl.carbs} g, fat ${pl.fat} g, greens ${TARGETS.greens} servings.
+TODAY (${WEEKDAYS[keyDate(today).getDay()]} ${today}, now ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}): eaten ${r(t.kcal)} of ${bud} kcal, ${r(bud - t.kcal)} left; protein ${r(t.p)} g; greens ${greensFor(today)} servings.
+LAST 7 DAYS:
+${days}
+WEIGHT: ${tr.length ? `trend ${r1(tr[tr.length - 1].trend)} kg${wk != null ? `, ${wk > 0 ? "+" : ""}${r1(wk)} kg/week` : ""}` : "no weigh-ins yet"}.
+NEXT DAYS: ${next}`;
+  }
+  function coachRules() {
+    return `You are PlateWise, a friendly nutrition coach inside a calorie and weight tracker used mainly in Ghana. Use the person's data below. Be warm, practical and brief (2-6 short sentences or a short list). Know Ghanaian food: chop bars, waakye, banku, kenkey, fufu, soups and stews, and suggest realistic local swaps (less oil on top, smaller ball, more kontomire or garden eggs, grilled not fried). Never shame food choices. You are not a doctor: for medical conditions, pregnancy, or signs of disordered eating, gently suggest seeing a health professional. Never recommend eating below the safety floor or losing more than 1% of body weight a week.${hide() ? " The person has turned on hide-numbers mode: do not mention calorie numbers; talk about portions and food choices instead." : ""}
+${state.canTools ? "When the person asks to plan around an event (wedding, funeral, party, festival), call propose_flex_plan with lower budgets on a few days before and a higher budget on the event day, keeping the total for those days about the same as their normal budgets. Then explain the plan in one or two sentences; the app shows a Save button." : ""}
+
+${coachContext()}`;
+  }
+  const coachTurns = () => state.docs.coach?.turns || [];
+  async function sendCoach(text) {
+    const C = state.coach;
+    if (!state.sample || C.busy || !text.trim()) return;
+    const turns = [...coachTurns(), { role: "user", content: text.trim().slice(0, 2000) }].slice(-16);
+    put("coach", { turns });
+    C.busy = true; C.live = ""; C.error = ""; C.ctl = new AbortController();
+    render(); scrollChat();
+    const tools = state.canTools ? [{
+      name: "propose_flex_plan",
+      description: "Propose day-specific calorie budgets for upcoming days (for example eating a bit less before a wedding and more on the day). The app shows the plan to the person with a Save button; nothing changes until they tap it. Returns a confirmation string.",
+      inputSchema: { type: "object", properties: { reason: { type: "string" }, days: { type: "array", items: { type: "object", properties: { date: { type: "string", description: "YYYY-MM-DD" }, kcal: { type: "number" } }, required: ["date", "kcal"] } } }, required: ["days"] },
+      execute(input) {
+        const pl = plan(profile()), today = dayKey();
+        const days = (Array.isArray(input.days) ? input.days : []).map((d) => ({ date: String(d.date), kcal: r(Number(d.kcal)) }))
+          .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d.date) && d.date >= today && daysBetween(today, d.date) <= 21 && d.kcal > 0).slice(0, 10);
+        if (!days.length) throw new Error("No valid upcoming dates (use YYYY-MM-DD within the next 3 weeks).");
+        const low = days.find((d) => d.kcal < pl.floor);
+        if (low) throw new Error(`${low.date} is below the ${pl.floor} kcal safety floor. Keep every day at or above it.`);
+        C.pending = { reason: String(input.reason || "Flex plan").slice(0, 80), days };
+        return "Shown to the person with a Save button.";
+      },
+    }] : undefined;
+    try {
+      const { text: answer } = await state.sample([{ role: "user", content: coachRules() }, ...turns], {
+        cache: false, signal: C.ctl.signal, tools,
+        onText: ({ text: t }) => { C.live = t; const el = $("#coachLive"); if (el) { el.innerHTML = md(t); scrollChat(); } },
+      });
+      put("coach", { turns: [...turns, { role: "assistant", content: answer.slice(0, 4000) }].slice(-16) });
+    } catch (e) {
+      if (e?.text) put("coach", { turns: [...turns, { role: "assistant", content: e.text }].slice(-16) });
+      C.error = e?.code === "cancelled" ? "" : aiErr(e); aiGone(e);
+    }
+    C.busy = false; C.live = ""; C.ctl = null;
+    if (state.tab === "coach") { render(); scrollChat(); }
+  }
+  function scrollChat() { const el = $("#chatEnd"); if (el) el.scrollIntoView({ block: "end" }); }
+
+  async function getFits() {
+    const C = state.coach;
+    if (!state.sample || C.fitsBusy) return;
+    const today = dayKey(), t = dayTotals(today), bud = budgetFor(today), pl = plan(profile());
+    const left = Math.max(bud - t.kcal, 300), pLeft = Math.max(pl.protein - t.p, 0), greens = greensFor(today);
+    C.fitsBusy = true; C.error = ""; C.fits = null; render();
+    try {
+      const res = await state.sample.json(`Suggest 3 realistic Ghanaian ${defaultMeal() === "Breakfast" ? "breakfast" : defaultMeal() === "Lunch" ? "lunch" : "dinner"} ideas for someone with about ${r(left)} kcal and ${r(pLeft)} g protein left today. They have had ${greens} of ${TARGETS.greens} servings of greens. Filter: ${C.fitsFilter === "All" ? "any" : C.fitsFilter === "Chop bar" ? "things you can buy at a chop bar or roadside" : C.fitsFilter === "Quick" ? "ready in 15 minutes" : "cooked at home"}.
+Use only foods from this table, with grams for each:
+${foodList()}
+Each idea should use most of the remaining calories without going over. Tag one "Best fit", and others with a short reason like "Most protein" or "Most greens".
+Reply with only JSON: {"ideas": [{"title": "Light soup with tilapia", "detail": "With a small ball of fufu", "tag": "Best fit", "items": [{"id": "lightsoup", "grams": 350}]}], "tip": "one short practical tip, e.g. for ordering at a chop bar"}`, { signal: (C.ctl = new AbortController()).signal });
+      const ideas = (res?.ideas || []).slice(0, 4).map((idea) => {
+        const items = (idea.items || []).map((x) => { const f = getFood(x.id); return f ? newItem(f, Math.max(5, Math.min(Number(x.grams) || f.portion, 2000))) : null; }).filter(Boolean);
+        const tot = items.reduce((s, it) => { const c = itemCalc(it); return { kcal: s.kcal + c.kcal, p: s.p + c.p }; }, { kcal: 0, p: 0 });
+        return { title: String(idea.title || "Idea").slice(0, 60), detail: String(idea.detail || "").slice(0, 100), tag: String(idea.tag || "").slice(0, 20), items, ...tot };
+      }).filter((i) => i.items.length);
+      C.fits = { left, ideas, tip: String(res?.tip || "").slice(0, 200) };
+    } catch (e) { C.error = e?.code === "cancelled" ? "" : aiErr(e); aiGone(e); }
+    C.fitsBusy = false; C.ctl = null;
+    if (state.tab === "coach") render();
   }
 
   // ---------- render ----------
@@ -460,18 +695,20 @@ Reply with only JSON in this shape:
     renderTabs();
     const v = $("#view");
     if (!state.ready) return;
-    if (!profile() || state.editingProfile) { v.innerHTML = viewProfile(); return; }
+    if (!profile() || state.editingProfile) { v.innerHTML = viewProfile(); updateProfilePreview(); return; }
+    if (state.glance) { v.innerHTML = viewGlance(); return; }
     if (state.scan) { v.innerHTML = viewScanning(); return; }
-    v.innerHTML = { today: viewToday, log: viewLog, review: viewReview, progress: viewProgress, me: viewMe }[state.tab]();
+    v.innerHTML = { today: viewToday, log: viewLog, review: viewReview, saved: viewSaved, progress: viewProgress, coach: viewCoach, me: viewMe }[state.tab]();
   }
   function renderTabs() {
-    const show = state.ready && profile() && !state.editingProfile;
+    const show = state.ready && profile() && !state.editingProfile && !state.glance;
     $("#tabs").hidden = !show;
     document.querySelectorAll("#tabs [data-tab]").forEach((b) => {
-      const cur = b.dataset.tab === state.tab || (state.tab === "review" && b.dataset.tab === "log");
+      const cur = b.dataset.tab === state.tab || (["review", "saved"].includes(state.tab) && b.dataset.tab === "log");
       if (cur) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
     });
   }
+  const back = (act, label = "Back") => `<button class="icon-btn" data-act="${act}" aria-label="${label}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></button>`;
 
   function viewProfile() {
     const p = profile() || {};
@@ -516,61 +753,118 @@ Reply with only JSON in this shape:
     return `<svg viewBox="0 0 160 160" aria-hidden="true"><circle cx="80" cy="80" r="70" fill="none" stroke="var(--line)" stroke-width="14"/>
       <circle cx="80" cy="80" r="70" fill="none" stroke="${over ? "var(--danger)" : "var(--mint)"}" stroke-width="14" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - Math.min(frac, 1))}"/></svg>`;
   }
+  function ringBlock(k) {
+    const t = dayTotals(k), bud = budgetFor(k), left = bud - t.kcal, H = hide();
+    return `<div class="ring ${left < 0 ? "over" : ""}" role="img" aria-label="${H ? (left < 0 ? "Over budget" : "Within budget") : `${fmt(t.kcal)} of ${fmt(bud)} kcal eaten`}">${ringSvg(t.kcal / bud, left < 0)}
+      <div class="center">${H ? `<span class="big" style="font-size:20px">${left < 0 ? "Over" : t.kcal / bud > 0.85 ? "Nearly there" : "On track"}</span>` : `<span class="big num">${fmt(Math.abs(left))}</span><span class="small muted" style="font-weight:600">kcal ${left < 0 ? "over" : "left"}</span>`}</div></div>`;
+  }
 
+  // Smart reminder: only for a meal you usually log, once its time has passed, if it isn't logged or skipped.
+  function dueReminder() {
+    const R = remind(), today = dayKey();
+    if (!R.on || state.date !== today) return null;
+    const d = dayDoc(today), now = nowMin();
+    if (R.weighDay === new Date().getDay() && !weights().some((w) => w.date === today) && !(d.skipped || []).includes("weigh"))
+      return { kind: "weigh" };
+    for (const type of ["Dinner", "Lunch", "Breakfast"]) {
+      const at = toMin(R[type]);
+      if (now < at || now > at + 180) continue;
+      if (d.meals.some((m) => m.type === type) || (d.skipped || []).includes(type)) continue;
+      const usual = Array.from({ length: 7 }, (_, i) => shift(today, -1 - i)).filter((k) => dayDoc(k).meals.some((m) => m.type === type)).length;
+      const anyHistory = Array.from({ length: 7 }, (_, i) => shift(today, -1 - i)).some((k) => dayDoc(k).meals.length);
+      if (anyHistory && usual < 3) continue;
+      return { kind: "meal", type, streak: mealStreak(type) };
+    }
+    return null;
+  }
+  function viewReminder() {
+    const due = dueReminder(); if (!due) return "";
+    if (due.kind === "weigh") return `<div class="remind"><b>Weigh-in day</b><span class="small">Step on the scale before breakfast. Your weekly trend keeps your budget honest.</span>
+      <div class="row wrap"><button class="btn sm" data-act="goWeigh">Weigh in</button><button class="btn sm alt" data-act="skipRemind" data-id="weigh">Skip today</button></div></div>`;
+    const yHas = dayDoc(shift(dayKey(), -1)).meals.some((m) => m.type === due.type);
+    return `<div class="remind"><b>${due.type} time? Snap it before you eat</b><span class="small">It takes 5 seconds.${due.streak > 1 ? ` You've logged ${due.type.toLowerCase()} ${due.streak} days in a row.` : ""}</span>
+      <div class="row wrap"><button class="btn sm" data-act="snapFor" data-id="${due.type}">Snap</button>${yHas ? `<button class="btn sm alt" data-act="repeatMeal" data-id="${due.type}">Same as yesterday</button>` : ""}<button class="btn sm alt" data-act="skipRemind" data-id="${due.type}">Skip today</button></div></div>`;
+  }
+  function lowIntakeCard() {
+    const today = dayKey(), days = [1, 2, 3].map((i) => shift(today, -i));
+    const low = days.every((k) => { const d = dayDoc(k); return d.meals.length && dayTotals(k).kcal < 1000; });
+    if (!low) return "";
+    return `<div class="notice"><b>Your last few days were very low.</b> Eating too little can leave you tired and make weight harder to manage. Your budget is there to be eaten. If food or your weight is worrying you, please talk to a doctor or someone you trust.</div>`;
+  }
   function viewToday() {
-    const p = profile(), pl = plan(p);
-    const k = state.date, t = dayTotals(k), meals = dayDoc(k).meals;
-    const left = pl.budget - t.kcal, today = dayKey();
-    const d = keyDate(k);
+    const pl = plan(profile());
+    const k = state.date, t = dayTotals(k), meals = dayDoc(k).meals, H = hide();
+    const bud = budgetFor(k), left = bud - t.kcal, today = dayKey();
+    const d = keyDate(k), hab = dayDoc(k).habits || {};
     const label = k === today ? "Today" : k === shift(today, -1) ? "Yesterday" : d.toLocaleDateString(undefined, { weekday: "long" });
-    const macro = (name, v, goal) => `<div class="macro"><b>${name}</b><div class="bar"><i style="width:${Math.min(v / goal, 1) * 100}%"></i></div><span class="small muted num">${r(v)} of ${goal} g</span></div>`;
-    const yMeals = dayDoc(shift(k, -1)).meals;
-    return `<div style="display:grid;gap:14px">
+    const yMeals = dayDoc(shift(k, -1)).meals, greens = greensFor(k), days = loggedDays();
+    const habit = (name, val, goal, color, ctrl) => `<div class="habit"><div class="top"><b>${name}</b>${ctrl || ""}</div><div class="bar"><i style="width:${Math.min(val / goal, 1) * 100}%;background:${color}"></i></div><span class="small muted num">${H && name === "Protein" ? `${r((val / goal) * 100)}% of goal` : `${typeof val === "number" ? fmt(val) : val} / ${fmt(goal)}${name === "Protein" ? " g" : name === "Greens" ? " servings" : name === "Water" ? " cups" : ""}`}</span></div>`;
+    const stepper = (key) => `<span class="step"><button data-act="habit" data-id="${key}" data-v="-1" aria-label="One less">−</button><button data-act="habit" data-id="${key}" data-v="1" aria-label="One more">+</button></span>`;
+    const tip = greens < 1 && meals.length >= 2 && k === today ? `<div class="good">Greens are low today. Kontomire stew or garden egg stew at dinner fixes it${H ? "" : ` and fits your ${fmt(Math.max(left, 0))} kcal`}.</div>` : "";
+    return `<div class="stack">
       <div class="row between">
-        <div><p class="eyebrow">${d.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}</p><h1>${label}</h1></div>
+        <div><p class="eyebrow">${d.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}${days ? ` · ${days} day${days > 1 ? "s" : ""} logged` : ""}</p><h1>${label}</h1></div>
         <div class="date-nav">
-          <button class="icon-btn" data-act="prevDay" aria-label="Previous day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+          ${back("prevDay", "Previous day")}
           <button class="icon-btn" data-act="nextDay" aria-label="Next day" ${k >= today ? "disabled style='opacity:.35'" : ""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></button>
         </div>
       </div>
-      <section class="card"><div class="ring-wrap">
-        <div class="ring ${left < 0 ? "over" : ""}" role="img" aria-label="${fmt(t.kcal)} of ${fmt(pl.budget)} kcal eaten">${ringSvg(t.kcal / pl.budget, left < 0)}
-          <div class="center"><span class="big num">${fmt(Math.abs(left))}</span><span class="small muted" style="font-weight:600">kcal ${left < 0 ? "over" : "left"}</span></div></div>
-        <div class="kv"><div><span class="small muted">Eaten</span><b class="num">about ${fmt(t.kcal)}</b></div><div><span class="small muted">Budget</span><b class="num">${fmt(pl.budget)} kcal</b></div>
-        <span class="small muted">Photo estimates can be off by about a fifth either way.</span></div>
+      ${viewReminder()}
+      ${k === today ? lowIntakeCard() : ""}
+      <section class="card"><div class="ring-wrap">${ringBlock(k)}
+        <div class="kv">${H ? `<span class="small muted">Hide numbers is on. Your ring still shows how the day is going.</span>` : `<div><span class="small muted">Eaten</span><b class="num">about ${fmt(t.kcal)}</b></div><div><span class="small muted">Budget${overrides()[k] ? " · flex plan" : ""}</span><b class="num">${fmt(bud)} kcal</b></div>
+        <span class="small muted">Photo estimates can be off by about a fifth either way.</span>`}</div>
       </div></section>
-      <div class="macros">${macro("Protein", t.p, pl.protein)}${macro("Carbs", t.c, pl.carbs)}${macro("Fat", t.f, pl.fat)}</div>
+      <h2>Daily habits</h2>
+      <div class="habits">
+        ${habit("Protein", r(t.p), pl.protein, "var(--mint)")}
+        ${habit("Greens", greens, TARGETS.greens, "var(--mint-text)", stepper("greens"))}
+        ${habit("Water", hab.water || 0, TARGETS.water, "var(--water)", stepper("water"))}
+        <div class="habit"><div class="top"><b>Steps</b></div><input id="steps" type="number" inputmode="numeric" min="0" value="${hab.steps || ""}" placeholder="From your phone" aria-label="Steps today"><div class="bar"><i style="width:${Math.min((hab.steps || 0) / TARGETS.steps, 1) * 100}%;background:var(--sun)"></i></div></div>
+      </div>
+      ${tip}
       <div class="row between"><h2>Meals</h2>${!meals.length && yMeals.length ? `<button class="btn ghost sm" data-act="sameAsYesterday">Same as yesterday</button>` : ""}</div>
       <div style="display:grid;gap:8px">
         ${meals.map((m) => `<div class="meal"><span class="meal-ico" aria-hidden="true">${esc(m.type[0])}</span>
           <div class="grow"><span class="small muted" style="font-weight:600">${esc(m.type)} · ${esc(m.time)}</span><div class="names">${esc(m.items.map((i) => i.name).join(", "))}</div></div>
-          <span class="kcal num">~${fmt(m.kcal)}</span>
+          ${H ? "" : `<span class="kcal num">~${fmt(m.kcal)}</span>`}
           <button class="x-btn" data-act="delMeal" data-id="${esc(m.id)}" aria-label="Delete ${esc(m.type)}">×</button></div>`).join("")}
         <button class="add-tile" data-act="goLog"><span class="meal-ico" style="background:var(--surface);color:var(--ink)" aria-hidden="true">+</span>
-          <span><b>${meals.length ? "Log another meal" : "Log your first meal"}</b><br><span class="small muted">${left > 0 ? `${fmt(left)} kcal left in this day's budget` : "Snap a photo, describe it, or search"}</span></span></button>
+          <span><b>${meals.length ? "Log another meal" : "Log your first meal"}</b><br><span class="small muted">${left > 0 && !H ? `${fmt(left)} kcal left in this day's budget` : "Photo, voice, barcode or search"}</span></span></button>
+        ${k === today && left > 250 && state.sample ? `<button class="add-tile" data-act="goFits"><span class="meal-ico" aria-hidden="true">?</span><span><b>Plan your next meal</b><br><span class="small muted">Ideas that fit what's left today</span></span></button>` : ""}
       </div>
     </div>`;
   }
 
   function viewScanning() {
     const s = state.scan;
+    const title = { photo: "Looking at your plate…", barcode: "Reading the package…", voice: "Working out what you said…", text: "Reading your meal…" }[s.kind];
     return `<section class="card scanning">
-      ${s.preview ? `<img src="${s.preview}" alt="Your meal" style="width:100%;max-height:260px;object-fit:cover;border-radius:18px">` : ""}
+      ${s.preview ? `<img src="${s.preview}" alt="" style="width:100%;max-height:260px;object-fit:cover;border-radius:18px">` : ""}
       <div class="spark" aria-hidden="true"></div>
-      <h2>${s.kind === "photo" ? "Looking at your plate…" : "Reading your meal…"}</h2>
-      <p class="muted small">Naming each food and estimating portions. This usually takes 5–30 seconds.</p>
+      <h2>${title}</h2>
+      <p class="muted small">This usually takes 5–30 seconds.</p>
       <button class="btn ghost sm" data-act="stopScan">Stop</button></section>`;
   }
 
+  const ICONS = {
+    photo: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+    voice: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
+    barcode: '<path d="M4 6v12M7 6v12M10 6v12M14 6v12M16 6v12M20 6v12"/>',
+    text: '<path d="M4 7h16M4 12h10M4 17h13"/>',
+    search: '<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/>',
+    saved: '<path d="M6 4h12v16l-6-4-6 4z"/>',
+  };
   function viewLog() {
     const L = state.log, ai = !!state.sample;
-    const modes = [["photo", "Photo", ai && state.canImages], ["text", "Describe it", ai], ["search", "Search", true], ["saved", "Saved meals", true]].filter((m) => m[2]);
+    const modes = [["photo", "Snap a photo", ai && state.canImages], ["voice", "Say it", ai], ["barcode", "Barcode", true], ["text", "Type it", ai], ["search", "Search", true], ["saved", "Saved meals", true]].filter((m) => m[2]);
     if (!modes.some((m) => m[0] === L.mode)) L.mode = modes[0][0];
     const mealSel = `<label class="field">Meal<select id="logMeal">${MEALS.map((m) => `<option${m === L.meal ? " selected" : ""}>${m}</option>`).join("")}</select></label>`;
+    const recent = recentMeals();
     let body = "";
     if (L.mode === "photo") {
       body = `<label class="drop" for="photoIn">
-          ${L.preview ? `<img src="${L.preview}" alt="Meal photo to scan">` : `<span class="cam" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--on-ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span>
+          ${L.preview ? `<img src="${L.preview}" alt="Meal photo to scan">` : `<span class="cam" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--on-ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS.photo}</svg></span>
           <b>Snap or choose a meal photo</b><span class="small muted">Whole plate in view, at a slight angle</span>`}
           <input id="photoIn" type="file" accept="image/jpeg,image/png,image/webp" capture="environment">
         </label>
@@ -579,71 +873,114 @@ Reply with only JSON in this shape:
         ${mealSel}
         <button class="btn full" data-act="scanPhoto" ${L.file ? "" : "disabled"}>Scan my plate</button>
         <p class="muted small">Your photo is sent to Claude to identify the food. PlateWise doesn't store it.</p>`;
+    } else if (L.mode === "voice") {
+      body = `<div class="chips" role="group" aria-label="Language">${LANGS.map(([id, l]) => `<button class="chip" data-act="lang" data-id="${id}" aria-pressed="${L.lang === id}">${l}</button>`).join("")}</div>
+        <button class="mic ${L.listening ? "on" : ""}" data-act="${L.listening ? "stopListen" : "listen"}" aria-label="${L.listening ? "Stop listening" : "Start speaking"}"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--on-ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS.voice}</svg></button>
+        <p class="small muted" style="text-align:center">${L.listening ? "Listening… tell me what you ate." : `Tap and say what you ate, and how much: "two balls of kenkey with fried fish and some pepper".`}</p>
+        <label class="field">We heard<textarea id="logText" placeholder="${L.lang === "tw" ? "Medidii kenkey ntwaa mmienu ne nam a wɔakye…" : L.lang === "pcm" ? "I chop two balls of kenkey with fried fish…" : "Two balls of kenkey with fried fish and some pepper"}">${esc(L.text)}</textarea></label>
+        <p class="small muted">If the button doesn't work here, tap the microphone on your phone's keyboard and speak into the box.</p>
+        ${mealSel}
+        <button class="btn full" data-act="scanVoice" ${L.text.trim() ? "" : "disabled"}>Check portions</button>`;
     } else if (L.mode === "text") {
       body = `<label class="field">What did you eat?<textarea id="logText" placeholder="Waakye with one egg, a ladle of stew, gari and two pieces of wele">${esc(L.text)}</textarea></label>
         ${mealSel}
         <button class="btn full" data-act="scanText" ${L.text.trim() ? "" : "disabled"}>Work it out</button>`;
+    } else if (L.mode === "barcode") {
+      const P = L.product;
+      body = P ? `<b>${P.code ? `Barcode ${esc(P.code)}` : "New product"}</b>
+          ${P.source === "estimate" ? `<p class="notice">No label was visible, so these are typical values for this product. Check them against the pack.</p>` : P.source === "label" ? `<p class="good">Read from the nutrition label. Check the numbers once; PlateWise remembers this product.</p>` : ""}
+          <label class="field">Product name<input id="prName" type="text" value="${esc(P.name)}" placeholder="Brand and product"></label>
+          <p class="small muted">Per 100 g (or 100 ml)</p>
+          <div class="grid2">
+            <label class="field">Calories<input id="prK" type="number" inputmode="decimal" value="${esc(P.kcal)}"></label>
+            <label class="field">Protein g<input id="prP" type="number" inputmode="decimal" value="${esc(P.p)}"></label>
+            <label class="field">Carbs g<input id="prC" type="number" inputmode="decimal" value="${esc(P.c)}"></label>
+            <label class="field">Fat g<input id="prF" type="number" inputmode="decimal" value="${esc(P.f)}"></label>
+          </div>
+          <div class="grid2"><label class="field">One serving (g or ml)<input id="prS" type="number" inputmode="decimal" value="${esc(P.serving)}"></label><label class="field">Barcode (optional)<input id="prCode" type="text" inputmode="numeric" value="${esc(P.code)}"></label></div>
+          ${mealSel}
+          <div class="row"><button class="btn ghost" data-act="cancelProduct">Cancel</button><button class="btn grow" data-act="saveProduct">Save and log</button></div>`
+        : `<label class="drop" for="barIn">
+          ${L.bpreview ? `<img src="${L.bpreview}" alt="Package photo">` : `<span class="cam" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--on-ink)" stroke-width="2" stroke-linecap="round">${ICONS.barcode}</svg></span>
+          <b>Photograph the barcode or nutrition label</b><span class="small muted">Products you scan once are remembered</span>`}
+          <input id="barIn" type="file" accept="image/jpeg,image/png,image/webp" capture="environment"></label>
+        ${mealSel}
+        <button class="btn full" data-act="scanBarcode" ${L.bfile ? "" : "disabled"}>Read package</button>
+        <button class="btn ghost sm" data-act="manualProduct" style="justify-self:start">Enter label values by hand</button>
+        ${productFoods().length ? `<p class="small muted">Your products: ${productFoods().map((f) => esc(f.name)).join(", ")}. Find them in Search.</p>` : ""}`;
     } else if (L.mode === "search") {
       const res = searchFoods(L.q);
       body = `<label class="field">Search foods<input id="logQ" type="search" value="${esc(L.q)}" placeholder="banku, tilapia, kelewele…" autocomplete="off"></label>
         ${mealSel}
-        <ul class="results">${(L.q.trim() ? res : FOODS.slice(0, 8)).map((f) => `<li><button data-act="pickFood" data-id="${f.id}"><span>${esc(f.name)}</span><small>${r((f.per[0] * f.portion) / 100)} kcal · ${esc(f.unit)}</small></button></li>`).join("") || `<li class="muted small">No match. Try another name${ai ? ", or use Describe it" : ""}.</li>`}</ul>`;
+        <ul class="results">${(L.q.trim() ? res : FOODS.slice(0, 8)).map((f) => `<li><button data-act="pickFood" data-id="${esc(f.id)}"><span>${esc(f.name)}</span><small>${hide() ? "" : r((f.per[0] * f.portion) / 100) + " kcal · "}${esc(f.unit)}</small></button></li>`).join("") || `<li class="muted small">No match. Try another name${ai ? ", or use Type it" : ""}.</li>`}</ul>`;
     } else {
       const s = saved();
-      body = s.length ? `<ul class="results">${s.map((m) => `<li class="row"><button class="grow" data-act="useSaved" data-id="${esc(m.id)}"><span>${esc(m.name)}</span><small>~${fmt(m.kcal)} kcal</small></button><button class="x-btn" data-act="delSaved" data-id="${esc(m.id)}" aria-label="Remove ${esc(m.name)}">×</button></li>`).join("")}</ul>${mealSel}`
+      body = s.length ? `<ul class="results">${s.map((m) => `<li class="row"><button class="grow" data-act="useSaved" data-id="${esc(m.id)}"><span>${esc(m.name)}</span><small>${hide() ? "" : "~" + fmt(m.kcal) + " kcal"}</small></button><button class="x-btn" data-act="delSaved" data-id="${esc(m.id)}" aria-label="Remove ${esc(m.name)}">×</button></li>`).join("")}</ul>${mealSel}`
         : `<p class="muted">No saved meals yet. When you save a meal, tick "Save as a favourite" to log it again in one tap.</p>`;
     }
-    return `<div style="display:grid;gap:14px">
-      <div><p class="eyebrow">${esc(L.meal)} · ${keyDate(state.date).toLocaleDateString(undefined, { day: "numeric", month: "short" })}</p><h1>Log a meal</h1></div>
-      <div class="chips" role="group" aria-label="How to log">${modes.map(([id, l]) => `<button class="chip" data-act="mode" data-id="${id}" aria-pressed="${L.mode === id}">${l}</button>`).join("")}</div>
+    const y = dayDoc(shift(state.date, -1)).meals.filter((m) => m.type === L.meal);
+    return `<div class="stack">
+      <div><p class="eyebrow">${esc(L.meal)} · ${keyDate(state.date).toLocaleDateString(undefined, { day: "numeric", month: "short" })}</p><h1>Log anything</h1><p class="muted small">Pick the fastest way for this meal.</p></div>
+      ${recent.length ? `<div class="chips">${recent.map((m, i) => `<button class="chip" data-act="recent" data-id="${i}">${esc(m.label)}</button>`).join("")}${y.length ? `<button class="chip" data-act="repeatMeal" data-id="${esc(L.meal)}">Same as yesterday</button>` : ""}</div>` : ""}
+      <div class="hub" role="group" aria-label="How to log">${modes.map(([id, l]) => `<button data-act="mode" data-id="${id}" aria-pressed="${L.mode === id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[id]}</svg>${l}</button>`).join("")}</div>
       ${L.error ? `<div class="notice">${esc(L.error)}</div>` : ""}
       <section class="card">${body}</section>
-      ${!ai ? `<p class="muted small">Photo and describe logging use Claude. They work when PlateWise is opened in Claude; search works everywhere.</p>` : ""}
+      ${!ai ? `<p class="muted small">Photo, voice and typed logging use Claude. They work when PlateWise is opened in Claude; barcode entry and search work everywhere.</p>` : ""}
     </div>`;
   }
-  function searchFoods(q) {
-    q = q.trim().toLowerCase(); if (!q) return [];
-    const words = q.split(/\s+/);
-    return FOODS.filter((f) => words.every((w) => (f.name + " " + f.id).toLowerCase().includes(w))).slice(0, 8);
+  function recentMeals() {
+    const seen = new Set(), out = [];
+    for (let i = 0; i < 10 && out.length < 4; i++) {
+      for (const m of dayDoc(shift(dayKey(), -i)).meals.slice().reverse()) {
+        const label = m.items.slice(0, 2).map((x) => x.name.split(" (")[0].split(",")[0]).join(" + ");
+        if (!seen.has(label)) { seen.add(label); out.push({ label, meal: m }); }
+        if (out.length >= 4) break;
+      }
+    }
+    return out;
   }
 
   function reviewTotals() {
     const R = state.review;
     return R.items.reduce((t, it) => { const c = itemCalc(it, R.oil); return { kcal: t.kcal + c.kcal, p: t.p + c.p, c: t.c + c.c, f: t.f + c.f }; }, { kcal: 0, p: 0, c: 0, f: 0 });
   }
+  function portionsText(it) { return it.unit && it.portion ? ` · ≈ ${r1(it.grams / it.portion)} × ${esc(it.unit)}` : ""; }
   function itemRow(it) {
-    const c = itemCalc(it, state.review.oil);
+    const c = itemCalc(it, state.review.oil), H = hide();
     const max = Math.max(50, r(Math.max(it.aiGrams, it.portion || 100) * 2.5));
     const low = it.conf === "low";
-    const ai = state.review.source === "photo" || state.review.source === "text";
-    const swap = `<select data-act="swap" data-key="${it.key}" aria-label="Change food"><option value="">${it.fid ? "Change food…" : "Match to a food…"}</option>${FOODS.map((f) => `<option value="${f.id}"${f.id === it.fid ? " selected" : ""}>${esc(f.name)}</option>`).join("")}</select>`;
+    const ai = ["photo", "text", "voice"].includes(state.review.source);
+    const swap = `<select data-act="swap" data-key="${it.key}" aria-label="Change food"><option value="">${it.fid ? "Not right? Change food…" : "Match to a food…"}</option>${allFoods().map((f) => `<option value="${esc(f.id)}"${f.id === it.fid ? " selected" : ""}>${esc(f.name)}</option>`).join("")}</select>`;
     return `<div class="item ${low && ai ? "low" : ""}" data-key="${it.key}">
       <div class="row between"><b class="grow" style="overflow-wrap:anywhere">${esc(it.name)}</b>
         ${it.aiPer ? `<span class="badge plain">AI estimate</span>` : ai ? `<span class="badge ${low ? "check" : "ok"}">${low ? "Check this" : "Looks right"}</span>` : ""}
         <button class="x-btn" data-act="rmItem" data-key="${it.key}" aria-label="Remove ${esc(it.name)}">×</button></div>
-      <div class="row between small"><span class="muted"><span class="g num">${it.grams}</span> g${it.unit ? ` · typical ${esc(it.unit)} is ${it.portion} g` : ""}</span><b class="k num">${fmt(c.kcal)} kcal</b></div>
+      <div class="row between small"><span class="muted"><span class="g num">${it.grams}</span> g<span class="pt">${portionsText(it)}</span></span>${H ? "" : `<b class="k num">${fmt(c.kcal)} kcal</b>`}</div>
       <input type="range" min="5" max="${max}" step="5" value="${it.grams}" data-act="grams" data-key="${it.key}" aria-label="Portion of ${esc(it.name)} in grams">
       ${swap}
     </div>`;
   }
+  function reviewSummary(t) {
+    const bud = budgetFor(state.date);
+    return hide() ? `P ${r(t.p)} g · C ${r(t.c)} g · F ${r(t.f)} g` : `Likely ${fmt(t.kcal * 0.8)}–${fmt(t.kcal * 1.2)} kcal · ${r((t.kcal / bud) * 100)}% of the day's ${fmt(bud)} kcal · P ${r(t.p)} g · C ${r(t.c)} g · F ${r(t.f)} g`;
+  }
   function viewReview() {
-    const R = state.review, t = reviewTotals(), pl = plan(profile());
-    const share = pl.budget ? r((t.kcal / pl.budget) * 100) : 0;
+    const R = state.review, t = reviewTotals();
     const anyOily = R.items.some((i) => i.oily);
     const res = searchFoods(R.q);
-    return `<div style="display:grid;gap:14px">
-      <div class="row"><button class="icon-btn" data-act="cancelReview" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></button>
-        <div><p class="eyebrow">${esc(R.meal)}</p><h1>Check your plate</h1></div></div>
+    return `<div class="stack">
+      <div class="row">${back("cancelReview")}
+        <div><p class="eyebrow">${esc(R.meal)} · ${R.items.length} item${R.items.length === 1 ? "" : "s"}</p><h1>Check your plate</h1></div></div>
       ${R.preview ? `<img src="${R.preview}" alt="Your meal" style="width:100%;max-height:220px;object-fit:cover;border-radius:20px">` : ""}
       ${R.note ? `<div class="good">${esc(R.note)}</div>` : ""}
-      <div style="display:grid;gap:8px" id="items">${R.items.map(itemRow).join("") || `<p class="muted">No items. Add one below.</p>`}</div>
+      <div style="display:grid;gap:8px">${R.items.map(itemRow).join("") || `<p class="muted">No items. Add one below.</p>`}</div>
       <div><label class="field">Add an item<input id="revQ" type="search" value="${esc(R.q)}" placeholder="e.g. gari, egg, shito" autocomplete="off"></label>
-        ${R.q.trim() ? `<ul class="suggest">${res.map((f) => `<li><button data-act="addItem" data-id="${f.id}" style="width:100%"><span>${esc(f.name)}</span><small>${esc(f.unit)}</small></button></li>`).join("") || `<li class="small muted" style="padding:8px">No match</li>`}</ul>` : ""}</div>
-      ${anyOily ? `<section class="card"><b>How much oil was it cooked with?</b><p class="small muted">Oil hides in stews, soups and fried food, so photos undercount it.</p>
-        <div class="chips">${[["light", "Light"], ["normal", "Normal"], ["heavy", "A lot"]].map(([k, l]) => `<button class="chip" data-act="oil" data-id="${k}" aria-pressed="${R.oil === k}">${l}</button>`).join("")}</div></section>` : ""}
+        ${R.q.trim() ? `<ul class="suggest">${res.map((f) => `<li><button data-act="addItem" data-id="${esc(f.id)}" style="width:100%"><span>${esc(f.name)}</span><small>${esc(f.unit)}</small></button></li>`).join("") || `<li class="small muted" style="padding:8px">No match</li>`}</ul>` : ""}</div>
+      ${anyOily ? `<section class="card"><b>How oily was it?</b><p class="small muted">Oil hides in stews, soups and fried food, so photos undercount it.</p>
+        <div class="chips">${[["light", "Light"], ["normal", "Normal"], ["heavy", "Very oily"]].map(([k, l]) => `<button class="chip" data-act="oil" data-id="${k}" aria-pressed="${R.oil === k}">${l}</button>`).join("")}</div></section>` : ""}
       <section class="card">
-        <div class="total"><span class="big num" id="revTotal">about ${fmt(t.kcal)}</span><span class="muted">kcal</span></div>
-        <p class="small muted" id="revRange">Likely ${fmt(t.kcal * 0.8)}–${fmt(t.kcal * 1.2)} kcal · ${share}% of your ${fmt(pl.budget)} kcal budget · P ${r(t.p)} g · C ${r(t.c)} g · F ${r(t.f)} g</p>
+        ${hide() ? "" : `<div class="total"><span class="big num" id="revTotal">about ${fmt(t.kcal)}</span><span class="muted">kcal</span></div>`}
+        <p class="small muted" id="revRange">${reviewSummary(t)}</p>
         <label class="field">Meal<select id="revMeal">${MEALS.map((m) => `<option${m === R.meal ? " selected" : ""}>${m}</option>`).join("")}</select></label>
         <label class="row small" style="font-weight:600"><input type="checkbox" id="revFav" ${R.fav ? "checked" : ""} style="width:20px;height:20px;accent-color:var(--mint)"> Save as a favourite meal</label>
         <input id="revFavName" type="text" placeholder="Name it, e.g. My usual waakye" value="${esc(R.favName)}" ${R.fav ? "" : "hidden"}>
@@ -652,10 +989,65 @@ Reply with only JSON in this shape:
     </div>`;
   }
   function refreshReviewNumbers() {
-    const R = state.review; if (!R) return;
-    const t = reviewTotals(), pl = plan(profile());
-    $("#revTotal").textContent = `about ${fmt(t.kcal)}`;
-    $("#revRange").textContent = `Likely ${fmt(t.kcal * 0.8)}–${fmt(t.kcal * 1.2)} kcal · ${r((t.kcal / pl.budget) * 100)}% of your ${fmt(pl.budget)} kcal budget · P ${r(t.p)} g · C ${r(t.c)} g · F ${r(t.f)} g`;
+    const t = reviewTotals();
+    const tot = $("#revTotal"); if (tot) tot.textContent = `about ${fmt(t.kcal)}`;
+    $("#revRange").textContent = reviewSummary(t);
+  }
+
+  // Meal check after saving: plain-language feedback, never shaming.
+  function viewSaved() {
+    const m = state.lastMeal, k = state.date, t = dayTotals(k), bud = budgetFor(k), pl = plan(profile()), H = hide();
+    const greens = greensFor(k), insights = [];
+    if (m.p >= 20) insights.push(["ok", "+", "Good protein", `This meal brought you to ${r((t.p / pl.protein) * 100)}% of today's protein goal.`]);
+    else if (m.p < 10) insights.push(["check", "!", "Light on protein", "An egg, fish, beans or chicken next time keeps you fuller for longer."]);
+    if (m.items.some((i) => i.oily)) insights.push(["check", "!", "Oil adds up", m.oil === "heavy" ? "We counted extra oil. Asking for less oil on top saves the most." : "Asking for less oil on top of stews and soups saves the most."]);
+    if (greens < 1) insights.push(["check", "!", "Low on greens", "Add kontomire, garden eggs, okro or salad at your next meal for fibre."]);
+    else if (m.items.some((i) => i.green)) insights.push(["ok", "+", "Greens counted", `${greens} of ${TARGETS.greens} servings today.`]);
+    if (t.kcal > bud) insights.push(["plain", "i", "Over for today", "That's fine. One day doesn't change your weight; the weekly pattern does."]);
+    const left = bud - t.kcal;
+    return `<div class="stack">
+      <div><p class="eyebrow">Meal saved</p><h1>${esc(m.type)} saved</h1><p class="muted">${H ? "" : `About ${fmt(m.kcal)} kcal · `}${esc(m.items.map((i) => i.name).join(", "))}</p></div>
+      <section class="card"><div class="ring-wrap">${ringBlock(k)}<div class="kv">${H ? "" : `<div><span class="small muted">Today so far</span><b class="num">${fmt(t.kcal)} of ${fmt(bud)} kcal</b></div><span class="small muted">${left > 0 ? `${fmt(left)} left for the rest of the day` : "Budget used for today"}</span>`}</div></div></section>
+      <section class="card"><h2>Meal check</h2>${insights.map(([kind, ic, title, txt]) => `<div class="insight"><span class="dot badge ${kind}" aria-hidden="true">${ic}</span><div><b>${title}</b><p class="small muted">${txt}</p></div></div>`).join("") || `<p class="small muted">Nothing to flag. Nice and balanced.</p>`}</section>
+      ${state.sample && left > 250 && k === dayKey() ? `<button class="btn full" data-act="goFits">See what fits next</button>` : ""}
+      <button class="btn ghost full" data-act="goToday">Back to today</button>
+    </div>`;
+  }
+
+  function viewCoach() {
+    const C = state.coach;
+    if (!state.sample) return `<div class="stack"><h1>Ask PlateWise</h1><section class="card"><p class="muted">The coach uses Claude. It works when PlateWise is opened in Claude and you've allowed it to use Claude.</p></section></div>`;
+    const seg = `<div class="chips" role="group" aria-label="Coach view"><button class="chip" data-act="coachMode" data-id="chat" aria-pressed="${C.mode === "chat"}">Ask PlateWise</button><button class="chip" data-act="coachMode" data-id="fits" aria-pressed="${C.mode === "fits"}">What fits now</button></div>`;
+    if (C.mode === "fits") {
+      const F = C.fits;
+      return `<div class="stack"><div><p class="eyebrow">Uses your logs and goals · not medical advice</p><h1>What fits now</h1></div>${seg}
+        <div class="chips">${["All", "Home-cooked", "Chop bar", "Quick"].map((f) => `<button class="chip" data-act="fitsFilter" data-id="${f}" aria-pressed="${C.fitsFilter === f}">${f}</button>`).join("")}</div>
+        ${C.error ? `<div class="notice">${esc(C.error)}</div>` : ""}
+        ${C.fitsBusy ? `<section class="card scanning"><div class="spark" aria-hidden="true"></div><p class="muted small">Finding meals that fit…</p><button class="btn ghost sm" data-act="stopCoach">Stop</button></section>`
+          : F ? `${hide() ? "" : `<p class="small muted">About <b>${fmt(F.left)} kcal</b> left today. The bar shows how much each idea uses.</p>`}
+            ${F.ideas.map((i, n) => `<div class="idea ${/best/i.test(i.tag) ? "best" : ""}"><div class="row between"><div><b>${esc(i.title)}</b><p class="small muted">${esc(i.detail)}</p></div>${i.tag ? `<span class="badge ok">${esc(i.tag)}</span>` : ""}</div>
+              ${hide() ? "" : `<div class="row"><div class="bar grow"><i style="width:${Math.min(i.kcal / F.left, 1) * 100}%"></i></div><b class="small num" style="white-space:nowrap">~${fmt(i.kcal)} kcal${i.kcal > F.left * 1.05 ? " (over)" : ""} · ${r(i.p)} g protein</b></div>`}
+              <button class="btn ghost sm" data-act="logIdea" data-id="${n}" style="justify-self:start">Log this meal</button></div>`).join("")}
+            ${F.tip ? `<div class="notice">${esc(F.tip)}</div>` : ""}
+            <button class="btn ghost sm" data-act="getFits" style="justify-self:start">More ideas</button>`
+          : `<button class="btn full" data-act="getFits">Show me ideas</button>`}
+      </div>`;
+    }
+    const turns = coachTurns();
+    const pend = C.pending;
+    return `<div class="stack"><div class="row between"><div><p class="eyebrow">Uses your logs and goals · not medical advice</p><h1>Ask PlateWise</h1></div>${turns.length ? `<button class="btn ghost sm" data-act="clearChat">Clear</button>` : ""}</div>${seg}
+      <div class="chat">
+        ${turns.length ? "" : `<div class="bubble ai">Hi! Ask me anything about food, portions or your plan. I can see what you've logged.</div>`}
+        ${turns.map((t) => `<div class="bubble ${t.role === "user" ? "me" : "ai"}">${md(t.content)}</div>`).join("")}
+        ${C.busy ? `<div class="bubble ai" id="coachLive">${C.live ? md(C.live) : "Thinking…"}</div>` : ""}
+        ${pend ? `<section class="card"><b>${esc(pend.reason)}</b>${pend.days.map((d) => `<div class="row between small"><span>${shortDay(d.date)}</span><b class="num">${hide() ? "" : fmt(d.kcal) + " kcal"}</b></div>`).join("")}
+          <div class="row"><button class="btn sm" data-act="savePlan">Save the flex plan</button><button class="btn ghost sm" data-act="dropPlan">Not now</button></div></section>` : ""}
+        ${C.error ? `<div class="notice">${esc(C.error)}</div>` : ""}
+        <span id="chatEnd"></span>
+      </div>
+      ${C.busy ? `<button class="btn ghost sm" data-act="stopCoach" style="justify-self:start">Stop</button>` : `<div class="chips">${["What should I eat tonight?", "I have a wedding on Saturday. How do I stay on track?", "Why was my week slow?", "How can I get more protein cheaply?"].map((q) => `<button class="chip long" data-act="ask" data-id="${esc(q)}">${esc(q)}</button>`).join("")}</div>`}
+      <form class="composer" id="coachForm"><label for="coachIn" class="grow"><span hidden>Message</span><textarea id="coachIn" rows="1" placeholder="Ask about food, portions, your plan…" ${C.busy ? "disabled" : ""}></textarea></label><button class="btn" type="submit" ${C.busy ? "disabled" : ""} aria-label="Send">Send</button></form>
+    </div>`;
   }
 
   function weightChart(tr, goal) {
@@ -678,23 +1070,46 @@ Reply with only JSON in this shape:
     s += `<text x="${L}" y="${H - 6}">${fmtD(d0)}</text><text x="${W - Rr}" y="${H - 6}" text-anchor="end">${fmtD(last.date)}</text></svg>`;
     return s + `<p class="small muted">Dots are your weigh-ins; the line is your smoothed trend, which ignores day-to-day water swings of 1–2 kg.</p>`;
   }
-  function weekBars() {
-    const W = 340, H = 150, T = 16, B = 22, pl = plan(profile());
-    const days = Array.from({ length: 7 }, (_, i) => shift(dayKey(), i - 6)), vals = days.map((k) => dayTotals(k).kcal);
-    const max = Math.max(pl.budget * 1.2, ...vals), y = (v) => T + (1 - v / max) * (H - T - B), slot = W / 7, bw = slot * 0.55;
-    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Calories eaten each of the last 7 days against your budget">`;
-    days.forEach((k, i) => {
-      const v = vals[i], x = slot * i + (slot - bw) / 2;
-      if (v > 0) s += `<rect x="${x}" y="${y(v)}" width="${bw}" height="${y(0) - y(v)}" rx="6" fill="${v > pl.budget * 1.05 ? "var(--sun)" : "var(--mint)"}"/><text x="${x + bw / 2}" y="${y(v) - 4}" text-anchor="middle" style="fill:var(--ink)">${fmt(v)}</text>`;
-      s += `<text x="${x + bw / 2}" y="${H - 6}" text-anchor="middle">${keyDate(k).toLocaleDateString(undefined, { weekday: "short" })}</text>`;
+  // Your week: the last 7 days as a short story.
+  function weekStory() {
+    const today = dayKey(), days = Array.from({ length: 7 }, (_, i) => shift(today, i - 6));
+    const info = days.map((k) => ({ k, kcal: dayTotals(k).kcal, bud: budgetFor(k), n: dayDoc(k).meals.length, p: dayTotals(k).p }));
+    const logged = info.filter((d) => d.n);
+    if (!logged.length) return "";
+    const meals = logged.reduce((s, d) => s + d.n, 0);
+    const cls = (d) => (d.kcal > d.bud * 1.1 ? "over" : d.kcal >= d.bud * 0.9 ? "on" : "under");
+    const color = { under: "var(--mint-tint)", on: "var(--mint)", over: "var(--sun)" };
+    const counts = {};
+    logged.forEach((d) => dayDoc(d.k).meals.forEach((m) => m.items.forEach((i) => { const n = i.name.split(" (")[0].split(",")[0]; counts[n] = (counts[n] || 0) + 1; })));
+    const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+    const best = logged.slice().sort((a, b) => Math.abs(a.kcal - a.bud) - Math.abs(b.kcal - b.bud))[0];
+    const overDays = logged.filter((d) => cls(d) === "over");
+    const weekendOver = overDays.length && overDays.every((d) => [0, 6].includes(keyDate(d.k).getDay()));
+    const pl = plan(profile()), avgP = logged.reduce((s, d) => s + d.p, 0) / logged.length, wk = weeklyChange();
+    const tip = weekendOver ? "Your over-budget days were weekends. Plan Saturday's meals on Friday, or ask the coach for a flex plan."
+      : overDays.length >= 3 ? "Several days went over. Try logging before you eat, and ask for less oil on top at chop bars."
+      : avgP < pl.protein * 0.7 ? "Protein was low most days. Add an egg, fish, beans or chicken to one more meal a day."
+      : logged.length < 5 ? "Logging on more days gives you a truer picture. Try a quick snap at every meal next week."
+      : "A steady week. Keep the same rhythm next week.";
+    const W = 300, H = 90, slot = W / 7, bw = slot * 0.6, max = Math.max(...info.map((d) => Math.max(d.kcal, d.bud)), 1);
+    let bars = `<svg viewBox="0 0 ${W} ${H + 18}" role="img" aria-label="Calories by day compared with budget">`;
+    info.forEach((d, i) => {
+      const x = slot * i + (slot - bw) / 2, h = (d.kcal / max) * H;
+      if (d.n) bars += `<rect x="${x}" y="${H - h}" width="${bw}" height="${Math.max(h, 2)}" rx="5" fill="${color[cls(d)]}" stroke="${cls(d) === "under" ? "var(--mint)" : "none"}"/>`;
+      bars += `<text x="${x + bw / 2}" y="${H + 14}" text-anchor="middle">${WEEKDAYS[keyDate(d.k).getDay()][0]}</text>`;
     });
-    s += `<line x1="0" x2="${W}" y1="${y(pl.budget)}" y2="${y(pl.budget)}" stroke="var(--ink)" stroke-dasharray="4 4" opacity="0.5"/></svg>`;
-    return s;
+    bars += `</svg>`;
+    return `<section class="card chart"><div><p class="eyebrow">${shortDay(days[0])} – ${shortDay(today)}</p><h2>Your week</h2></div>
+      <div class="stats"><div class="stat"><span class="small muted">Meals logged</span><b class="num">${meals}</b><span class="small muted">on ${logged.length} of 7 days</span></div>
+        <div class="stat"><span class="small muted">Top dish</span><b style="font-size:15px">${esc(top?.[0] || "–")}</b><span class="small muted">${top ? `${top[1]} time${top[1] > 1 ? "s" : ""}` : ""}</span></div>
+        <div class="stat"><span class="small muted">Trend</span><b class="num">${wk == null ? "–" : (wk > 0 ? "+" : "") + r1(wk) + " kg"}</b><span class="small muted">per week</span></div></div>
+      ${bars}
+      <div class="legend"><span><i style="background:var(--mint-tint);border:1px solid var(--mint)"></i>Under</span><span><i style="background:var(--mint)"></i>Right on</span><span><i style="background:var(--sun)"></i>Over</span></div>
+      <p class="small"><b>Best day:</b> ${WEEKDAYS[keyDate(best.k).getDay()]}, closest to budget.</p>
+      <div class="good"><b>Try next week:</b> ${tip}</div></section>`;
   }
   function viewProgress() {
-    const p = profile(), pl = plan(p), tr = ema(weights()), last = tr[tr.length - 1];
-    let weekly = null;
-    if (tr.length >= 2) { const ref = tr.find((t) => daysBetween(t.date, last.date) <= 14) || tr[0]; const sp = daysBetween(ref.date, last.date); if (sp >= 5) weekly = ((last.trend - ref.trend) / sp) * 7; }
+    const p = profile(), pl = plan(p), tr = ema(weights()), last = tr[tr.length - 1], weekly = weeklyChange();
     const learn = learnBurn();
     let learnCard = "";
     if (learn?.tdee) {
@@ -702,10 +1117,11 @@ Reply with only JSON in this shape:
       const diff = Math.abs(newPlan.budget - pl.budget);
       learnCard = `<section class="card"><h2>Weekly check-in</h2>
         <p class="small">Over ${learn.span} days you ate about <b>${fmt(learn.avg)}</b> kcal a day on logged days, and your trend moved ${learn.change > 0 ? "+" : ""}${r1(learn.change)} kg. That means you burn about <b>${fmt(learn.tdee)} kcal a day</b> (our first guess was ${fmt(pl.guess)}).</p>
-        ${diff >= 30 ? `<p class="small">To stay on your ${pl.pace} kg-a-week pace, your budget should be <b>${fmt(newPlan.budget)} kcal</b>.</p><div class="row wrap"><button class="btn sm" data-act="useLearned" data-v="${r(learn.tdee)}">Use ${fmt(newPlan.budget)} kcal</button><button class="btn ghost sm" data-act="keepBudget">Keep ${fmt(pl.budget)}</button></div>`
-          : `<p class="good">Your budget of ${fmt(pl.budget)} kcal is still right for your pace.</p>`}</section>`;
+        ${diff >= 30 ? `<p class="small">To stay on your ${pl.pace} kg-a-week pace, your budget should be <b>${fmt(newPlan.budget)} kcal</b>.</p>` : `<p class="good">Your budget of ${fmt(pl.budget)} kcal is still right for your pace.</p>`}
+        <div class="row wrap">${diff >= 30 ? `<button class="btn sm" data-act="useLearned" data-v="${r(learn.tdee)}">Use ${fmt(newPlan.budget)} kcal</button><button class="btn ghost sm" data-act="keepBudget">Keep ${fmt(pl.budget)}</button>` : ""}
+        ${pl.lose ? `<button class="btn ghost sm" data-act="maintWeek" data-v="${r(learn.tdee)}">Take a maintenance week</button>` : ""}</div></section>`;
     } else if (learn?.need) learnCard = `<p class="small muted">PlateWise learns your real daily burn from your weigh-ins and logs. Still needed: ${learn.need}.</p>`;
-    return `<div style="display:grid;gap:14px">
+    return `<div class="stack">
       <div><p class="eyebrow">Goal ${p.goal} kg · ${pl.pace} kg a week</p><h1>Progress</h1></div>
       <form class="card" id="weighForm"><b>Weigh in</b><div class="row">
         <input id="wKg" type="number" step="0.1" inputmode="decimal" placeholder="kg" aria-label="Weight in kilograms" style="flex:1">
@@ -716,34 +1132,56 @@ Reply with only JSON in this shape:
         <div class="stat"><span class="small muted">Per week</span><b class="num">${weekly == null ? "–" : (weekly > 0 ? "+" : "") + r1(weekly) + " kg"}</b></div>
         <div class="stat"><span class="small muted">To goal</span><b class="num">${r1(Math.abs((last ? last.trend : p.weight) - p.goal))} kg</b></div>
       </div>
+      ${weekStory()}
       <section class="card chart"><h2>Weight trend</h2>${weightChart(tr, p.goal)}</section>
       ${learnCard}
-      <section class="card chart"><h2>Last 7 days</h2>${weekBars()}<p class="small muted">The dashed line is your ${fmt(pl.budget)} kcal budget. One day doesn't change your weight; the weekly pattern does.</p></section>
-      ${tr.length ? `<section class="card"><h2>Weigh-ins</h2><div class="list">${tr.slice().reverse().slice(0, 30).map((w) => `<div><span>${keyDate(w.date).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}</span><span class="row"><b class="num">${w.kg} kg</b><button class="x-btn" data-act="delWeight" data-id="${w.date}" aria-label="Delete weigh-in">×</button></span></div>`).join("")}</div></section>` : ""}
+      ${tr.length ? `<section class="card"><h2>Weigh-ins</h2><div class="list">${tr.slice().reverse().slice(0, 30).map((w) => `<div><span>${shortDay(w.date)}</span><span class="row"><b class="num">${w.kg} kg</b><button class="x-btn" data-act="delWeight" data-id="${w.date}" aria-label="Delete weigh-in">×</button></span></div>`).join("")}</div></section>` : ""}
     </div>`;
   }
 
+  function viewGlance() {
+    const k = dayKey(), t = dayTotals(k), pl = plan(profile()), bud = budgetFor(k), left = bud - t.kcal, H = hide();
+    const next = ["Breakfast", "Lunch", "Dinner"].find((m) => !dayDoc(k).meals.some((x) => x.type === m)) || "Snack";
+    return `<div class="stack"><div class="glance">
+      <div class="ring-wrap">${ringBlock(k)}<div class="kv">
+        <div><span class="small muted">Protein</span><b class="num">${H ? r((t.p / pl.protein) * 100) + "%" : `${r(t.p)} / ${pl.protein} g`}</b></div>
+        <div><span class="small muted">Next</span><b>${next}</b></div></div></div>
+      <button class="btn full" data-act="glanceSnap">Snap ${next.toLowerCase()}</button>
+      ${left > 250 && state.sample && !H ? `<p class="small muted">Ideas that fit your last ${fmt(left)} kcal are one tap away in the Coach.</p>` : ""}
+    </div><button class="btn ghost" data-act="exitGlance">Open the full app</button>
+    <p class="small muted">This is the glance view. Pin it in Claude's sidebar to check your day in one tap.</p></div>`;
+  }
+
   function viewMe() {
-    const p = profile(), pl = plan(p);
+    const p = profile(), pl = plan(p), R = remind();
     const act = ACTIVITY.find((a) => a[0] === p.activity)?.[1] || "";
-    return `<div style="display:grid;gap:14px">
+    const ov = Object.entries(overrides()).filter(([k]) => k >= dayKey()).sort();
+    return `<div class="stack">
       <div><p class="eyebrow">Your plan</p><h1>Me</h1></div>
       <section class="card"><div class="row between"><b>Daily budget</b><b class="num" style="font-size:22px">${fmt(pl.budget)} kcal</b></div>
         <div class="list small">
           <div><span class="muted">Resting burn (BMR)</span><span class="num">${fmt(pl.bmr)} kcal</span></div>
           <div><span class="muted">Daily burn ${p.learnedTdee ? "(learned from your scale)" : `(${esc(act.toLowerCase())})`}</span><span class="num">${fmt(pl.tdee)} kcal</span></div>
           <div><span class="muted">Weight</span><span class="num">${p.weight} kg → ${p.goal} kg</span></div>
-          <div><span class="muted">Pace</span><span>${pl.lose ? "−" : pl.gain ? "+" : ""}${pl.lose || pl.gain ? pl.pace + " kg a week" : "maintain"}</span></div>
+          <div><span class="muted">Pace</span><span>${pl.lose ? "−" + pl.pace + " kg a week" : pl.gain ? "+" + pl.pace + " kg a week" : "maintain"}</span></div>
           <div><span class="muted">Targets</span><span class="num">P ${pl.protein} g · C ${pl.carbs} g · F ${pl.fat} g</span></div>
         </div>
         ${pl.floored ? `<p class="notice">Your budget is held at the ${fmt(pl.floor)} kcal safety floor.</p>` : ""}
         ${p.learnedTdee ? `<button class="btn ghost sm" data-act="resetLearned" style="justify-self:start">Go back to the formula estimate</button>` : ""}
         <button class="btn" data-act="editProfile">Edit details and goal</button></section>
+      ${ov.length ? `<section class="card"><b>Planned days</b><div class="list small">${ov.map(([k, o]) => `<div><span>${shortDay(k)} · ${esc(o.reason || "")}</span><b class="num">${fmt(o.kcal)} kcal</b></div>`).join("")}</div><button class="btn ghost sm" data-act="clearPlans" style="justify-self:start">Clear planned days</button></section>` : ""}
+      <section class="card"><b>Reminders</b>
+        <label class="switch">Remind me to log meals and weigh in<input type="checkbox" id="rOn" ${R.on ? "checked" : ""}></label>
+        <div class="grid3">${["Breakfast", "Lunch", "Dinner"].map((m) => `<label class="field">${m}<input type="time" id="r${m}" value="${R[m]}"></label>`).join("")}</div>
+        <label class="field">Weigh-in day<select id="rWeigh">${WEEKDAYS.map((d, i) => `<option value="${i}"${R.weighDay === i ? " selected" : ""}>${d}</option>`).join("")}</select></label>
+        <p class="small muted">Reminders show at the top of Today when PlateWise is open, and only for meals you usually log. Web pages inside Claude can't send phone notifications.</p></section>
+      <section class="card"><b>Glance view</b><p class="small muted">A widget-style view: calories left, protein, and a Snap button.</p><button class="btn ghost sm" data-act="openGlance" style="justify-self:start">Open glance view</button></section>
+      <section class="card"><label class="switch">Hide calorie numbers<input type="checkbox" id="hideNums" ${p.hideNumbers ? "checked" : ""}></label><p class="small muted">Shows your progress with words and the ring instead of numbers. Helpful if numbers make food stressful.</p></section>
       <section class="card"><b>How PlateWise counts</b>
         <p class="small muted">Claude names each food and estimates the grams. Calories come from a food table built on USDA and FAO West Africa data, not from the AI. Expect photo estimates to be off by about 20% either way; your weekly weigh-ins correct for that over time.</p></section>
       <section class="card"><b>Your data</b>
         <p class="small muted">${store.mode === "db" ? "Your log is stored privately in your Claude account. Nobody else who opens this page can see it." : "Your log is stored in this browser only."} Meal photos are never stored.</p>
-        ${state.confirmDelete ? `<p class="err">Delete every meal, weigh-in and your profile? This can't be undone.</p><div class="row"><button class="btn ghost sm" data-act="cancelDelete">Keep my data</button><button class="btn danger sm" data-act="deleteAll">Delete everything</button></div>`
+        ${state.confirmDelete ? `<p class="err">Delete every meal, weigh-in, chat and your profile? This can't be undone.</p><div class="row"><button class="btn ghost sm" data-act="cancelDelete">Keep my data</button><button class="btn danger sm" data-act="deleteAll">Delete everything</button></div>`
           : `<button class="btn danger sm" data-act="askDelete" style="justify-self:start">Delete all my data</button>`}</section>
     </div>`;
   }
@@ -752,20 +1190,29 @@ Reply with only JSON in this shape:
   function saveMeal() {
     const R = state.review, t = reviewTotals();
     const meal = {
-      id: uid(), type: R.meal, time: new Date().toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }), source: R.source, oil: R.oil,
+      id: uid(), type: R.meal, time: new Date().toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }), min: nowMin(), source: R.source, oil: R.oil,
       kcal: r(t.kcal), p: r1(t.p), c: r1(t.c), f: r1(t.f),
-      items: R.items.map((it) => { const c = itemCalc(it, R.oil); return { name: it.name, fid: it.fid, grams: it.grams, aiGrams: it.aiGrams, per: it.per, oily: !!it.oily, conf: it.conf, corrected: it.grams !== it.aiGrams || !!it.swapped, kcal: r(c.kcal), unit: it.unit || "", portion: it.portion || 0 }; }),
+      items: R.items.map((it) => { const c = itemCalc(it, R.oil); return { name: it.name, fid: it.fid, grams: it.grams, aiGrams: it.aiGrams, per: it.per, oily: !!it.oily, green: !!it.green, conf: it.conf, corrected: it.grams !== it.aiGrams || !!it.swapped, kcal: r(c.kcal), unit: it.unit || "", portion: it.portion || 0 }; }),
     };
-    const k = state.date, doc = dayDoc(k);
-    put("d" + k, { date: k, meals: [...doc.meals, meal] });
+    const k = state.date;
+    putDay(k, { meals: [...dayDoc(k).meals, meal] });
     if (R.fav) put("saved", { meals: [{ id: uid(), name: R.favName.trim() || meal.items.map((i) => i.name).join(", ").slice(0, 60), kcal: meal.kcal, items: meal.items, oil: R.oil }, ...saved()].slice(0, 50) });
-    state.review = null; state.log = { ...state.log, file: null, preview: null, note: "", text: "", q: "", error: "" };
-    state.tab = "today"; render(); window.scrollTo(0, 0);
-    toast(`${meal.type} saved · about ${fmt(meal.kcal)} kcal`);
+    state.review = null; state.lastMeal = meal;
+    state.log = { ...state.log, file: null, preview: null, note: "", text: "", q: "", error: "", bfile: null, bpreview: null, product: null };
+    state.tab = "saved"; render(); window.scrollTo(0, 0);
   }
-  function fromSaved(items) {
-    return items.map((i) => ({ key: uid(), fid: i.fid, name: i.name, per: i.per, grams: i.grams, aiGrams: i.grams, oily: i.oily, conf: "high", unit: i.unit, portion: i.portion || i.grams }));
+  function repeatYesterday(type) {
+    const y = dayDoc(shift(state.date, -1)).meals.filter((m) => m.type === type).map((m) => ({ ...m, id: uid(), time: new Date().toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }), min: nowMin() }));
+    if (!y.length) return;
+    putDay(state.date, { meals: [...dayDoc(state.date).meals, ...y] });
+    state.tab = "today"; render(); toast(`Logged ${type.toLowerCase()} from yesterday`);
   }
+  function setGlance(on) {
+    state.glance = on;
+    try { if (on) location.hash = "glance"; else history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
+    render(); window.scrollTo(0, 0);
+  }
+  window.addEventListener("hashchange", () => { state.glance = location.hash === "#glance"; render(); });
 
   document.addEventListener("click", (e) => {
     const tab = e.target.closest("#tabs [data-tab]");
@@ -773,70 +1220,130 @@ Reply with only JSON in this shape:
       if (state.scan) { state.scan.ctl.abort(); state.scan = null; }
       state.tab = tab.dataset.tab; state.review = null; state.confirmDelete = false;
       if (state.tab === "log" && state.date === dayKey()) state.log.meal = defaultMeal();
-      render(); window.scrollTo(0, 0); return;
+      render(); window.scrollTo(0, 0); if (state.tab === "coach") scrollChat(); return;
     }
     const b = e.target.closest("[data-act]"); if (!b || b.tagName === "SELECT" || b.type === "range") return;
-    const id = b.dataset.id, act = b.dataset.act;
+    const id = b.dataset.id, act = b.dataset.act, L = state.log, C = state.coach;
     switch (act) {
       case "prevDay": state.date = shift(state.date, -1); render(); break;
       case "nextDay": if (state.date < dayKey()) { state.date = shift(state.date, 1); render(); } break;
       case "goLog": state.tab = "log"; render(); window.scrollTo(0, 0); break;
-      case "delMeal": { const d = dayDoc(state.date); const m = d.meals.find((x) => x.id === id); const rest = d.meals.filter((x) => x.id !== id); put("d" + state.date, rest.length ? { date: state.date, meals: rest } : null); render(); if (m) toast(`Deleted ${m.type.toLowerCase()}`); break; }
-      case "sameAsYesterday": { const y = dayDoc(shift(state.date, -1)).meals.map((m) => ({ ...m, id: uid() })); put("d" + state.date, { date: state.date, meals: y }); render(); toast(`Copied ${y.length} meal${y.length > 1 ? "s" : ""} from the day before`); break; }
-      case "mode": state.log.mode = id; state.log.error = ""; render(); break;
-      case "clearPhoto": state.log.file = null; state.log.preview = null; render(); break;
+      case "goToday": state.tab = "today"; render(); window.scrollTo(0, 0); break;
+      case "goFits": state.date = dayKey(); state.tab = "coach"; C.mode = "fits"; render(); window.scrollTo(0, 0); if (!C.fits) getFits(); break;
+      case "goWeigh": state.tab = "progress"; render(); $("#wKg")?.focus(); break;
+      case "snapFor": L.meal = id; L.mode = state.canImages ? "photo" : L.mode; state.tab = "log"; render(); window.scrollTo(0, 0); break;
+      case "repeatMeal": repeatYesterday(id); break;
+      case "skipRemind": putDay(dayKey(), { skipped: [...(dayDoc(dayKey()).skipped || []), id] }); render(); break;
+      case "habit": { const d = dayDoc(state.date), h = { ...(d.habits || {}) }; h[id] = Math.max(0, (h[id] || 0) + Number(b.dataset.v)); if (id === "greens" && greensFor(state.date) + Number(b.dataset.v) < 0) break; putDay(state.date, { habits: h }); render(); break; }
+      case "delMeal": { const d = dayDoc(state.date); const m = d.meals.find((x) => x.id === id); putDay(state.date, { meals: d.meals.filter((x) => x.id !== id) }); render(); if (m) toast(`Deleted ${m.type.toLowerCase()}`); break; }
+      case "sameAsYesterday": { const y = dayDoc(shift(state.date, -1)).meals.map((m) => ({ ...m, id: uid() })); putDay(state.date, { meals: y }); render(); toast(`Copied ${y.length} meal${y.length > 1 ? "s" : ""} from the day before`); break; }
+      case "recent": { const m = recentMeals()[Number(id)]?.meal; if (m) { openReview(fromSaved(m.items), "saved", ""); state.review.oil = m.oil || "normal"; render(); } break; }
+      case "mode": L.mode = id; L.error = ""; if (recog) try { recog.abort(); } catch (er) {} render(); break;
+      case "lang": L.lang = id; render(); break;
+      case "listen": startListening(); break;
+      case "stopListen": try { recog?.stop(); } catch (er) {} L.listening = false; render(); break;
+      case "clearPhoto": L.file = null; L.preview = null; render(); break;
       case "scanPhoto": runScan("photo"); break;
       case "scanText": runScan("text"); break;
-      case "stopScan": state.scan?.ctl.abort(); break;
-      case "pickFood": openReview([newItem(FOOD[id], FOOD[id].portion)], "search", ""); break;
+      case "scanVoice": runScan("voice"); break;
+      case "scanBarcode": scanPackage(); break;
+      case "manualProduct": L.product = { code: "", name: "", kcal: "", p: "", c: "", f: "", serving: 100 }; L.error = ""; render(); break;
+      case "cancelProduct": L.product = null; L.bfile = null; L.bpreview = null; render(); break;
+      case "saveProduct": {
+        const n = (s) => Math.max(0, parseFloat($(s).value) || 0);
+        const name = $("#prName").value.trim(), kcal = n("#prK"), serving = n("#prS") || 100, code = $("#prCode").value.replace(/\D/g, "");
+        if (!name || !kcal) { L.error = "Enter at least the product name and calories per 100 g."; render(); break; }
+        const key = code || uid();
+        const prod = { name: name.slice(0, 60), per: [kcal, n("#prP"), n("#prC"), n("#prF")], serving, unit: L.product.unit || "1 serving", code };
+        put("products", { items: { ...products(), [key]: prod } });
+        L.product = null; L.bfile = null; L.bpreview = null;
+        openReview([newItem({ id: "p:" + key, name: prod.name, per: prod.per, portion: serving, unit: prod.unit, oily: false, green: false }, serving)], "barcode", "");
+        break;
+      }
+      case "stopScan": state.scan?.ctl.abort(); state.scan = null; render(); break;
+      case "pickFood": { const f = getFood(id); if (f) openReview([newItem(f, f.portion)], "search", ""); break; }
       case "useSaved": { const m = saved().find((x) => x.id === id); if (m) { openReview(fromSaved(m.items), "saved", ""); state.review.oil = m.oil || "normal"; render(); } break; }
       case "delSaved": put("saved", { meals: saved().filter((x) => x.id !== id) }); render(); break;
       case "cancelReview": state.review = null; state.tab = "log"; render(); break;
       case "rmItem": state.review.items = state.review.items.filter((i) => i.key !== b.dataset.key); render(); break;
-      case "addItem": state.review.items.push(newItem(FOOD[id], FOOD[id].portion)); state.review.q = ""; render(); break;
+      case "addItem": { const f = getFood(id); if (f) state.review.items.push(newItem(f, f.portion)); state.review.q = ""; render(); break; }
       case "oil": state.review.oil = id; render(); break;
       case "saveMeal": saveMeal(); break;
+      case "coachMode": C.mode = id; C.error = ""; render(); if (id === "fits" && !C.fits) getFits(); break;
+      case "fitsFilter": C.fitsFilter = id; getFits(); break;
+      case "getFits": getFits(); break;
+      case "logIdea": { const idea = C.fits?.ideas[Number(id)]; if (idea) { state.date = dayKey(); state.log.meal = defaultMeal(); openReview(idea.items.map((i) => ({ ...i, key: uid() })), "search", idea.title); } break; }
+      case "ask": state.tab = "coach"; C.mode = "chat"; sendCoach(id); break;
+      case "stopCoach": C.ctl?.abort(); break;
+      case "clearChat": put("coach", null); C.pending = null; C.error = ""; render(); break;
+      case "savePlan": {
+        const days = { ...overrides() };
+        C.pending.days.forEach((d) => (days[d.date] = { kcal: d.kcal, reason: C.pending.reason }));
+        put("plans", { days }); C.pending = null; render(); toast("Flex plan saved"); break;
+      }
+      case "dropPlan": C.pending = null; render(); break;
+      case "clearPlans": put("plans", null); render(); toast("Planned days cleared"); break;
+      case "maintWeek": {
+        const days = { ...overrides() }, kcal = Math.round(Number(b.dataset.v) / 10) * 10;
+        for (let i = 0; i < 7; i++) days[shift(dayKey(), i)] = { kcal, reason: "Maintenance week" };
+        put("plans", { days }); render(); toast(`Maintenance week: ${fmt(kcal)} kcal a day for 7 days`); break;
+      }
       case "useLearned": { put("profile", { ...profile(), learnedTdee: Number(b.dataset.v) }); render(); toast(`Budget updated to ${fmt(plan(profile()).budget)} kcal`); break; }
       case "keepBudget": toast("Budget kept"); break;
       case "resetLearned": { const { learnedTdee, ...p } = profile(); put("profile", p); render(); break; }
       case "delWeight": put("weights", { entries: weights().filter((w) => w.date !== id) }); render(); break;
-      case "editProfile": state.editingProfile = true; render(); updateProfilePreview(); window.scrollTo(0, 0); break;
+      case "editProfile": state.editingProfile = true; render(); window.scrollTo(0, 0); break;
       case "cancelProfile": state.editingProfile = false; render(); break;
+      case "openGlance": setGlance(true); break;
+      case "exitGlance": setGlance(false); break;
+      case "glanceSnap": { const k = dayKey(); state.date = k; L.meal = ["Breakfast", "Lunch", "Dinner"].find((m) => !dayDoc(k).meals.some((x) => x.type === m)) || "Snack"; state.tab = "log"; setGlance(false); break; }
       case "askDelete": state.confirmDelete = true; render(); break;
       case "cancelDelete": state.confirmDelete = false; render(); break;
-      case "deleteAll": Object.keys(state.docs).forEach((k) => put(k, null)); state.confirmDelete = false; state.tab = "today"; render(); toast("All your data was deleted"); break;
+      case "deleteAll": Object.keys(state.docs).forEach((k) => put(k, null)); state.confirmDelete = false; state.tab = "today"; C.pending = null; render(); toast("All your data was deleted"); break;
     }
   });
 
   document.addEventListener("input", (e) => {
     const t = e.target;
     if (t.id === "logNote") state.log.note = t.value;
-    else if (t.id === "logText") { state.log.text = t.value; const btn = $('[data-act="scanText"]'); if (btn) btn.disabled = !t.value.trim(); }
+    else if (t.id === "logText") { state.log.text = t.value; const btn = $('[data-act="scanText"]') || $('[data-act="scanVoice"]'); if (btn) btn.disabled = !t.value.trim(); }
     else if (t.id === "logQ") { state.log.q = t.value; const pos = t.selectionStart; render(); const n = $("#logQ"); n.focus(); n.setSelectionRange(pos, pos); }
     else if (t.id === "revQ") { state.review.q = t.value; const pos = t.selectionStart; render(); const n = $("#revQ"); n.focus(); n.setSelectionRange(pos, pos); }
     else if (t.id === "revFavName") state.review.favName = t.value;
     else if (t.dataset.act === "grams") {
       const it = state.review.items.find((i) => i.key === t.dataset.key); if (!it) return;
       it.grams = Number(t.value);
-      const row = t.closest(".item"); $(".g", row).textContent = it.grams; $(".k", row).textContent = `${fmt(itemCalc(it, state.review.oil).kcal)} kcal`;
+      const row = t.closest(".item"); $(".g", row).textContent = it.grams; $(".pt", row).innerHTML = portionsText(it);
+      const k = $(".k", row); if (k) k.textContent = `${fmt(itemCalc(it, state.review.oil).kcal)} kcal`;
       refreshReviewNumbers();
     } else if (t.closest("#profileForm")) updateProfilePreview();
   });
 
   document.addEventListener("change", (e) => {
-    const t = e.target;
+    const t = e.target, L = state.log;
     if (t.id === "photoIn" && t.files?.[0]) {
-      const f = t.files[0];
-      if (state.log.preview) URL.revokeObjectURL(state.log.preview);
-      state.log.file = f; state.log.preview = URL.createObjectURL(f); state.log.error = ""; render();
-    } else if (t.id === "logMeal") state.log.meal = t.value;
+      if (L.preview) URL.revokeObjectURL(L.preview);
+      L.file = t.files[0]; L.preview = URL.createObjectURL(L.file); L.error = ""; render();
+    } else if (t.id === "barIn" && t.files?.[0]) {
+      if (L.bpreview) URL.revokeObjectURL(L.bpreview);
+      L.bfile = t.files[0]; L.bpreview = URL.createObjectURL(L.bfile); L.error = ""; render();
+    } else if (t.id === "logMeal") L.meal = t.value;
     else if (t.id === "revMeal") state.review.meal = t.value;
     else if (t.id === "revFav") { state.review.fav = t.checked; $("#revFavName").hidden = !t.checked; }
-    else if (t.dataset.act === "swap" && t.value) {
-      const it = state.review.items.find((i) => i.key === t.dataset.key), f = FOOD[t.value];
-      Object.assign(it, { fid: f.id, name: f.name, per: f.per, oily: f.oily, unit: f.unit, portion: f.portion, aiPer: false, swapped: true, conf: "high" });
+    else if (t.id === "steps") { const d = dayDoc(state.date); putDay(state.date, { habits: { ...(d.habits || {}), steps: Math.max(0, parseInt(t.value, 10) || 0) } }); setTimeout(render); }
+    else if (t.id === "hideNums") { put("profile", { ...profile(), hideNumbers: t.checked }); render(); }
+    else if (["rOn", "rBreakfast", "rLunch", "rDinner", "rWeigh"].includes(t.id)) {
+      const R = { on: $("#rOn").checked, Breakfast: $("#rBreakfast").value || DEFAULT_REMIND.Breakfast, Lunch: $("#rLunch").value || DEFAULT_REMIND.Lunch, Dinner: $("#rDinner").value || DEFAULT_REMIND.Dinner, weighDay: Number($("#rWeigh").value) };
+      put("profile", { ...profile(), remind: R }); toast("Reminders saved");
+    } else if (t.dataset.act === "swap" && t.value) {
+      const it = state.review.items.find((i) => i.key === t.dataset.key), f = getFood(t.value);
+      Object.assign(it, { fid: f.id, name: f.name, per: f.per, oily: f.oily, green: f.green, unit: f.unit, portion: f.portion, aiPer: false, swapped: true, conf: "high" });
       render();
     } else if (t.closest("#profileForm")) updateProfilePreview();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.target.id === "coachIn" && e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("#coachForm").requestSubmit(); }
   });
 
   document.addEventListener("submit", (e) => {
@@ -847,7 +1354,8 @@ Reply with only JSON in this shape:
       if (err) { box.textContent = err; box.hidden = false; return; }
       const old = profile();
       const keepLearned = old?.learnedTdee && old.weight === p.weight && old.activity === p.activity;
-      const next = { ...p, ...(keepLearned ? { learnedTdee: old.learnedTdee } : {}), start: old?.start || p.weight, startDate: old?.startDate || dayKey() };
+      const { learnedTdee, ...rest } = old || {};
+      const next = { ...rest, ...p, ...(keepLearned ? { learnedTdee: old.learnedTdee } : {}), start: old?.start || p.weight, startDate: old?.startDate || dayKey() };
       put("profile", next);
       if (!old && !weights().length) put("weights", { entries: [{ date: dayKey(), kg: p.weight }] });
       state.editingProfile = false; state.tab = "today"; render(); window.scrollTo(0, 0);
@@ -857,6 +1365,8 @@ Reply with only JSON in this shape:
       if (!(kg >= 30 && kg <= 300)) { toast("Enter your weight in kilograms"); return; }
       put("weights", { entries: [...weights().filter((w) => w.date !== date), { date, kg: r1(kg) }] });
       render(); toast(`Saved ${r1(kg)} kg`);
+    } else if (e.target.id === "coachForm") {
+      const v = $("#coachIn").value; if (v.trim()) sendCoach(v);
     }
   });
 
