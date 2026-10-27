@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, Share, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -19,7 +19,7 @@ import { IconButton } from '../src/components/IconButton';
 import { Button } from '../src/components/Button';
 import { useApp } from '../src/state/AppState';
 import { useTheme } from '../src/theme/ThemeProvider';
-import { weekDays } from '../src/data/sample';
+import { weekStory } from '../src/state/insights';
 import { kcal } from '../src/lib/format';
 import { duration, easeOut, stagger } from '../src/lib/motion';
 
@@ -42,7 +42,9 @@ function DayBar({ index, value, max, color }: { index: number; value: number; ma
 /** Weekly recap, story-style: tap to pause, the progress bar fills over 6 s. */
 export default function Week() {
   const { c } = useTheme();
-  const { s } = useApp();
+  const { s, budget: todayBudget, budgetFor, proteinGoal } = useApp();
+  const story = weekStory(s.days, s.weights, budgetFor, proteinGoal);
+  const weekDays = story.days.map((d) => ({ d: d.letter, kcal: d.kcal }));
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const reduce = useReducedMotion();
@@ -64,8 +66,8 @@ export default function Week() {
     }
   };
 
-  const budget = s.budget;
-  const max = Math.max(...weekDays.map((d) => d.kcal), budget) * 1.05;
+  const budget = todayBudget;
+  const max = Math.max(...weekDays.map((d) => d.kcal), budget, 1) * 1.05;
   const budgetY = (budget / max) * CHART_H;
   const colorFor = (k: number) => (Math.abs(k - budget) <= 60 ? '#FFFFFF' : k > budget ? c.sun : c.mintLight);
   const label = weekDays.map((d) => `${d.d} ${kcal(d.kcal)}`).join(', ');
@@ -85,19 +87,19 @@ export default function Week() {
 
       <View style={styles.top}>
         <T v="small" weight="bold" color={SOFT}>
-          Your week · 19–25 Oct
+          Your week · {story.label}
         </T>
         <IconButton icon="close" label="Close" tone="dark" onPress={() => router.back()} />
       </View>
 
       <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 14 }}>
-        <Odometer value={19} size={76} color="#FFFFFF" delay={200} />
+        <Odometer value={story.meals} size={76} color="#FFFFFF" delay={200} />
         <Animated.View entering={FadeInDown.duration(duration.slow).delay(900)} style={{ paddingBottom: 14, gap: 2 }}>
           <T v="h2" size={20} color="#FFFFFF">
             meals logged
           </T>
           <T v="small" color={SOFT}>
-            on 6 of 7 days
+            on {story.daysLogged} of 7 days
           </T>
         </Animated.View>
       </View>
@@ -114,7 +116,7 @@ export default function Week() {
         <View style={{ height: CHART_H }} accessible accessibilityRole="image" accessibilityLabel={`Daily calories: ${label}`}>
           <View style={[styles.bars, { height: CHART_H }]}>
             {weekDays.map((d, i) => (
-              <DayBar key={i} index={i} value={d.kcal} max={max} color={colorFor(d.kcal)} />
+              <DayBar key={i} index={i} value={d.kcal} max={max} color={d.kcal ? colorFor(d.kcal) : 'transparent'} />
             ))}
           </View>
           <View style={[styles.budgetLine, { bottom: budgetY }]} />
@@ -144,9 +146,9 @@ export default function Week() {
 
       <View style={{ flexDirection: 'row', gap: 8 }}>
         {[
-          { t: 'Top dish', v: 'Waakye', n: '4 times' },
-          { t: 'Best day', v: 'Thursday', n: 'Right on budget' },
-          { t: 'Trend', v: '−0.4 kg', n: 'This week' },
+          { t: 'Top dish', v: story.topDish?.name ?? '–', n: story.topDish ? `${story.topDish.n} ${story.topDish.n === 1 ? 'time' : 'times'}` : 'Nothing yet' },
+          { t: 'Best day', v: story.bestDay ?? '–', n: story.bestDay ? 'Closest to budget' : 'Log to see' },
+          { t: 'Trend', v: story.trend == null ? '–' : `${story.trend > 0 ? '+' : '−'}${Math.abs(story.trend).toFixed(1)} kg`, n: story.trend == null ? 'Weigh in to see' : 'Per week' },
         ].map((x, i) => (
           <Animated.View key={x.t} entering={FadeInDown.duration(duration.slow).delay(1100 + i * stagger)} style={[styles.card, { flex: 1, gap: 4, padding: 12 }]}>
             <T v="small" size={12} color={SOFT}>
@@ -167,13 +169,20 @@ export default function Week() {
           Try next week
         </T>
         <T v="body" weight="semibold" color="#101828">
-          Your over-budget days were weekends. Plan Saturday dinner on Friday.
+          {story.tip}
         </T>
       </Animated.View>
 
       <View style={{ flex: 1 }} />
       <View style={{ flexDirection: 'row', gap: 10 }}>
-        <Button label="Share" icon="share" kind="ghost" fgColor="#FFFFFF" onPress={() => undefined} style={{ borderWidth: 1, borderColor: '#667085' }} />
+        <Button
+          label="Share"
+          icon="share"
+          kind="ghost"
+          fgColor="#FFFFFF"
+          onPress={() => Share.share({ message: `My PlateWise week: ${story.meals} meals logged on ${story.daysLogged} of 7 days.${story.trend != null ? ` Trend ${story.trend > 0 ? '+' : ''}${story.trend.toFixed(1)} kg a week.` : ''}` }).catch(() => undefined)}
+          style={{ borderWidth: 1, borderColor: '#667085' }}
+        />
         <Button label="Next" grow bgColor="#FFFFFF" fgColor="#101828" onPress={() => router.back()} />
       </View>
     </Pressable>

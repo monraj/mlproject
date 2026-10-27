@@ -23,8 +23,9 @@ import { Icon } from '../src/components/Icon';
 import { Press } from '../src/components/Press';
 import { useTheme } from '../src/theme/ThemeProvider';
 import { useApp } from '../src/state/AppState';
-import { dinnerIdeas, type Idea } from '../src/data/sample';
-import { kcal } from '../src/lib/format';
+import { api, type Idea } from '../src/api/client';
+import { draftFromFood, food } from '../src/data/foods';
+import { kcal, mealForHour } from '../src/lib/format';
 import { duration, stagger } from '../src/lib/motion';
 
 function Steam({ delay }: { delay: number }) {
@@ -76,14 +77,43 @@ const FILTERS = [
 
 export default function Fits() {
   const { c } = useTheme();
-  const { s, leftKcal, protein } = useApp();
+  const { s, leftKcal, protein, proteinGoal, greens, dispatch } = useApp();
   const router = useRouter();
   const [filter, setFilter] = useState<(typeof FILTERS)[number]['id']>('all');
-  const hide = s.hideNumbers;
-  const proteinLeft = Math.max(0, s.proteinGoal - protein);
+  const [ideas, setIdeas] = useState<Idea[]>([]);
+  const [tip, setTip] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const hide = !!s.profile?.hideNumbers;
+  const proteinLeft = Math.max(0, proteinGoal - protein);
+  const meal = mealForHour(new Date().getHours());
 
   // Never suggest when little is left (ROADMAP Phase 5: "What fits" rules).
-  const ideas: Idea[] = leftKcal < 300 ? [] : dinnerIdeas.filter((i) => (filter === 'all' || i.category === filter) && i.kcal <= leftKcal + 50);
+  useEffect(() => {
+    if (leftKcal < 300) return;
+    let alive = true;
+    setLoading(true);
+    setError(null);
+    api
+      .ideas({ kcal_left: leftKcal, protein_left: proteinLeft, greens_today: greens, meal, category: filter })
+      .then((r) => {
+        if (!alive) return;
+        setIdeas(r.ideas.filter((i) => i.kcal <= leftKcal * 1.1));
+        setTip(r.tip);
+      })
+      .catch((e: Error) => alive && setError(e.message))
+      .finally(() => alive && setLoading(false));
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter]);
+
+  const logIdea = (idea: Idea) => {
+    const items = idea.items.map((it) => food(it.food_id)).flatMap((f, i) => (f ? [draftFromFood(f, idea.items[i].grams)] : []));
+    dispatch({ type: 'startDraft', items, source: 'idea' });
+    router.push('/scan/review');
+  };
 
   return (
     <Screen>
@@ -91,7 +121,7 @@ export default function Fits() {
         <IconButton icon="back" label="Back" onPress={() => router.back()} />
         <View style={{ gap: 2, flex: 1 }}>
           <T v="title" size={26}>
-            What fits tonight
+            What fits {meal === 'Dinner' ? 'tonight' : 'now'}
           </T>
           {!hide && (
             <T v="small" muted>
@@ -120,8 +150,8 @@ export default function Fits() {
           return (
             <Animated.View key={idea.id} entering={FadeInDown.duration(duration.slow).delay(100 + i * stagger)} layout={LinearTransition}>
               <Press
-                onPress={() => router.push('/scan/camera')}
-                accessibilityLabel={`${idea.name}, ${idea.detail}. ${hide ? '' : `About ${idea.kcal} kcal, ${idea.protein} grams protein.`} ${idea.badge}`}
+                onPress={() => logIdea(idea)}
+                accessibilityLabel={`${idea.name}, ${idea.detail}. ${hide ? '' : `About ${idea.kcal} kcal, ${idea.protein} grams protein.`} ${idea.badge}. Tap to log it`}
                 style={[styles.idea, { backgroundColor: c.surface, borderColor: best ? c.mintBorder : 'transparent' }]}
               >
                 <View style={styles.ideaTop}>
@@ -162,7 +192,17 @@ export default function Fits() {
             </Animated.View>
           );
         })}
-        {ideas.length === 0 ? (
+        {loading ? (
+          <Card>
+            <T muted>Finding meals that fit…</T>
+          </Card>
+        ) : error ? (
+          <Card tone="amber">
+            <T v="small" color={c.amberText}>
+              {error}
+            </T>
+          </Card>
+        ) : ideas.length === 0 ? (
           <Card>
             <T muted>
               {leftKcal < 300 ? 'You’re close to today’s budget. A light snack or a warm drink is plenty — no need to skip anything.' : 'No ideas in this group yet. Try “All”.'}
@@ -174,10 +214,7 @@ export default function Fits() {
       <Card tone="amber" order={4} style={styles.tip}>
         <Icon name="bulb" color={c.amberText} />
         <T v="small" color={c.amberText} style={{ flex: 1 }}>
-          <T v="small" weight="bold" color={c.amberText}>
-            At a chop bar?
-          </T>{' '}
-          Ask for the soup with less oil on top, and the smaller ball.
+          {tip ?? 'At a chop bar, ask for the soup with less oil on top, and the smaller ball.'}
         </T>
       </Card>
 

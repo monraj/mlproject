@@ -18,7 +18,7 @@ export function mealTips(meal: Meal, dayProtein: number, proteinGoal: number, gr
 }
 
 export function todayInsight(greens: number, protein: number, proteinGoal: number, leftKcal: number, mealsToday: number): { text: string; link: string } {
-  if (mealsToday === 0) return { text: 'Snap your first meal of the day. It takes about 5 seconds.', link: 'Log' };
+  if (mealsToday === 0) return { text: 'Snap your first meal of the day. It takes about 5 seconds', link: 'Log' };
   if (greens < 1) return { text: `Greens are low today. Kontomire stew or garden egg stew fixes it`, link: 'Ideas' };
   if (protein < proteinGoal * 0.5 && leftKcal > 400) return { text: 'Protein is under half your goal. Fish, chicken, eggs or beans help', link: 'Ideas' };
   if (leftKcal < 200) return { text: "You're close to today's budget. A light snack or warm drink is plenty", link: 'Ideas' };

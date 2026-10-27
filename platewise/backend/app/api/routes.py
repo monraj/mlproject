@@ -10,7 +10,7 @@ from app.config import get_settings
 from app.nutrition.calc import nutrients
 from app.nutrition.foods import get_food, load_foods
 from app.nutrition.matcher import search
-from app.products.openfoodfacts import lookup
+from app.products.openfoodfacts import LookupUnavailable, lookup
 from app.safety.rules import calorie_floor
 from app.vision.pipeline import build_scan, prepare_image
 from app.vision.prompts import LABEL_PROMPT, PROMPT_VERSION, coach_system, ideas_prompt, photo_prompt, scan_system, text_prompt
@@ -146,7 +146,10 @@ def ideas(req: IdeasRequest) -> dict[str, Any]:
 def product(barcode: str) -> dict[str, Any]:
     if not re.fullmatch(r"\d{6,14}", barcode):
         raise HTTPException(422, "Barcode should be 6–14 digits.")
-    found = lookup(barcode)
+    try:
+        found = lookup(barcode)
+    except LookupUnavailable as e:
+        raise HTTPException(503, "The product database can't be reached right now. Photograph the nutrition label instead.") from e
     if not found:
         raise HTTPException(404, "Product not found.")
     return found

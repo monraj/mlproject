@@ -7,16 +7,22 @@ import httpx
 from app.config import get_settings
 
 
+class LookupUnavailable(Exception):
+    """The product database couldn't be reached (as opposed to the product not existing)."""
+
+
 def lookup(barcode: str) -> dict[str, Any] | None:
     s = get_settings()
     url = f"{s.openfoodfacts_url}/api/v2/product/{barcode}.json"
     params = {"fields": "product_name,brands,nutriments,serving_quantity,serving_size,quantity"}
     try:
         r = httpx.get(url, params=params, timeout=10, headers={"User-Agent": "PlateWise/0.1 (calorie tracker)"})
-    except httpx.HTTPError:
+    except httpx.HTTPError as e:
+        raise LookupUnavailable from e
+    if r.status_code == 404:
         return None
     if r.status_code != 200:
-        return None
+        raise LookupUnavailable(f"status {r.status_code}")
     data = r.json()
     p = data.get("product") if data.get("status") == 1 else None
     if not p:

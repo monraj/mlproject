@@ -19,7 +19,14 @@ import { Press } from '../../src/components/Press';
 import { Icon } from '../../src/components/Icon';
 import { useTheme } from '../../src/theme/ThemeProvider';
 import { useApp } from '../../src/state/AppState';
-import { coachOpening, coachReplies, type ChatMsg } from '../../src/data/sample';
+import { newId } from '../../src/state/AppState';
+import type { ChatMsg, FlexPlan as Plan } from '../../src/state/types';
+import { api } from '../../src/api/client';
+import { coachContext } from '../../src/state/insights';
+import { shortDate, weekdayShort } from '../../src/lib/dates';
+import { mealForHour } from '../../src/lib/format';
+import { useRouter } from 'expo-router';
+import { Button } from '../../src/components/Button';
 import { font } from '../../src/theme/tokens';
 import { duration, easeOut } from '../../src/lib/motion';
 import { kcal } from '../../src/lib/format';
@@ -35,41 +42,55 @@ function TypingDot({ delay }: { delay: number }) {
   return <Animated.View style={[{ width: 7, height: 7, borderRadius: 4, backgroundColor: c.muted }, style]} />;
 }
 
-function FlexPlan() {
+function FlexPlan({ msg }: { msg: ChatMsg & { plan: Plan } }) {
   const { c } = useTheme();
-  const { s } = useApp();
+  const { s, dispatch } = useApp();
   const reduce = useReducedMotion();
-  // Same weekly total, every day stays above the safety floor (ROADMAP Phase 5b).
-  const days = [
-    { d: 'Thu', v: s.budget - 90 },
-    { d: 'Fri', v: s.budget - 90 },
-    { d: 'Sat', v: s.budget + 180 },
-  ];
-  const max = Math.max(...days.map((x) => x.v));
+  const days = msg.plan.days;
+  const max = Math.max(...days.map((x) => x.kcal));
+  const min = Math.min(...days.map((x) => x.kcal));
+  const hide = !!s.profile?.hideNumbers;
+  const floor = s.profile?.sex === 'male' ? '1,500' : '1,200';
   return (
     <View style={[styles.plan, { backgroundColor: c.surface }]}>
       <T v="small" weight="bold">
-        Flex plan for this week
+        {msg.plan.reason}
       </T>
-      <View style={styles.planBars} accessible accessibilityLabel={days.map((x) => `${x.d} ${kcal(x.v)} kcal`).join(', ') + '. Same weekly total.'}>
+      <View style={styles.planBars} accessible accessibilityLabel={days.map((x) => `${weekdayShort(x.date)} ${kcal(x.kcal)} kcal`).join(', ')}>
         {days.map((x, i) => (
-          <View key={x.d} style={{ flex: 1, alignItems: 'center', gap: 4 }}>
-            <T v="small" size={12} weight="bold">
-              {kcal(x.v)}
-            </T>
+          <View key={x.date} style={{ flex: 1, alignItems: 'center', gap: 4 }}>
+            {!hide ? (
+              <T v="small" size={12} weight="bold">
+                {kcal(x.kcal)}
+              </T>
+            ) : null}
             <Animated.View
-              entering={reduce ? undefined : FadeIn.duration(duration.base).delay(500 + i * 80)}
-              style={{ width: '100%', height: 30 + 46 * (x.v / max - 0.85) * 6, borderRadius: 8, backgroundColor: x.d === 'Sat' ? c.mint : c.mintLight }}
+              entering={reduce ? undefined : FadeIn.duration(duration.base).delay(300 + i * 80)}
+              style={{ width: '100%', height: 30 + (max === min ? 30 : (46 * (x.kcal - min)) / (max - min)), borderRadius: 8, backgroundColor: x.kcal === max ? c.mint : c.mintLight }}
             />
             <T v="small" size={12} muted>
-              {x.d}
+              {weekdayShort(x.date)} {shortDate(x.date).split(' ')[0]}
             </T>
           </View>
         ))}
       </View>
       <T v="small" size={12} muted>
-        Same weekly total. Never below your {s.sex === 'female' ? '1,200' : '1,500'} kcal floor.
+        Never below your {floor} kcal floor.
       </T>
+      {msg.planSaved ? (
+        <T v="small" weight="bold" color={c.mintText}>
+          Saved. Today shows the planned budget on those days.
+        </T>
+      ) : (
+        <Button
+          label="Save the flex plan"
+          kind="secondary"
+          onPress={() => {
+            dispatch({ type: 'setPlans', plan: msg.plan });
+            dispatch({ type: 'chatPatch', id: msg.id, patch: { planSaved: true } });
+          }}
+        />
+      )}
     </View>
   );
 }
@@ -77,24 +98,46 @@ function FlexPlan() {
 export default function Coach() {
   const { c } = useTheme();
   const insets = useSafeAreaInsets();
-  const [msgs, setMsgs] = useState<ChatMsg[]>(coachOpening);
+  const router = useRouter();
+  const { s, dispatch, budgetFor } = useApp();
   const [typing, setTyping] = useState(false);
   const [text, setText] = useState('');
-  const replyIndex = useRef(0);
   const scroll = useRef<ScrollView>(null);
+  const opening: ChatMsg = { id: 'hello', from: 'coach', text: `Hi${s.profile?.name ? ` ${s.profile.name}` : ''}! Ask me about food, portions or your plan. I can see what you've logged. To log by chat, start with “Log:”.` };
+  const msgs = [opening, ...s.chat];
 
-  const send = (value: string) => {
+  const send = async (value: string) => {
     const v = value.trim();
-    if (!v) return;
-    setMsgs((m) => [...m, { id: `u${Date.now()}`, from: 'me', text: v }]);
+    if (!v || typing || !s.profile) return;
     setText('');
+    const mine: ChatMsg = { id: newId('u'), from: 'me', text: v };
+    dispatch({ type: 'chat', msg: mine });
     setTyping(true);
-    setTimeout(() => {
-      const reply = coachReplies[replyIndex.current % coachReplies.length];
-      replyIndex.current += 1;
+    try {
+      if (/^log[:\s]/i.test(v)) {
+        const r = await api.parseText(v.replace(/^log[:\s]*/i, ''), 'en', mealForHour(new Date().getHours()));
+        if (r.isFood) {
+          dispatch({ type: 'chat', msg: { id: newId('c'), from: 'coach', text: `Got it: ${r.items.map((i) => i.name).join(', ')}. Check the portions and save.` } });
+          dispatch({ type: 'startDraft', items: r.items, source: 'text', note: r.note });
+          router.push('/scan/review');
+          return;
+        }
+      }
+      const history = [...s.chat, mine].slice(-14);
+      while (history.length && history[0].from !== 'me') history.shift();
+      const plans = Object.entries(s.plans).map(([d, p]) => `${d}: ${p.kcal} (${p.reason})`).join('; ');
+      const r = await api.coach(
+        history.map((m) => ({ role: m.from === 'me' ? 'user' : 'assistant', content: m.text })),
+        coachContext(s.profile, s.days, s.weights, budgetFor, plans ? `Saved plans: ${plans}` : ''),
+        s.profile.sex,
+        s.profile.hideNumbers,
+      );
+      dispatch({ type: 'chat', msg: { id: newId('c'), from: 'coach', text: r.reply, plan: r.flex_plan } });
+    } catch (e) {
+      dispatch({ type: 'chat', msg: { id: newId('c'), from: 'coach', text: `I couldn't answer just now. ${(e as Error).message}` } });
+    } finally {
       setTyping(false);
-      setMsgs((m) => [...m, { id: `c${Date.now()}`, from: 'coach', text: reply }]);
-    }, 1400);
+    }
   };
 
   useEffect(() => {
@@ -116,6 +159,13 @@ export default function Coach() {
             Uses your logs and goals · not medical advice
           </T>
         </View>
+        {s.chat.length ? (
+          <Press onPress={() => dispatch({ type: 'chatClear' })} accessibilityLabel="Clear the conversation" style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 6 }}>
+            <T v="small" weight="bold" color={c.mintText}>
+              Clear
+            </T>
+          </Press>
+        ) : null}
       </View>
 
       <ScrollView ref={scroll} contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
@@ -140,7 +190,7 @@ export default function Coach() {
                   {m.text}
                 </T>
               </View>
-              {m.plan ? <FlexPlan /> : null}
+              {m.plan && m.plan.days.length ? <FlexPlan msg={m as ChatMsg & { plan: Plan }} /> : null}
             </Animated.View>
           );
         })}
@@ -155,7 +205,7 @@ export default function Coach() {
 
       <View style={[styles.composer, { paddingBottom: 12 }]}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-          {['What should I pick at the buffet?', 'Why was my week slow?', 'Log: two balls of kenkey'].map((q) => (
+          {['What should I eat tonight?', 'I have a wedding on Saturday. How do I stay on track?', 'Why was my week slow?', 'Log: two balls of kenkey'].map((q) => (
             <Chip key={q} label={q} onPress={() => send(q)} />
           ))}
         </ScrollView>

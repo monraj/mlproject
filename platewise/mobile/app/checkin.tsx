@@ -19,28 +19,39 @@ import { Card } from '../src/components/Card';
 import { Press } from '../src/components/Press';
 import { useTheme } from '../src/theme/ThemeProvider';
 import { useApp } from '../src/state/AppState';
-import { CALORIE_FLOOR } from '../src/state/calc';
+import { clampBudget, dailyBudget, formulaTdee, learnBurn, profileBudget, profileTdee } from '../src/state/calc';
 import { kcal } from '../src/lib/format';
 import { duration, easeOut, stagger } from '../src/lib/motion';
 
-// Prototype numbers. Phase 5 computes these from weigh-ins and logged intake,
-// and never moves the budget more than ±150 kcal in a week.
-const AVG_INTAKE = 1830;
-const LEARNED_BURN = 2280;
+// Never move the budget more than ±150 kcal in one check-in (ROADMAP Phase 5).
+const MAX_STEP = 150;
 
 export default function CheckIn() {
   const { c } = useTheme();
   const { s, dispatch } = useApp();
   const router = useRouter();
   const reduce = useReducedMotion();
-  const old = s.previousBudget ?? s.budget + 60;
-  const proposed = Math.max(CALORIE_FLOOR[s.sex], s.budget);
-  const options = [
-    { id: 'new', title: `Use ${kcal(proposed)} kcal`, note: 'Suggested · stays on pace', value: proposed },
-    { id: 'keep', title: `Keep ${kcal(old)} kcal`, note: 'Slower pace, a bit more food', value: old },
-    { id: 'maint', title: 'Take a maintenance week', note: `Eat at about ${kcal(LEARNED_BURN)} for a break`, value: LEARNED_BURN },
-  ];
-  const [pick, setPick] = useState('new');
+  const p = s.profile!;
+  const learned = learnBurn(s.days, s.weights);
+  const ready = !!learned && 'tdee' in learned;
+  const current = profileBudget(p);
+  const guess = formulaTdee(p);
+  // Limit the step so the budget changes gently.
+  const target = ready ? dailyBudget(p, learned.tdee) : current;
+  const proposed = clampBudget(Math.min(current + MAX_STEP, Math.max(current - MAX_STEP, target)), p.sex);
+  const tdeeForProposed = ready ? profileTdee(p) + (proposed - current) : null;
+  const burn = ready ? learned.tdee : profileTdee(p);
+  const changed = ready && proposed !== current;
+  const options = ready
+    ? [
+        ...(changed ? [{ id: 'new', title: `Use ${kcal(proposed)} kcal`, note: 'Suggested · stays on pace' }] : []),
+        { id: 'keep', title: `Keep ${kcal(current)} kcal`, note: changed ? (proposed < current ? 'Slower pace, a bit more food' : 'Faster pace, a bit less food') : 'Still right for your pace' },
+        ...(p.goalKg < p.weightKg ? [{ id: 'maint', title: 'Take a maintenance week', note: `Eat at about ${kcal(clampBudget(burn, p.sex))} for a break` }] : []),
+      ]
+    : [{ id: 'keep', title: `Keep ${kcal(current)} kcal`, note: 'Your current budget' }];
+  const [pick, setPick] = useState(options[0].id);
+  const old = changed ? current : s.budgetChange?.from ?? current;
+  const shown = changed ? proposed : current;
 
   // Old number gets struck through, then fades — the change is shown, not hidden.
   const strike = useSharedValue(reduce ? 1 : 0);
@@ -56,8 +67,8 @@ export default function CheckIn() {
         <Button
           label="Confirm"
           onPress={() => {
-            const chosen = options.find((o) => o.id === pick);
-            if (chosen) dispatch({ type: 'setBudget', budget: chosen.value });
+            if (pick === 'new' && tdeeForProposed) dispatch({ type: 'setLearnedTdee', tdee: Math.round(tdeeForProposed), reason: 'Weekly check-in from your weigh-ins' });
+            if (pick === 'maint') dispatch({ type: 'maintenanceWeek', kcal: clampBudget(burn, p.sex) });
             router.back();
           }}
         />
@@ -71,48 +82,62 @@ export default function CheckIn() {
       </View>
 
       <View style={{ gap: 6 }}>
-        <T v="title">Your new daily budget</T>
+        <T v="title">{changed ? 'Your new daily budget' : 'Your daily budget'}</T>
         <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 14 }}>
-          <Animated.View style={oldStyle}>
-            <T v="title" size={26} muted>
-              {kcal(old)}
-            </T>
-            <Animated.View style={[styles.strike, { backgroundColor: c.faint }, strikeStyle]} />
-          </Animated.View>
-          <Odometer value={proposed} size={58} color={c.mintDeep} delay={900} />
+          {old !== shown ? (
+            <Animated.View style={oldStyle}>
+              <T v="title" size={26} muted>
+                {kcal(old)}
+              </T>
+              <Animated.View style={[styles.strike, { backgroundColor: c.faint }, strikeStyle]} />
+            </Animated.View>
+          ) : null}
+          <Odometer value={shown} size={58} color={c.mintDeep} delay={900} />
         </View>
-        <T muted>kcal a day, starting today</T>
+        <T muted>kcal a day{changed ? ', starting today' : ''}</T>
       </View>
 
       <Card order={1} style={{ gap: 12 }}>
         <T v="body" weight="bold">
           Why it changed
         </T>
-        <View style={{ gap: 4 }}>
-          <View style={styles.between}>
+        {ready ? (
+          <>
+            <View style={{ gap: 4 }}>
+              <View style={styles.between}>
+                <T v="small" muted>
+                  You ate (avg / day)
+                </T>
+                <T v="small" weight="bold">
+                  about {kcal(learned.avgIntake)}
+                </T>
+              </View>
+              <Bar value={learned.avgIntake / Math.max(burn, learned.avgIntake)} color={c.sun} track={c.line} delay={400} />
+            </View>
+            <View style={{ gap: 4 }}>
+              <View style={styles.between}>
+                <T v="small" muted>
+                  You burn (learned)
+                </T>
+                <T v="small" weight="bold">
+                  about {kcal(burn)}
+                </T>
+              </View>
+              <Bar value={burn / Math.max(burn, learned.avgIntake)} color={c.mint} track={c.line} delay={520} />
+            </View>
             <T v="small" muted>
-              You ate (avg / day)
+              Over {learned.span} days your trend moved {learned.change > 0 ? '+' : ''}
+              {learned.change.toFixed(1)} kg. That means you burn {burn < guess ? 'a little less' : 'a little more'} than our first guess of {kcal(guess)}.
+              {changed ? ` We change the budget by at most ${MAX_STEP} kcal at a time.` : ''}
             </T>
-            <T v="small" weight="bold">
-              about {kcal(AVG_INTAKE)}
-            </T>
-          </View>
-          <Bar value={AVG_INTAKE / LEARNED_BURN} color={c.sun} track={c.line} delay={400} />
-        </View>
-        <View style={{ gap: 4 }}>
-          <View style={styles.between}>
-            <T v="small" muted>
-              You burn (learned)
-            </T>
-            <T v="small" weight="bold">
-              about {kcal(LEARNED_BURN)}
-            </T>
-          </View>
-          <Bar value={1} color={c.mint} track={c.line} delay={520} />
-        </View>
-        <T v="small" muted>
-          Your weigh-ins show you burn a little less than our first guess of 2,350. A small trim keeps you on your 0.5 kg-a-week pace.
-        </T>
+          </>
+        ) : (
+          <T v="small" muted>
+            {s.budgetChange ? `Last change: ${s.budgetChange.reason.toLowerCase()}. ` : ''}
+            Your budget comes from your details for now. After two weeks of weigh-ins and at least seven logged days we learn how much you really burn.
+            {learned && 'need' in learned ? ` Still needed: ${learned.need}.` : ' Log your weight a few times a week to start.'}
+          </T>
+        )}
       </Card>
 
       <View style={{ gap: 8 }} accessibilityRole="radiogroup">

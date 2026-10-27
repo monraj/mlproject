@@ -48,12 +48,16 @@ export default function Launch() {
   const word = useSharedValue(reduce ? 0 : 1);
   const tag = useSharedValue(reduce ? 1 : 0);
 
+  // Timers below hold an old copy of `go`, so read the latest state through a ref.
+  const latest = useRef(s);
+  latest.current = s;
   const go = () => {
     wantGo.current = true;
-    if (done.current || !s.hydrated) return; // wait until the saved log has loaded
+    const cur = latest.current;
+    if (done.current || !cur.hydrated) return; // wait until the saved log has loaded
     done.current = true;
     dispatch({ type: 'launched' });
-    router.replace(s.profile ? '/today' : '/onboarding');
+    router.replace(cur.profile ? '/today' : '/onboarding');
   };
 
   useEffect(() => {

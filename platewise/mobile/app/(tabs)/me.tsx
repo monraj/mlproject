@@ -1,5 +1,5 @@
-import React from 'react';
-import { StyleSheet, Switch, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Alert, Platform, StyleSheet, Switch, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen } from '../../src/components/Screen';
 import { T } from '../../src/components/T';
@@ -9,6 +9,12 @@ import { Icon, type IconName } from '../../src/components/Icon';
 import { useTheme, type ThemePref } from '../../src/theme/ThemeProvider';
 import { useApp } from '../../src/state/AppState';
 import { kcal } from '../../src/lib/format';
+import { profileBudget } from '../../src/state/calc';
+import { api, apiBase, type Health } from '../../src/api/client';
+import { askPermission } from '../../src/lib/reminders';
+import { WEEKDAYS } from '../../src/lib/dates';
+import { font } from '../../src/theme/tokens';
+import type { Reminders } from '../../src/state/types';
 
 function Row({ icon, label, detail, onPress }: { icon: IconName; label: string; detail?: string; onPress: () => void }) {
   const { c } = useTheme();
@@ -32,6 +38,46 @@ export default function Me() {
   const { c, pref, setPref } = useTheme();
   const { s, dispatch } = useApp();
   const router = useRouter();
+  const p = s.profile!;
+  const [health, setHealth] = useState<Health | null | 'down'>(null);
+  useEffect(() => {
+    api.health().then(setHealth).catch(() => setHealth('down'));
+  }, []);
+  const r = p.reminders;
+  const setReminders = async (patch: Partial<Reminders>) => {
+    const next = { ...r, ...patch };
+    if (patch.on && !(await askPermission())) {
+      const msg = 'Allow notifications for PlateWise in your phone settings to get reminders.';
+      if (Platform.OS === 'web') return;
+      Alert.alert('Notifications are off', msg);
+      return;
+    }
+    dispatch({ type: 'patchProfile', patch: { reminders: next } });
+  };
+  const confirm = (title: string, body: string, action: string, go: () => void) => {
+    if (Platform.OS === 'web') return go();
+    Alert.alert(title, body, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: action, style: 'destructive', onPress: go },
+    ]);
+  };
+  const planned = Object.keys(s.plans).length;
+  const time = (key: 'breakfast' | 'lunch' | 'dinner', label: string) => (
+    <View style={{ flex: 1, gap: 4 }}>
+      <T v="small" muted>
+        {label}
+      </T>
+      <TextInput
+        defaultValue={r[key]}
+        onEndEditing={(e) => {
+          const v = e.nativeEvent.text.trim();
+          if (/^([01]?\d|2[0-3]):[0-5]\d$/.test(v)) setReminders({ [key]: v.padStart(5, '0') });
+        }}
+        accessibilityLabel={`${label} reminder time`}
+        style={[styles.time, { backgroundColor: c.bg, color: c.ink }]}
+      />
+    </View>
+  );
   const prefs: { id: ThemePref; label: string }[] = [
     { id: 'system', label: 'Phone' },
     { id: 'light', label: 'Light' },
@@ -47,13 +93,14 @@ export default function Me() {
       <Card order={1} style={styles.profile}>
         <View style={[styles.avatar, { backgroundColor: c.mint }]}>
           <T v="h2" size={22} weight="heavy" color="#101828">
-            A
+            {(p.name || 'Y')[0].toUpperCase()}
           </T>
         </View>
         <View style={{ flex: 1, gap: 2 }}>
-          <T v="h2">Ama</T>
+          <T v="h2">{p.name || 'You'}</T>
           <T v="small" muted>
-            Goal 76 kg · Steady pace · {kcal(s.budget)} kcal a day
+            Goal {p.goalKg} kg · {p.paceKgWeek ? `${p.paceKgWeek} kg a week` : 'Keep steady'}
+            {p.hideNumbers ? '' : ` · ${kcal(profileBudget(p))} kcal a day`}
           </T>
         </View>
       </Card>
@@ -90,8 +137,8 @@ export default function Me() {
             </T>
           </View>
           <Switch
-            value={s.hideNumbers}
-            onValueChange={(v) => dispatch({ type: 'setHideNumbers', value: v })}
+            value={p.hideNumbers}
+            onValueChange={(v) => dispatch({ type: 'patchProfile', patch: { hideNumbers: v } })}
             trackColor={{ true: c.mintBorder, false: c.line }}
             thumbColor="#FFFFFF"
             accessibilityLabel="Hide numbers"
@@ -99,15 +146,71 @@ export default function Me() {
         </View>
       </Card>
 
-      <Card order={3} style={{ paddingVertical: 6 }}>
+      <Card order={3} style={{ gap: 12 }}>
+        <View style={styles.switchRow}>
+          <View style={{ flex: 1, gap: 2 }}>
+            <T v="body" weight="semibold">
+              Meal reminders
+            </T>
+            <T v="small" muted>
+              Only for meals you haven’t logged yet that day.
+            </T>
+          </View>
+          <Switch value={r.on} onValueChange={(v) => setReminders({ on: v })} trackColor={{ true: c.mintBorder, false: c.line }} thumbColor="#FFFFFF" accessibilityLabel="Meal reminders" />
+        </View>
+        {r.on ? (
+          <>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              {time('breakfast', 'Breakfast')}
+              {time('lunch', 'Lunch')}
+              {time('dinner', 'Dinner')}
+            </View>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+              <T v="small" muted>
+                Weigh-in day
+              </T>
+              {WEEKDAYS.map((d, i) => (
+                <Press key={d} onPress={() => setReminders({ weighDay: i })} accessibilityRole="radio" accessibilityState={{ checked: r.weighDay === i }} style={[styles.day, { backgroundColor: r.weighDay === i ? c.button : c.bg }]}>
+                  <T v="small" weight="bold" color={r.weighDay === i ? c.buttonText : c.muted}>
+                    {d.slice(0, 2)}
+                  </T>
+                </Press>
+              ))}
+            </View>
+          </>
+        ) : null}
+      </Card>
+
+      <Card order={4} style={{ paddingVertical: 6 }}>
         <Row icon="calendar" label="Week in review" onPress={() => router.push('/week')} />
-        <Row icon="progress" label="Weekly check-in" detail="Mondays" onPress={() => router.push('/checkin')} />
-        <Row icon="today" label="Goal and pace" onPress={() => router.push('/onboarding')} />
-        <Row icon="info" label="How estimates work" detail="Ranges, not exact" onPress={() => router.push('/coach')} />
+        <Row icon="progress" label="Weekly check-in" onPress={() => router.push('/checkin')} />
+        <Row icon="today" label="Goal and pace" detail={`${p.weightKg} → ${p.goalKg} kg`} onPress={() => router.push('/onboarding')} />
+        <Row icon="bookmark" label="Saved meals" detail={`${s.saved.length}`} onPress={() => router.push('/saved-meals')} />
+        {planned ? <Row icon="calendar" label="Clear planned days" detail={`${planned}`} onPress={() => confirm('Clear planned days?', 'Flex plans and maintenance days go back to your normal budget.', 'Clear', () => dispatch({ type: 'clearPlans' }))} /> : null}
+        <Row
+          icon="close"
+          label="Delete all my data"
+          onPress={() => confirm('Delete everything?', 'Your meals, weigh-ins, chat and profile are removed from this phone. This can’t be undone.', 'Delete', () => {
+            dispatch({ type: 'reset' });
+            router.replace('/onboarding');
+          })}
+        />
+      </Card>
+
+      <Card order={5} style={{ gap: 4 }}>
+        <T v="label" muted>
+          PlateWise server
+        </T>
+        <T v="small" weight="semibold" color={health === 'down' ? c.amberText : c.mintText}>
+          {health === null ? 'Checking…' : health === 'down' ? 'Not connected. Photo, voice, coach and ideas need the server.' : health.demo ? 'Connected · demo answers (no AI key on the server yet)' : `Connected · AI by ${health.ai}`}
+        </T>
+        <T v="small" size={12} muted selectable>
+          {apiBase()}
+        </T>
       </Card>
 
       <T v="small" muted center>
-        PlateWise prototype · sample data · not medical advice
+        Estimates for general wellness · not medical advice · your log stays on this phone
       </T>
     </Screen>
   );
@@ -120,4 +223,6 @@ const styles = StyleSheet.create({
   segItem: { flex: 1, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56 },
+  time: { height: 44, borderRadius: 12, paddingHorizontal: 12, fontFamily: font.bold, fontSize: 16 },
+  day: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
 });

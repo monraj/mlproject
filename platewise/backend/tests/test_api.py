@@ -112,6 +112,12 @@ def test_product_lookup(client, monkeypatch):
     assert client.get("/products/1234567").status_code == 404
     assert client.get("/products/abc").status_code == 422
 
+    def down(code: str) -> None:
+        raise routes.LookupUnavailable
+
+    monkeypatch.setattr(routes, "lookup", down)
+    assert client.get("/products/6001234567890").status_code == 503
+
 
 def test_label_not_found_in_demo(client):
     r = client.post("/products/label", files={"image": ("p.jpg", _jpeg(), "image/jpeg")})
