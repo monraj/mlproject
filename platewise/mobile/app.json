@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "PlateWise",
+    "slug": "platewise",
+    "scheme": "platewise",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "app.platewise.mobile"
+    },
+    "android": {
+      "package": "app.platewise.mobile",
+      "edgeToEdgeEnabled": true
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#FFFFFF",
+          "dark": { "backgroundColor": "#0C111D" },
+          "imageWidth": 120
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "PlateWise uses the camera to photograph your meals so it can estimate what's on the plate.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}
