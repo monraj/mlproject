@@ -13,7 +13,8 @@ class Settings(BaseSettings):
     vision_provider: str = "auto"
 
     gemini_api_key: str | None = None
-    gemini_model: str = "gemini-2.5-flash"
+    gemini_model: str = "gemini-3.5-flash"
+    gemini_fallback_model: str | None = "gemini-flash-lite-latest"
     openai_api_key: str | None = None
     openai_model: str = "gpt-5-mini"
     anthropic_api_key: str | None = None

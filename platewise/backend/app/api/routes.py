@@ -114,15 +114,15 @@ def ideas(req: IdeasRequest) -> dict[str, Any]:
         raise HTTPException(502, "The AI answer was unreadable. Try again.") from e
     out = []
     for n, idea in enumerate(parsed.ideas[:4]):
+        portions = [(f, max(5.0, min(it.grams, 2000.0))) for it in idea.items if (f := get_food(it.catalog_id)) and f.kcal_per_100g is not None]
+        total = sum((f.kcal_per_100g or 0.0) * g / 100 for f, g in portions)
+        # Models often overshoot; shrink every portion so the meal fits what's left.
+        scale = min(1.0, req.kcal_left * 0.95 / total) if total else 1.0
         items, kcal, protein = [], 0.0, 0.0
-        for it in idea.items:
-            food = get_food(it.catalog_id)
-            if not food:
-                continue
-            g = max(5.0, min(it.grams, 2000.0))
+        for food, g0 in portions:
+            g = max(5.0, round(g0 * scale / 5) * 5)
             nut = nutrients(food, g, g, g)
-            if nut is None:
-                continue
+            assert nut is not None
             kcal += nut.kcal
             protein += nut.protein
             items.append({"food_id": food.id, "name": food.name, "grams": round(g)})

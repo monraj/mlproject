@@ -88,6 +88,11 @@ def test_ideas_computed_from_table(client):
     assert soup["kcal"] == round(55 * 3.5 + 130 * 1.5 + 130 * 2)
 
 
+def test_ideas_scaled_to_fit_what_is_left(client):
+    r = client.post("/ideas", json={"kcal_left": 400, "protein_left": 40, "greens_today": 0}).json()
+    assert all(i["kcal"] <= 400 for i in r["ideas"])
+
+
 class _Broken:
     name = "broken"
 

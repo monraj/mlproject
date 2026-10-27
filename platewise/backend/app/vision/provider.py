@@ -78,7 +78,7 @@ def build_providers(s: Settings) -> list[VisionProvider]:
 
     available: dict[str, VisionProvider] = {}
     if s.gemini_api_key:
-        available["gemini"] = GeminiProvider(s.gemini_api_key, s.gemini_model, s.request_timeout_s)
+        available["gemini"] = GeminiProvider(s.gemini_api_key, s.gemini_model, s.request_timeout_s, s.gemini_fallback_model)
     if s.openai_api_key:
         available["openai"] = OpenAIProvider(s.openai_api_key, s.openai_model, s.request_timeout_s)
     if s.anthropic_api_key:

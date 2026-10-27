@@ -1,7 +1,7 @@
 .PHONY: setup server test lint app sync-foods
 
 setup:            ## install server and app dependencies
-	cd backend && python3 -m venv .venv && .venv/bin/pip install -e ".[dev]"
+	cd backend && python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
 	cd mobile && npm install
 
 server:           ## run the API on your network so the phone can reach it

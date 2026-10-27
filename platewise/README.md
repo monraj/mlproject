@@ -10,7 +10,19 @@ platewise/
   CLAUDE.md  rules the code follows · ROADMAP.md  the full plan
 ```
 
-## Run it on your phone
+## Run it on your phone (easiest)
+
+Install **Python 3.12+** and **Node.js 20+** on your computer and the **Expo Go** app on your phone
+(same Wi-Fi). Then:
+
+- **Mac / Linux:** open a terminal in the `platewise` folder and run `bash start.sh`
+- **Windows:** double-click `start.bat` in the `platewise` folder
+
+The first time, it asks you to paste your Gemini API key (nothing shows while you paste; that's normal),
+saves it to `backend/.env`, installs everything, and starts the server and the app. Scan the QR code
+with Expo Go. Next time it remembers your key.
+
+## Run it step by step
 
 You need **Python 3.12+**, **Node.js 20+**, and the **Expo Go** app on your phone. Phone and
 computer must be on the same Wi-Fi.
@@ -29,7 +41,7 @@ server somewhere else, start the app with `EXPO_PUBLIC_API_URL=http://your-serve
 
 ### AI keys
 
-Put at least one key in `backend/.env`: `GEMINI_API_KEY`, `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`.
+The start script fills this in for you. To change it later, edit `backend/.env`: put at least one key in: `GEMINI_API_KEY`, `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`.
 With several, the server tries them in order and falls back if one fails. With none, it runs in
 **demo mode**: everything works, but scans and the coach return sample answers.
 
