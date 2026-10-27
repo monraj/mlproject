@@ -1,13 +1,21 @@
-# Food Calorie Tracker
+# PlateWise
 
-A single-page calorie tracker. Open `index.html` in any browser; no install or server needed.
+A working version of the PlateWise food-photo calorie and weight tracker, built from the
+"Building an AI Food-Photo Calorie & Weight Tracker" spec and the PlateWise "Fresh mint" screens.
 
-- Search 80+ common foods (calories, protein, carbs, fat per serving) or enter a custom food
-- Log by meal (breakfast, lunch, dinner, snacks) and move between days
-- Daily goal ring, macro progress bars, and a 7-day chart
+- **Log a meal** by photo or description (Claude names each food and estimates grams), by
+  search, or from saved meals. Calories are computed from a built-in food table (Ghanaian
+  dishes plus common foods, per 100 g), not by the AI.
+- **Check your plate**: per-item portion sliders, swap or add items, an oil question for
+  oil-heavy dishes, and a total shown as a likely range.
+- **Daily budget** from Mifflin–St Jeor with safety floors (1,200 / 1,500 kcal), pace capped at
+  1% of body weight a week, and no underweight goals.
+- **Progress**: weigh-ins, a smoothed (7-day EMA) weight trend, and a weekly check-in that
+  learns your real daily burn from your logs and scale.
 
-Opened as a local file, the log is saved in that browser (localStorage). Published as a
-Claude artifact, it is saved to your Claude account so it follows you across devices.
+Open `index.html` in a browser to use it with search logging; data stays in that browser.
+Published as a Claude artifact, photo and describe logging use Claude, and the log syncs to
+your Claude account.
 
-`app.html` is the page source used for the artifact; `index.html` is the same page wrapped
-in a full HTML document for opening locally. Regenerate `index.html` after editing `app.html`.
+`app.html` is the artifact source; `index.html` wraps it in a full HTML document. Regenerate
+`index.html` after editing `app.html`.

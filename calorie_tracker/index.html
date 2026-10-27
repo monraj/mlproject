@@ -5,619 +5,868 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 </head>
 <body>
-<title>Food Calorie Tracker</title>
+<title>PlateWise</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* Layout: one column on phones, two columns (log | summary) on wide screens; summary first. */
+/* Layout: a single phone-width app column (max 520px), centred on wide screens, bottom tab bar fixed. Fresh mint style. */
 :root {
-  --bg: #f2f5f0;
-  --surface: #ffffff;
-  --ink: #18241c;
-  --muted: #5d6b61;
-  --line: #dbe3d8;
-  --leaf: #2f7d4f;
-  --leaf-soft: #e1efe4;
-  --over: #b8432f;
-  --protein: #8a4fb0;
-  --carbs: #c98a12;
-  --fat: #2a8c9a;
-  --font-display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
-  --font-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-data: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --bg: #ffffff;
+  --surface: #f4f6f5;
+  --line: #eaecf0;
+  --ink: #101828;
+  --muted: #475467;
+  --mint: #12b76a;
+  --mint-text: #027a48;
+  --mint-tint: #ecfdf3;
+  --sun: #fdb022;
+  --amber-bg: #fffaeb;
+  --amber: #f79009;
+  --amber-text: #b54708;
+  --danger: #d92d20;
+  --on-ink: #ffffff;
+  --font: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #111813; --surface: #19221c; --ink: #e6eee7; --muted: #9aab9f; --line: #2c3a30;
-    --leaf: #5cbf83; --leaf-soft: #20352862; --over: #ee7a63;
-    --protein: #b98ad8; --carbs: #e5b04a; --fat: #5ab9c6; color-scheme: dark;
+    --bg: #0c111d; --surface: #161b26; --line: #263040; --ink: #f5f5f6; --muted: #a4adbd;
+    --mint: #32d583; --mint-text: #6ce9a6; --mint-tint: #0f2a1e; --amber-bg: #2b1d08; --amber-text: #fec84b;
+    --danger: #f97066; --on-ink: #0c111d; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #111813; --surface: #19221c; --ink: #e6eee7; --muted: #9aab9f; --line: #2c3a30;
-  --leaf: #5cbf83; --leaf-soft: #20352862; --over: #ee7a63;
-  --protein: #b98ad8; --carbs: #e5b04a; --fat: #5ab9c6; color-scheme: dark;
+  --bg: #0c111d; --surface: #161b26; --line: #263040; --ink: #f5f5f6; --muted: #a4adbd;
+  --mint: #32d583; --mint-text: #6ce9a6; --mint-tint: #0f2a1e; --amber-bg: #2b1d08; --amber-text: #fec84b;
+  --danger: #f97066; --on-ink: #0c111d; color-scheme: dark;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body {
-  background: var(--bg); color: var(--ink); font: 15px/1.5 var(--font-body);
+  background: var(--bg); color: var(--ink); font: 15px/1.5 var(--font); margin: 0;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 20px 48px;
+  padding-block: 18px calc(110px + env(safe-area-inset-bottom, 0px));
 }
-.wrap { max-width: 1080px; margin: 0 auto; display: grid; gap: 20px; }
-header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; }
-h1 { font: 800 clamp(28px, 6vw, 40px)/1 var(--font-display); letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
-h2 { font: 600 18px/1.2 var(--font-display); margin: 0; }
-.status { font-size: 12px; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
-.datenav { display: flex; align-items: center; gap: 6px; }
-.datenav strong { min-width: 150px; text-align: center; font-weight: 600; }
-button, input, select { font: inherit; color: inherit; }
+.app { max-width: 520px; margin: 0 auto; display: grid; gap: 14px; }
+button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
-:focus-visible { outline: 2px solid var(--leaf); outline-offset: 2px; }
-.icon-btn { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); font-size: 18px; line-height: 1; }
-.link-btn { border: 0; background: none; color: var(--leaf); font-weight: 600; padding: 4px 6px; }
-.grid { display: grid; gap: 20px; grid-template-columns: 1fr; }
-@media (min-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); align-items: start; } .side { position: sticky; top: 16px; } }
-.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 14px; min-width: 0; }
-.side { display: grid; gap: 20px; min-width: 0; }
+:focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; }
+h1 { font-size: 30px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; margin: 0; text-wrap: balance; }
+h2 { font-size: 17px; font-weight: 700; margin: 0; }
+p { margin: 0; }
+.eyebrow { font-size: 13px; font-weight: 600; color: var(--muted); }
+.muted { color: var(--muted); }
+.small { font-size: 12.5px; line-height: 1.45; }
+.num { font-variant-numeric: tabular-nums; }
+.topbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 800; letter-spacing: -0.02em; }
+.brand-dot { width: 22px; height: 22px; border-radius: 50%; background: var(--mint); position: relative; }
+.brand-dot::after { content: ""; position: absolute; inset: 6px; border-radius: 50%; background: var(--bg); }
+.status { font-size: 11.5px; color: var(--muted); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.row { display: flex; align-items: center; gap: 10px; }
+.between { justify-content: space-between; }
+.wrap { flex-wrap: wrap; }
+.grow { flex: 1; min-width: 0; }
+.btn { height: 50px; padding: 0 22px; border-radius: 25px; border: 0; background: var(--ink); color: var(--on-ink); font-weight: 700; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.btn:disabled { opacity: 0.45; cursor: default; }
+.btn.full { width: 100%; }
+.btn.ghost { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+.btn.sm { height: 38px; padding: 0 14px; font-size: 14px; border-radius: 19px; }
+.btn.danger { background: transparent; color: var(--danger); border: 1px solid var(--line); }
+.chip { height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid var(--line); background: var(--bg); font-size: 14px; font-weight: 600; white-space: nowrap; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.icon-btn { width: 40px; height: 40px; border-radius: 20px; border: 1px solid var(--line); background: var(--bg); display: inline-flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0; }
+.icon-btn svg { width: 18px; height: 18px; }
+.x-btn { width: 32px; height: 32px; border-radius: 16px; border: 0; background: transparent; color: var(--muted); font-size: 18px; line-height: 1; flex-shrink: 0; }
+.x-btn:hover { background: var(--line); color: var(--danger); }
+label.field { display: grid; gap: 5px; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+input[type=text], input[type=number], input[type=date], input[type=search], select, textarea {
+  width: 100%; min-height: 46px; padding: 10px 14px; border-radius: 14px; border: 1px solid var(--line);
+  background: var(--bg); font-size: 15px; font-weight: 500; color: var(--ink);
+}
+textarea { min-height: 96px; resize: vertical; }
+.grid2 { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.badge { font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+.badge.ok { background: var(--mint-tint); color: var(--mint-text); }
+.badge.check { background: var(--amber-bg); color: var(--amber-text); border: 1.5px solid var(--amber); }
+.badge.plain { background: var(--line); color: var(--muted); }
+.notice { padding: 12px 14px; border-radius: 16px; background: var(--amber-bg); color: var(--amber-text); font-size: 13.5px; line-height: 1.45; }
+.good { padding: 12px 14px; border-radius: 16px; background: var(--mint-tint); color: var(--mint-text); font-size: 13.5px; line-height: 1.45; }
+.err { color: var(--danger); font-size: 13.5px; font-weight: 600; }
 
-/* summary */
-.summary { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px; align-items: center; }
-.ring { width: 132px; height: 132px; position: relative; }
+/* today */
+.ring-wrap { display: flex; align-items: center; gap: 18px; }
+.ring { position: relative; width: 140px; height: 140px; flex-shrink: 0; }
 .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
 .ring .center { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
-.ring .big { font: 600 26px/1 var(--font-data); font-variant-numeric: tabular-nums; }
-.ring .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
-.ring.over .big { color: var(--over); }
-.kv { display: grid; gap: 4px; font-size: 14px; }
-.kv div { display: flex; justify-content: space-between; gap: 8px; }
-.kv span:last-child, .num { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
-.macros { display: grid; gap: 10px; }
-.macro { display: grid; gap: 4px; }
-.macro .top { display: flex; justify-content: space-between; font-size: 13px; }
-.bar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
-.bar i { display: block; height: 100%; border-radius: 4px; }
-.hint { font-size: 12px; color: var(--muted); margin: 0; }
+.ring .big { font-size: 32px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
+.ring.over .big { color: var(--danger); }
+.kv { display: grid; gap: 8px; }
+.kv b { display: block; font-size: 18px; }
+.macros { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.macro { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 11px; display: grid; gap: 7px; min-width: 0; }
+.macro b { font-size: 13px; }
+.bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.bar i { display: block; height: 100%; border-radius: 3px; background: var(--mint); }
+.meal { display: flex; align-items: center; gap: 12px; padding: 10px 8px 10px 10px; border-radius: 20px; background: var(--surface); border: 1px solid var(--line); }
+.meal-ico { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; flex-shrink: 0; font-weight: 800; font-size: 15px; color: var(--mint-text); background: var(--mint-tint); }
+.meal .names { font-size: 15px; font-weight: 700; overflow-wrap: anywhere; }
+.meal .kcal { font-weight: 700; white-space: nowrap; }
+.add-tile { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 20px; border: 2px dashed var(--line); background: transparent; text-align: left; width: 100%; }
+.date-nav { display: flex; align-items: center; gap: 6px; }
 
-/* add form */
-form { display: grid; gap: 10px; }
-.row { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); }
-label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
-input, select { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); font-size: 15px; text-transform: none; letter-spacing: 0; }
-.search { position: relative; }
-.suggest { position: absolute; z-index: 5; left: 0; right: 0; top: calc(100% + 4px); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; max-height: 260px; overflow-y: auto; box-shadow: 0 10px 30px rgb(0 0 0 / 0.14); padding: 4px; margin: 0; list-style: none; }
-.suggest li { padding: 8px 10px; border-radius: 8px; display: flex; justify-content: space-between; gap: 10px; cursor: pointer; font-size: 14px; text-transform: none; letter-spacing: 0; color: var(--ink); }
-.suggest li small { color: var(--muted); white-space: nowrap; font-family: var(--font-data); font-size: 12px; }
-.suggest li[aria-selected="true"], .suggest li:hover { background: var(--leaf-soft); }
-.preview { font-size: 13px; color: var(--muted); min-height: 1.5em; }
-.primary { background: var(--leaf); color: #fff; border: 0; border-radius: 10px; padding: 11px 16px; font-weight: 600; }
-.primary:disabled { opacity: 0.5; cursor: default; }
-.tabs { display: flex; gap: 6px; }
-.tabs button { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 5px 12px; font-size: 13px; }
-.tabs button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+/* log */
+.drop { display: grid; place-items: center; gap: 8px; text-align: center; min-height: 220px; border-radius: 24px; border: 2px dashed var(--line); background: var(--surface); padding: 20px; cursor: pointer; position: relative; overflow: hidden; }
+.drop img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.drop .cam { width: 64px; height: 64px; border-radius: 32px; background: var(--ink); display: grid; place-items: center; }
+.results { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.results button { width: 100%; text-align: left; display: flex; justify-content: space-between; gap: 10px; padding: 11px 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--bg); }
+.results small { color: var(--muted); white-space: nowrap; }
+.scanning { display: grid; place-items: center; gap: 14px; padding: 30px 10px; text-align: center; }
+.spark { width: 70px; height: 70px; border-radius: 50%; border: 6px solid var(--line); border-top-color: var(--mint); animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-/* meals */
-.meal { display: grid; gap: 6px; }
-.meal-head { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
-.meal-head span { font-family: var(--font-data); font-size: 13px; color: var(--muted); }
-.entries { list-style: none; margin: 0; padding: 0; display: grid; }
-.entries li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center; padding: 7px 0; }
-.entries li + li { border-top: 1px dashed var(--line); }
-.entries .name { min-width: 0; overflow-wrap: anywhere; }
-.entries .name small { display: block; color: var(--muted); font-size: 12px; }
-.entries .kcal { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
-.del { border: 0; background: none; color: var(--muted); width: 28px; height: 28px; border-radius: 50%; font-size: 16px; }
-.del:hover { background: var(--leaf-soft); color: var(--over); }
-.empty { color: var(--muted); font-size: 14px; padding: 4px 0; margin: 0; }
+/* review */
+.item { background: var(--bg); border: 1px solid var(--line); border-radius: 18px; padding: 12px 12px 12px 14px; display: grid; gap: 8px; }
+.item.low { border: 2px solid var(--amber); }
+.item input[type=range] { width: 100%; accent-color: var(--mint); height: 28px; }
+.item select { min-height: 38px; padding: 6px 10px; font-size: 13.5px; border-radius: 10px; }
+.total { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.total .big { font-size: 34px; font-weight: 800; letter-spacing: -0.03em; }
+.suggest { list-style: none; margin: 4px 0 0; padding: 4px; border: 1px solid var(--line); border-radius: 14px; background: var(--bg); display: grid; }
+.suggest button { text-align: left; border: 0; background: transparent; padding: 9px 10px; border-radius: 10px; display: flex; justify-content: space-between; gap: 8px; }
+.suggest button:hover { background: var(--surface); }
+.suggest small { color: var(--muted); }
 
-/* week chart */
+/* progress */
 .chart svg { width: 100%; height: auto; display: block; }
-.chart text { fill: var(--muted); font: 11px var(--font-body); }
-.chart .val { fill: var(--ink); font: 500 10px var(--font-data); }
-.goal-row { display: flex; gap: 10px; align-items: end; }
-.goal-row label { flex: 1; }
-.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 8px 14px; border-radius: 999px; font-size: 14px; }
-@media (prefers-reduced-motion: no-preference) { .ring circle, .bar i { transition: stroke-dashoffset .4s ease, width .4s ease; } }
+.chart text { fill: var(--muted); font: 600 10.5px var(--font); }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 10px 12px; display: grid; gap: 2px; min-width: 0; }
+.stat b { font-size: 18px; letter-spacing: -0.02em; }
+.list { display: grid; }
+.list > div { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); }
+
+/* tab bar */
+nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--surface); border-top: 1px solid var(--line);
+  padding: 8px max(12px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)); }
+nav.tabs .in { max-width: 520px; margin: 0 auto; display: flex; justify-content: space-around; align-items: center; }
+nav.tabs button { border: 0; background: none; display: grid; justify-items: center; gap: 2px; min-width: 60px; font-size: 11.5px; font-weight: 600; color: var(--muted); padding: 4px; }
+nav.tabs button[aria-current="page"] { color: var(--mint-text); font-weight: 700; }
+nav.tabs button svg { width: 24px; height: 24px; }
+nav.tabs .snap { width: 60px; height: 60px; border-radius: 30px; background: var(--ink); margin-top: -26px; display: grid; place-items: center; min-width: 0; }
+nav.tabs .snap svg { stroke: var(--on-ink); }
+.toast { position: fixed; left: 50%; bottom: calc(100px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 30; background: var(--ink); color: var(--on-ink); padding: 9px 16px; border-radius: 999px; font-size: 14px; font-weight: 600; max-width: calc(100vw - 32px); text-align: center; }
+@media (prefers-reduced-motion: no-preference) { .ring circle, .bar i { transition: stroke-dashoffset .5s cubic-bezier(.2,.8,.2,1), width .5s cubic-bezier(.2,.8,.2,1); } }
+@media (prefers-reduced-motion: reduce) { .spark { animation: none; } }
 </style>
 
-<div class="wrap">
-  <header>
-    <div>
-      <h1>Food Calorie Tracker</h1>
-      <div class="status" id="status">Loading your log…</div>
-    </div>
-    <div class="datenav">
-      <button class="icon-btn" id="prevDay" aria-label="Previous day">‹</button>
-      <strong id="dateLabel">Today</strong>
-      <button class="icon-btn" id="nextDay" aria-label="Next day">›</button>
-      <button class="link-btn" id="todayBtn" hidden>Today</button>
-    </div>
-  </header>
-
-  <div class="grid">
-    <div class="side" id="sideCol">
-      <section class="panel" aria-label="Today's summary">
-        <div class="summary">
-          <div class="ring" id="ring">
-            <svg viewBox="0 0 120 120" aria-hidden="true">
-              <circle cx="60" cy="60" r="52" fill="none" stroke="var(--line)" stroke-width="12"></circle>
-              <circle id="ringArc" cx="60" cy="60" r="52" fill="none" stroke="var(--leaf)" stroke-width="12" stroke-linecap="round" stroke-dasharray="326.73" stroke-dashoffset="326.73"></circle>
-            </svg>
-            <div class="center"><div class="big" id="remaining">0</div><div class="lbl" id="remainingLbl">kcal left</div></div>
-          </div>
-          <div class="kv">
-            <div><span>Goal</span><span id="goalVal">0</span></div>
-            <div><span>Eaten</span><span id="eatenVal">0</span></div>
-            <div><span>Items logged</span><span id="countVal">0</span></div>
-          </div>
-        </div>
-        <div class="macros" id="macros"></div>
-        <p class="hint">Macro targets split your goal 25% protein, 50% carbs, 25% fat. Protein and carbs give 4 kcal per gram, fat gives 9.</p>
-      </section>
-
-      <section class="panel chart" aria-label="Last 7 days">
-        <h2>Last 7 days</h2>
-        <div id="chart"></div>
-      </section>
-
-      <section class="panel">
-        <h2>Daily goal</h2>
-        <form id="goalForm" class="goal-row">
-          <label for="goalInput">Calories per day
-            <input id="goalInput" type="number" min="800" max="6000" step="50" inputmode="numeric" required>
-          </label>
-          <button class="primary" type="submit" id="goalSave">Save goal</button>
-        </form>
-      </section>
-    </div>
-
-    <div class="side" id="mainCol" style="position:static">
-      <section class="panel" aria-label="Add food">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-          <h2>Add food</h2>
-          <div class="tabs" role="group" aria-label="Entry type">
-            <button type="button" id="tabSearch" aria-pressed="true">Search foods</button>
-            <button type="button" id="tabCustom" aria-pressed="false">Custom</button>
-          </div>
-        </div>
-        <form id="addForm" autocomplete="off">
-          <div id="searchFields" class="row" style="grid-template-columns:minmax(0,2fr) minmax(80px,0.7fr)">
-            <label for="foodSearch" class="search">Food
-              <input id="foodSearch" type="text" placeholder="Try “banana” or “rice”" role="combobox" aria-expanded="false" aria-controls="suggest">
-              <ul class="suggest" id="suggest" role="listbox" hidden></ul>
-            </label>
-            <label for="servings">Servings
-              <input id="servings" type="number" min="0.25" step="0.25" value="1" inputmode="decimal">
-            </label>
-          </div>
-          <div id="customFields" hidden>
-            <div class="row">
-              <label for="cName" style="grid-column:1/-1">Food name
-                <input id="cName" type="text" placeholder="Mom's lasagna">
-              </label>
-            </div>
-            <div class="row" style="margin-top:10px">
-              <label for="cKcal">Calories<input id="cKcal" type="number" min="0" inputmode="numeric"></label>
-              <label for="cP">Protein g<input id="cP" type="number" min="0" step="0.1" inputmode="decimal"></label>
-              <label for="cC">Carbs g<input id="cC" type="number" min="0" step="0.1" inputmode="decimal"></label>
-              <label for="cF">Fat g<input id="cF" type="number" min="0" step="0.1" inputmode="decimal"></label>
-            </div>
-          </div>
-          <div class="row">
-            <label for="meal">Meal
-              <select id="meal">
-                <option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snacks</option>
-              </select>
-            </label>
-          </div>
-          <div class="preview" id="preview" aria-live="polite"></div>
-          <button class="primary" type="submit" id="addBtn" disabled>Add to log</button>
-        </form>
-      </section>
-
-      <section class="panel" aria-label="Food log" id="log"></section>
-    </div>
+<div class="app">
+  <div class="topbar">
+    <div class="brand"><span class="brand-dot" aria-hidden="true"></span>PlateWise</div>
+    <span class="status" id="status">Loading…</span>
   </div>
+  <main id="view" aria-live="polite"><div class="card"><p class="muted">Loading your log…</p></div></main>
 </div>
+
+<nav class="tabs" id="tabs" aria-label="Main" hidden>
+  <div class="in">
+    <button data-tab="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 8 8h-8z"/></svg>Today</button>
+    <button data-tab="log" class="snap" aria-label="Log a meal"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+    <button data-tab="progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19h16"/><path d="M5 15l4-4 4 3 6-7"/></svg>Progress</button>
+    <button data-tab="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Me</button>
+  </div>
+</nav>
 <div class="toast" id="toast" role="status" hidden></div>
 
 <script>
 (() => {
-  // name, serving, kcal, protein g, carbs g, fat g
+  // ---------- food table: per 100 g [kcal, protein, carbs, fat]; portion = typical grams ----------
+  // Values are approximate, compiled from USDA FoodData Central and the FAO/INFOODS West Africa table.
   const FOODS = [
-    ["Apple", "1 medium (182 g)", 95, 0.5, 25, 0.3],
-    ["Banana", "1 medium (118 g)", 105, 1.3, 27, 0.4],
-    ["Orange", "1 medium (131 g)", 62, 1.2, 15, 0.2],
-    ["Strawberries", "1 cup (152 g)", 49, 1, 12, 0.5],
-    ["Blueberries", "1 cup (148 g)", 84, 1.1, 21, 0.5],
-    ["Grapes", "1 cup (151 g)", 104, 1.1, 27, 0.2],
-    ["Mango", "1 cup (165 g)", 99, 1.4, 25, 0.6],
-    ["Watermelon", "1 cup diced (152 g)", 46, 0.9, 12, 0.2],
-    ["Avocado", "1/2 fruit (100 g)", 160, 2, 9, 15],
-    ["Broccoli, cooked", "1 cup (156 g)", 55, 3.7, 11, 0.6],
-    ["Carrot", "1 medium (61 g)", 25, 0.6, 6, 0.1],
-    ["Spinach, raw", "2 cups (60 g)", 14, 1.7, 2.2, 0.2],
-    ["Mixed salad greens", "2 cups (85 g)", 15, 1.2, 3, 0.2],
-    ["Tomato", "1 medium (123 g)", 22, 1.1, 4.8, 0.2],
-    ["Cucumber", "1 cup sliced (119 g)", 16, 0.7, 3.8, 0.1],
-    ["Potato, baked", "1 medium (173 g)", 161, 4.3, 37, 0.2],
-    ["Sweet potato, baked", "1 medium (114 g)", 103, 2.3, 24, 0.2],
-    ["French fries", "medium serving (117 g)", 365, 4, 48, 17],
-    ["White rice, cooked", "1 cup (158 g)", 205, 4.3, 45, 0.4],
-    ["Brown rice, cooked", "1 cup (195 g)", 216, 5, 45, 1.8],
-    ["Pasta, cooked", "1 cup (140 g)", 221, 8, 43, 1.3],
-    ["Quinoa, cooked", "1 cup (185 g)", 222, 8, 39, 3.6],
-    ["Oatmeal, cooked", "1 cup (234 g)", 166, 5.9, 28, 3.6],
-    ["White bread", "1 slice (25 g)", 67, 2, 13, 0.8],
-    ["Whole wheat bread", "1 slice (32 g)", 81, 4, 14, 1.1],
-    ["Bagel, plain", "1 medium (105 g)", 277, 11, 55, 1.4],
-    ["Flour tortilla", "1 medium (45 g)", 140, 3.7, 24, 3.5],
-    ["Chapati / roti", "1 piece (40 g)", 120, 3.1, 18, 3.7],
-    ["Naan", "1 piece (90 g)", 262, 8.7, 45, 5.1],
-    ["Corn flakes", "1 cup (28 g)", 100, 2, 24, 0.1],
-    ["Granola", "1/2 cup (61 g)", 290, 7, 38, 13],
-    ["Egg, large", "1 egg (50 g)", 72, 6.3, 0.4, 4.8],
-    ["Scrambled eggs", "2 eggs with butter", 200, 13, 2, 15],
-    ["Chicken breast, grilled", "100 g", 165, 31, 0, 3.6],
-    ["Chicken thigh, roasted", "100 g", 209, 26, 0, 11],
-    ["Ground beef 85%, cooked", "100 g", 250, 26, 0, 15],
-    ["Steak, sirloin", "100 g", 206, 29, 0, 9],
-    ["Salmon, baked", "100 g", 206, 22, 0, 12],
-    ["Tuna, canned in water", "1 can drained (142 g)", 179, 39, 0, 1.3],
-    ["Shrimp, cooked", "100 g", 99, 24, 0.2, 0.3],
-    ["Tofu, firm", "100 g", 144, 17, 3, 9],
-    ["Lentils, cooked", "1 cup (198 g)", 230, 18, 40, 0.8],
-    ["Chickpeas, cooked", "1 cup (164 g)", 269, 15, 45, 4.2],
-    ["Black beans, cooked", "1 cup (172 g)", 227, 15, 41, 0.9],
-    ["Dal (lentil curry)", "1 cup (240 g)", 260, 13, 34, 8],
-    ["Hummus", "2 tbsp (30 g)", 70, 2, 4, 5],
-    ["Milk, 2%", "1 cup (244 g)", 122, 8, 12, 4.8],
-    ["Milk, whole", "1 cup (244 g)", 149, 8, 12, 8],
-    ["Greek yogurt, plain nonfat", "170 g container", 100, 17, 6, 0.7],
-    ["Yogurt, flavored", "150 g container", 140, 5, 24, 2.5],
-    ["Cheddar cheese", "1 slice (28 g)", 113, 7, 0.4, 9.3],
-    ["Mozzarella", "28 g", 85, 6.3, 0.7, 6.3],
-    ["Cottage cheese, 2%", "1/2 cup (113 g)", 92, 12, 5, 2.6],
-    ["Butter", "1 tbsp (14 g)", 102, 0.1, 0, 11.5],
-    ["Olive oil", "1 tbsp (14 g)", 119, 0, 0, 13.5],
-    ["Peanut butter", "2 tbsp (32 g)", 188, 8, 6, 16],
-    ["Almonds", "1 oz (28 g, ~23 nuts)", 164, 6, 6, 14],
-    ["Walnuts", "1 oz (28 g)", 185, 4.3, 3.9, 18.5],
-    ["Protein shake (whey)", "1 scoop in water", 120, 24, 3, 1.5],
-    ["Pizza, cheese", "1 slice (107 g)", 285, 12, 36, 10],
-    ["Hamburger", "1 single patty with bun", 354, 20, 29, 17],
-    ["Cheeseburger", "1 single patty with bun", 403, 22, 31, 21],
-    ["Burrito, bean & cheese", "1 burrito (200 g)", 380, 14, 52, 12],
-    ["Chicken curry", "1 cup (240 g)", 290, 24, 9, 18],
-    ["Fried rice", "1 cup (198 g)", 238, 5.5, 34, 9],
-    ["Sushi roll, California", "6 pieces", 255, 7, 38, 7],
-    ["Caesar salad", "1 bowl (200 g)", 330, 8, 12, 28],
-    ["Turkey sandwich", "1 sandwich", 320, 22, 36, 9],
-    ["Potato chips", "1 oz (28 g)", 152, 2, 15, 10],
-    ["Dark chocolate 70%", "1 oz (28 g)", 170, 2.2, 13, 12],
-    ["Chocolate chip cookie", "1 medium (30 g)", 142, 1.6, 19, 7],
-    ["Ice cream, vanilla", "1/2 cup (66 g)", 137, 2.3, 16, 7.3],
-    ["Donut, glazed", "1 medium (64 g)", 269, 4, 31, 15],
-    ["Coffee, black", "1 cup (240 ml)", 2, 0.3, 0, 0],
-    ["Latte, 2% milk", "16 oz (473 ml)", 190, 13, 18, 7],
-    ["Orange juice", "1 cup (248 ml)", 112, 1.7, 26, 0.5],
-    ["Cola", "1 can (355 ml)", 140, 0, 39, 0],
-    ["Beer", "1 can (355 ml)", 153, 1.6, 13, 0],
-    ["Red wine", "1 glass (150 ml)", 125, 0.1, 3.8, 0],
-    ["Honey", "1 tbsp (21 g)", 64, 0.1, 17, 0],
-    ["Sugar", "1 tsp (4 g)", 16, 0, 4, 0],
-  ].map(([name, serving, kcal, p, c, f]) => ({ name, serving, kcal, p, c, f }));
+    ["waakye", "Waakye (rice and beans)", [150, 5, 29, 1.5], 300, "1 plate", false],
+    ["jollof", "Jollof rice", [175, 3.5, 28, 5.5], 300, "1 plate", true],
+    ["rice", "Plain rice, cooked", [130, 2.7, 28, 0.3], 200, "1 cup", false],
+    ["friedrice", "Fried rice", [165, 4, 25, 5.5], 250, "1 plate", true],
+    ["riceballs", "Omo tuo (rice balls)", [130, 2.5, 29, 0.3], 250, "2 balls", false],
+    ["banku", "Banku", [115, 2, 25, 0.8], 350, "1 ball", false],
+    ["kenkey", "Kenkey", [105, 2, 23, 0.6], 330, "1 ball", false],
+    ["fufu", "Fufu", [130, 1, 32, 0.3], 300, "1 ball", false],
+    ["tuozaafi", "Tuo zaafi", [100, 2.5, 22, 0.5], 300, "1 portion", false],
+    ["kokonte", "Kokonte", [120, 1, 29, 0.3], 300, "1 ball", false],
+    ["yam", "Yam, boiled", [116, 1.5, 27, 0.1], 200, "2 slices", false],
+    ["ampesi", "Plantain, boiled (ampesi)", [122, 1.3, 32, 0.4], 200, "1 finger", false],
+    ["kelewele", "Kelewele (spiced fried plantain)", [230, 1.2, 32, 11], 150, "1 wrap", true],
+    ["friedplantain", "Fried ripe plantain", [230, 1.2, 32, 11], 100, "6 slices", true],
+    ["redred", "Red-red (beans in palm oil)", [180, 7, 18, 9], 250, "1 bowl", true],
+    ["gari", "Gari", [360, 1, 87, 0.5], 30, "2 tbsp", false],
+    ["spaghetti", "Spaghetti (talia), cooked", [158, 5.8, 31, 0.9], 120, "1 portion", false],
+    ["noodles", "Instant noodles, prepared", [140, 3, 19, 6], 250, "1 pack", true],
+    ["bread", "Bread (tea or sugar bread)", [290, 8, 55, 4], 60, "2 slices", false],
+    ["lightsoup", "Light soup", [55, 5, 4, 2], 350, "1 bowl", false],
+    ["groundnutsoup", "Groundnut soup", [120, 6, 5, 9], 350, "1 bowl", true],
+    ["palmnutsoup", "Palm nut soup", [140, 5, 5, 11], 350, "1 bowl", true],
+    ["okro", "Okro soup or stew", [90, 5, 6, 5], 250, "1 bowl", true],
+    ["kontomire", "Kontomire stew", [130, 6, 6, 10], 200, "1 ladle", true],
+    ["gardenegg", "Garden egg stew", [110, 3, 7, 8], 200, "1 ladle", true],
+    ["stew", "Tomato stew", [140, 2, 8, 11], 100, "1 ladle", true],
+    ["shito", "Shito (black pepper sauce)", [550, 10, 10, 52], 15, "1 tbsp", true],
+    ["pepper", "Fresh pepper sauce", [35, 1.5, 7, 0.4], 50, "1 small dish", false],
+    ["hausakoko", "Hausa koko (millet porridge)", [60, 1.5, 12, 0.6], 300, "1 cup", false],
+    ["koose", "Koose (bean fritters)", [290, 10, 22, 18], 80, "4 pieces", true],
+    ["bofrot", "Bofrot (puff-puff)", [330, 6, 45, 14], 50, "1 piece", true],
+    ["ricewater", "Rice water (rice porridge)", [50, 1, 11, 0.1], 300, "1 cup", false],
+    ["oats", "Oats porridge", [71, 2.5, 12, 1.5], 250, "1 bowl", false],
+    ["tilapia", "Grilled tilapia", [130, 26, 0, 2.7], 200, "1 fish", false],
+    ["friedfish", "Fried fish", [230, 22, 5, 13], 120, "1 piece", true],
+    ["chicken", "Chicken, grilled or stewed", [190, 27, 0, 9], 120, "1 piece", false],
+    ["friedchicken", "Fried chicken", [260, 25, 8, 15], 120, "1 piece", true],
+    ["goat", "Goat meat", [140, 27, 0, 3], 100, "3 pieces", false],
+    ["beef", "Beef, stewed", [220, 28, 0, 12], 100, "3 pieces", false],
+    ["wele", "Wele (cow skin)", [220, 40, 0, 6], 60, "3 pieces", false],
+    ["chichinga", "Chichinga (beef kebab)", [250, 25, 3, 15], 80, "1 stick", true],
+    ["egg", "Egg, boiled", [155, 13, 1.1, 11], 50, "1 egg", false],
+    ["friedegg", "Egg, fried or omelette", [196, 14, 1, 15], 60, "1 egg", true],
+    ["beans", "Beans, boiled", [127, 8.7, 22, 0.5], 150, "1 cup", false],
+    ["salad", "Salad with cream dressing", [150, 1, 10, 12], 80, "1 side", true],
+    ["avocado", "Avocado", [160, 2, 9, 15], 100, "half", false],
+    ["groundnuts", "Groundnuts, roasted", [585, 24, 21, 50], 30, "1 handful", false],
+    ["banana", "Banana", [89, 1.1, 23, 0.3], 118, "1 medium", false],
+    ["orange", "Orange", [47, 0.9, 12, 0.1], 130, "1 medium", false],
+    ["pineapple", "Pineapple", [50, 0.5, 13, 0.1], 150, "1 cup", false],
+    ["pawpaw", "Pawpaw", [43, 0.5, 11, 0.3], 150, "1 cup", false],
+    ["mango", "Mango", [60, 0.8, 15, 0.4], 165, "1 cup", false],
+    ["apple", "Apple", [52, 0.3, 14, 0.2], 180, "1 medium", false],
+    ["milo", "Milo with milk", [80, 3, 12, 2.5], 250, "1 mug", false],
+    ["malt", "Malt drink", [55, 0.4, 13, 0], 330, "1 bottle", false],
+    ["soda", "Soft drink (cola, Fanta)", [42, 0, 11, 0], 330, "1 can", false],
+    ["sobolo", "Sobolo (hibiscus drink)", [45, 0, 11, 0], 300, "1 cup", false],
+    ["yogurt", "Yogurt, sweetened", [95, 3.5, 16, 2], 200, "1 cup", false],
+    ["pizza", "Pizza", [266, 11, 33, 10], 110, "1 slice", true],
+    ["burger", "Burger with bun", [254, 13, 24, 12], 180, "1 burger", true],
+    ["fries", "Chips (fries)", [312, 3.4, 41, 15], 120, "1 portion", true],
+  ].map(([id, name, per, portion, unit, oily]) => ({ id, name, per, portion, unit, oily }));
+  const FOOD = Object.fromEntries(FOODS.map((f) => [f.id, f]));
+  const MEALS = ["Breakfast", "Lunch", "Dinner", "Snack"];
+  const ACTIVITY = [[1.2, "Mostly sitting"], [1.375, "Lightly active"], [1.55, "Active"], [1.725, "Very active"], [1.9, "Athlete or manual work"]];
+  const PACES = [[0, "Keep my weight"], [0.25, "Gentle · 0.25 kg a week"], [0.5, "Steady · 0.5 kg a week"], [0.75, "Faster · 0.75 kg a week"]];
+  const OIL = { light: 0.85, normal: 1, heavy: 1.25 };
+  const KCAL_PER_KG = 7700;
+  const LOCAL_KEY = "platewise-v1";
+  const $ = (s, el = document) => el.querySelector(s);
 
-  const MEALS = ["Breakfast", "Lunch", "Dinner", "Snacks"];
-  const DEFAULT_GOAL = 2000;
-  const LOCAL_KEY = "food-calorie-tracker-v1";
-  const $ = (id) => document.getElementById(id);
-
-  const state = { days: {}, goal: DEFAULT_GOAL, date: todayKey(), ready: false, mode: "loading" };
+  const state = {
+    ready: false, docs: {}, tab: "today", date: dayKey(), sample: null, canImages: false,
+    log: { mode: "photo", file: null, preview: null, note: "", text: "", q: "", meal: defaultMeal(), error: "" },
+    scan: null, review: null, editingProfile: false, confirmDelete: false,
+  };
   let store = null;
 
-  function todayKey(d = new Date()) {
-    const z = (n) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}`;
-  }
-  function shiftKey(key, by) {
-    const [y, m, d] = key.split("-").map(Number);
-    return todayKey(new Date(y, m - 1, d + by));
-  }
-  function keyToDate(key) { const [y, m, d] = key.split("-").map(Number); return new Date(y, m - 1, d); }
-  const round = (n) => Math.round(n);
-  const r1 = (n) => Math.round(n * 10) / 10;
+  // ---------- helpers ----------
+  function dayKey(d = new Date()) { const z = (n) => String(n).padStart(2, "0"); return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}`; }
+  function keyDate(k) { const [y, m, d] = k.split("-").map(Number); return new Date(y, m - 1, d); }
+  function shift(k, n) { const d = keyDate(k); d.setDate(d.getDate() + n); return dayKey(d); }
+  function daysBetween(a, b) { return Math.round((keyDate(b) - keyDate(a)) / 864e5); }
+  const r = Math.round, r1 = (n) => Math.round(n * 10) / 10;
+  const fmt = (n) => r(n).toLocaleString();
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  function defaultMeal() { const h = new Date().getHours(); return h < 11 ? "Breakfast" : h < 16 ? "Lunch" : h < 21 ? "Dinner" : "Snack"; }
+  let toastT;
+  function toast(m) { const t = $("#toast"); t.textContent = m; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => (t.hidden = true), 2400); }
 
-  // ---------- storage ----------
+  // ---------- storage: one document per thing ----------
+  const profile = () => state.docs.profile || null;
+  const dayDoc = (k) => state.docs["d" + k] || { meals: [] };
+  const weights = () => (state.docs.weights?.entries || []).slice().sort((a, b) => (a.date < b.date ? -1 : 1));
+  const saved = () => state.docs.saved?.meals || [];
+
+  async function put(id, body) {
+    state.docs = { ...state.docs };
+    if (body) state.docs[id] = body; else delete state.docs[id];
+    try { await store.write(id, body); } catch (e) { console.warn(e); toast(e?.code === "quota_exceeded" ? "Storage is full. Delete some old meals." : "Couldn't save. Check your connection and try again."); }
+  }
+
   function localStore() {
-    let data = { days: {}, goal: DEFAULT_GOAL };
-    try { data = Object.assign(data, JSON.parse(localStorage.getItem(LOCAL_KEY) || "{}")); } catch (e) {}
-    const persist = () => { try { localStorage.setItem(LOCAL_KEY, JSON.stringify({ days: state.days, goal: state.goal })); } catch (e) {} };
+    let docs = {};
+    try { docs = JSON.parse(localStorage.getItem(LOCAL_KEY) || "{}") || {}; } catch (e) {}
     return {
       mode: "local",
-      start(onLoad) { onLoad(data.days || {}, data.goal || DEFAULT_GOAL); },
-      async saveDay() { persist(); },
-      async saveGoal() { persist(); },
+      start(cb) { cb(docs); },
+      async write(id) { try { localStorage.setItem(LOCAL_KEY, JSON.stringify(state.docs)); } catch (e) {} },
     };
   }
-
   function dbStore(db, userId) {
     const col = db.collection("data/users/" + userId);
     const chains = {};
-    // One write at a time per document.
-    const queue = (id, fn) => (chains[id] = (chains[id] || Promise.resolve()).catch(() => {}).then(fn));
     return {
       mode: "db",
-      start(onLoad) {
+      start(cb) {
         col.onSnapshot((snap) => {
-          const days = {}; let goal = DEFAULT_GOAL;
-          for (const doc of snap.docs) {
-            const body = doc.data() || {};
-            if (doc.id === "settings") goal = Number(body.goal) || DEFAULT_GOAL;
-            else if (doc.id.startsWith("d")) days[doc.id.slice(1)] = Array.isArray(body.entries) ? body.entries : [];
-          }
-          onLoad(days, goal);
-        }, (err) => { setStatus("Sync stopped. Reload the page to reconnect."); console.warn(err); });
+          const docs = {};
+          for (const d of snap.docs) docs[d.id] = d.data();
+          cb(docs);
+        }, (e) => { console.warn(e); setStatus("Sync stopped · reload to reconnect"); });
       },
-      saveDay(key, entries) {
-        const ref = col.doc("d" + key);
-        return queue(ref.path, () => entries.length ? ref.set({ date: key, entries }) : ref.delete());
-      },
-      saveGoal(goal) {
-        const ref = col.doc("settings");
-        return queue(ref.path, () => ref.set({ goal }));
+      write(id, body) {
+        const ref = col.doc(id);
+        return (chains[id] = (chains[id] || Promise.resolve()).catch(() => {}).then(() => (body ? ref.set(body) : ref.delete())));
       },
     };
   }
-
   async function connect() {
-    let db = null, user = null;
-    if (window.claude && typeof window.claude.use === "function") {
-      try { [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]); } catch (e) {}
+    let db = null, user = null, sample = null;
+    if (window.claude?.use) {
+      try { [db, user, sample] = await Promise.all(["db", "user", "sample"].map((n) => window.claude.use(n).catch(() => null))); } catch (e) {}
     }
     let userId = null;
     if (db && user) { try { userId = await user.id(); } catch (e) {} }
+    if (sample) {
+      state.sample = sample;
+      try { state.canImages = !!(await sample.limits())?.images; } catch (e) {}
+    }
     store = db && userId ? dbStore(db, userId) : localStore();
-    state.mode = store.mode;
-    store.start((days, goal) => {
-      state.days = days; state.goal = goal; state.ready = true;
+    store.start((docs) => {
+      state.docs = docs; state.ready = true;
       setStatus(store.mode === "db" ? "Synced to your Claude account" : "Saved on this device");
-      render();
+      if (state.tab !== "review") render(); else renderTabs();
     });
   }
+  function setStatus(t) { $("#status").textContent = t; }
 
-  function setStatus(t) { $("status").textContent = t; }
-  function persistError(e) {
-    console.warn(e);
-    const code = e && e.code;
-    toast(code === "quota_exceeded" ? "Storage is full. Delete some old entries." : "Couldn't save. Check your connection and try again.");
+  // ---------- energy maths ----------
+  function plan(p, tdeeOverride) {
+    const male = p.sex === "male";
+    const bmr = 10 * p.weight + 6.25 * p.height - 5 * p.age + (male ? 5 : -161);
+    const guess = bmr * p.activity;
+    const tdee = tdeeOverride || p.learnedTdee || guess;
+    const maxPace = p.weight * 0.01;
+    const lose = p.goal < p.weight - 0.1, gain = p.goal > p.weight + 0.1;
+    const pace = Math.min(p.pace, maxPace);
+    const daily = (pace * KCAL_PER_KG) / 7;
+    const floor = male ? 1500 : 1200;
+    let budget = lose ? tdee - daily : gain ? tdee + Math.min(daily, 500) : tdee;
+    const floored = budget < floor;
+    budget = Math.max(budget, floor);
+    budget = Math.round(budget / 10) * 10;
+    return { bmr, guess, tdee, budget, floor, floored, pace, paceCapped: p.pace > maxPace, lose, gain,
+      protein: r((budget * 0.25) / 4), carbs: r((budget * 0.47) / 4), fat: r((budget * 0.28) / 9) };
+  }
+  function validateProfile(p) {
+    if (!(p.age >= 18 && p.age <= 100)) return "PlateWise is for adults 18 and over.";
+    if (!(p.height >= 120 && p.height <= 230)) return "Enter your height in centimetres, between 120 and 230.";
+    if (!(p.weight >= 35 && p.weight <= 300)) return "Enter your weight in kilograms, between 35 and 300.";
+    if (!(p.goal >= 35 && p.goal <= 300)) return "Enter a goal weight in kilograms.";
+    const bmi = p.goal / (p.height / 100) ** 2;
+    if (bmi < 18.5) return `A goal of ${p.goal} kg is in the underweight range for your height. Choose ${Math.ceil(18.5 * (p.height / 100) ** 2)} kg or more.`;
+    return "";
   }
 
-  // ---------- derived ----------
-  const entriesFor = (key) => state.days[key] || [];
-  function totals(entries) {
-    return entries.reduce((t, e) => ({ kcal: t.kcal + e.kcal, p: t.p + e.p, c: t.c + e.c, f: t.f + e.f }), { kcal: 0, p: 0, c: 0, f: 0 });
+  function itemCalc(it, oil) {
+    const f = it.per;
+    let kcal = (f[0] * it.grams) / 100, p = (f[1] * it.grams) / 100, c = (f[2] * it.grams) / 100, fat = (f[3] * it.grams) / 100;
+    if (it.oily && oil && OIL[oil] !== 1) { const extra = kcal * (OIL[oil] - 1); kcal += extra; fat = Math.max(0, fat + extra / 9); }
+    return { kcal, p, c, f: fat };
+  }
+  function dayTotals(k) {
+    return dayDoc(k).meals.reduce((t, m) => ({ kcal: t.kcal + m.kcal, p: t.p + m.p, c: t.c + m.c, f: t.f + m.f }), { kcal: 0, p: 0, c: 0, f: 0 });
+  }
+  function ema(list) {
+    let out = [], prev = null;
+    for (const w of list) {
+      if (!prev) prev = { date: w.date, v: w.kg };
+      else { const dt = Math.max(daysBetween(prev.date, w.date), 0.5); const a = 1 - Math.exp(-dt / 7); prev = { date: w.date, v: prev.v + a * (w.kg - prev.v) }; }
+      out.push({ date: w.date, kg: w.kg, trend: prev.v });
+    }
+    return out;
+  }
+  // Back-solve true daily burn from logged intake and the smoothed weight trend.
+  function learnBurn() {
+    const tr = ema(weights());
+    if (tr.length < 2) return null;
+    const end = tr[tr.length - 1];
+    const start = tr.find((t) => daysBetween(t.date, end.date) <= 28) || tr[0];
+    const span = daysBetween(start.date, end.date);
+    if (span < 14) return { need: `${14 - span} more day${14 - span === 1 ? "" : "s"} of weigh-ins` };
+    let sum = 0, n = 0;
+    for (let k = start.date; k <= end.date; k = shift(k, 1)) { const t = dayTotals(k).kcal; if (t > 0) { sum += t; n++; } }
+    if (n < 7) return { need: `${7 - n} more logged day${7 - n === 1 ? "" : "s"}` };
+    const change = end.trend - start.trend;
+    const tdee = sum / n - (change * KCAL_PER_KG) / span;
+    return { tdee: Math.min(Math.max(tdee, 1200), 5000), avg: sum / n, span, change };
+  }
+
+  // ---------- AI scan ----------
+  function foodList() { return FOODS.map((f) => `${f.id}: ${f.name} (typical ${f.portion} g = ${f.unit})`).join("\n"); }
+  function scanPrompt(kind, text, note) {
+    return `You are the food-recognition step of a calorie tracker used mainly in Ghana. ${kind === "photo" ? "Look at the meal photo." : "Read the meal description below."}
+Split the meal into separate foods. For each food, estimate the edible portion in grams, using the plate size, cutlery, hands and typical Ghanaian serving sizes (a ball of banku or kenkey, a chop-bar bowl) as scale. Do not compute calories for foods you match; the app computes those from its own table.
+
+Match each food to one id from this table when it fits; otherwise use null and give your own per-100 g nutrition estimate:
+${foodList()}
+
+${text ? `Meal description: "${text.slice(0, 600)}"\n` : ""}${note ? `User note: "${note.slice(0, 200)}"\n` : ""}
+Reply with only JSON in this shape:
+{"is_food": true, "items": [{"name": "Waakye", "id": "waakye", "grams": 320, "grams_low": 250, "grams_high": 400, "confidence": "high", "per100g": null}], "note": "one short sentence for the user, or empty"}
+- confidence is "high", "medium" or "low"; use "low" when portion or identity is unclear.
+- per100g is null when id is set; otherwise {"kcal": n, "protein": n, "carbs": n, "fat": n}.
+- If the ${kind === "photo" ? "photo shows" : "text describes"} no food, reply {"is_food": false, "items": [], "note": "why"}.`;
+  }
+  async function runScan(kind) {
+    const L = state.log;
+    if (!state.sample) return;
+    const ctl = new AbortController();
+    state.scan = { kind, ctl, preview: kind === "photo" ? L.preview : null };
+    L.error = "";
+    render();
+    try {
+      const opts = { signal: ctl.signal };
+      if (kind === "photo") opts.images = [L.file];
+      const res = await state.sample.json(scanPrompt(kind, kind === "text" ? L.text : "", L.note), opts);
+      if (!res || res.is_food === false || !Array.isArray(res.items) || !res.items.length) {
+        L.error = res?.note ? `No food found: ${res.note}` : "No food found. Try a clearer photo, or describe the meal.";
+        state.scan = null; render(); return;
+      }
+      const items = res.items.slice(0, 12).map((x) => {
+        const f = FOOD[x.id];
+        const grams = Math.max(1, Math.min(Number(x.grams) || f?.portion || 100, 2000));
+        if (f) return newItem(f, grams, x.confidence, x.name);
+        const p = x.per100g || {};
+        const per = [Number(p.kcal) || 0, Number(p.protein) || 0, Number(p.carbs) || 0, Number(p.fat) || 0];
+        return { key: uid(), fid: null, name: String(x.name || "Food").slice(0, 60), per, grams: r(grams), aiGrams: r(grams), oily: false, conf: x.confidence || "low", aiPer: true, unit: "", portion: r(grams) };
+      });
+      state.scan = null;
+      openReview(items, kind, typeof res.note === "string" ? res.note : "");
+    } catch (e) {
+      state.scan = null;
+      const msg = {
+        cancelled: "", not_granted: "PlateWise needs your permission to use Claude for photo and text logging. You can still search foods.",
+        rate_limited: "Too many scans right now. Wait a minute, then try again.", image_rejected: "That image couldn't be read. Try a JPEG or PNG photo.",
+        images_unavailable: "Photo scanning isn't available here. Describe the meal instead.", invalid_json: "The scan came back unreadable. Try again.",
+        refused: "That couldn't be analysed. Try a different photo or description.", session_expired: "Sign in to Claude again, then retry.",
+      }[e?.code];
+      L.error = msg ?? "The scan didn't finish. Check your connection and try again.";
+      if (e?.code === "not_granted" || e?.code === "sampling_disabled") state.sample = null;
+      render();
+    }
+  }
+  function newItem(f, grams, conf = "high", aiName) {
+    return { key: uid(), fid: f.id, name: f.name, aiName, per: f.per, grams: r(grams), aiGrams: r(grams), oily: f.oily, conf, unit: f.unit, portion: f.portion };
+  }
+  function openReview(items, source, note, meal) {
+    state.review = { items, source, note, oil: "normal", meal: meal || state.log.meal, fav: false, favName: "", q: "", preview: source === "photo" ? state.log.preview : null };
+    state.tab = "review"; render(); window.scrollTo(0, 0);
   }
 
   // ---------- render ----------
   function render() {
-    renderDate(); renderSummary(); renderLog(); renderChart();
-    if (document.activeElement !== $("goalInput")) $("goalInput").value = state.goal;
-    updatePreview();
+    renderTabs();
+    const v = $("#view");
+    if (!state.ready) return;
+    if (!profile() || state.editingProfile) { v.innerHTML = viewProfile(); return; }
+    if (state.scan) { v.innerHTML = viewScanning(); return; }
+    v.innerHTML = { today: viewToday, log: viewLog, review: viewReview, progress: viewProgress, me: viewMe }[state.tab]();
   }
-
-  function renderDate() {
-    const t = todayKey();
-    const d = keyToDate(state.date);
-    const label = state.date === t ? "Today" : state.date === shiftKey(t, -1) ? "Yesterday" : d.toLocaleDateString(undefined, { weekday: "short" });
-    $("dateLabel").textContent = `${label}, ${d.toLocaleDateString(undefined, { month: "short", day: "numeric" })}`;
-    $("nextDay").disabled = state.date >= t;
-    $("nextDay").style.opacity = state.date >= t ? 0.35 : 1;
-    $("todayBtn").hidden = state.date === t;
-  }
-
-  function renderSummary() {
-    const entries = entriesFor(state.date);
-    const t = totals(entries);
-    const left = state.goal - t.kcal;
-    const pct = Math.min(t.kcal / state.goal, 1);
-    const C = 2 * Math.PI * 52;
-    const arc = $("ringArc");
-    arc.setAttribute("stroke-dashoffset", String(C * (1 - pct)));
-    arc.setAttribute("stroke", left < 0 ? "var(--over)" : "var(--leaf)");
-    $("ring").classList.toggle("over", left < 0);
-    $("remaining").textContent = Math.abs(round(left)).toLocaleString();
-    $("remainingLbl").textContent = left < 0 ? "kcal over" : "kcal left";
-    $("goalVal").textContent = state.goal.toLocaleString() + " kcal";
-    $("eatenVal").textContent = round(t.kcal).toLocaleString() + " kcal";
-    $("countVal").textContent = entries.length;
-
-    const targets = { p: state.goal * 0.25 / 4, c: state.goal * 0.5 / 4, f: state.goal * 0.25 / 9 };
-    const rows = [["Protein", "p", "--protein"], ["Carbs", "c", "--carbs"], ["Fat", "f", "--fat"]];
-    $("macros").innerHTML = rows.map(([label, k, color]) => {
-      const w = Math.min(t[k] / targets[k], 1) * 100;
-      return `<div class="macro"><div class="top"><span>${label}</span><span class="num">${round(t[k])} / ${round(targets[k])} g</span></div>
-        <div class="bar"><i style="width:${w}%;background:var(${color})"></i></div></div>`;
-    }).join("");
-  }
-
-  function esc(s) { return String(s).replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch])); }
-
-  function renderLog() {
-    const log = $("log");
-    if (!state.ready) { log.innerHTML = `<h2>Food log</h2><p class="empty">Loading your log…</p>`; return; }
-    const entries = entriesFor(state.date);
-    const sections = MEALS.map((meal) => {
-      const items = entries.filter((e) => e.meal === meal);
-      const sum = round(items.reduce((s, e) => s + e.kcal, 0));
-      const list = items.length
-        ? `<ul class="entries">${items.map((e) => `
-            <li><div class="name">${esc(e.name)}<small>${esc(e.qty)} · P ${r1(e.p)} · C ${r1(e.c)} · F ${r1(e.f)} g</small></div>
-            <span class="kcal">${round(e.kcal)}</span>
-            <button class="del" data-id="${esc(e.id)}" aria-label="Remove ${esc(e.name)}">×</button></li>`).join("")}</ul>`
-        : `<p class="empty">Nothing logged for ${meal.toLowerCase()}.</p>`;
-      return `<div class="meal"><div class="meal-head"><h2>${meal}</h2><span>${sum} kcal</span></div>${list}</div>`;
-    }).join("");
-    const intro = entries.length ? "" : `<p class="empty">Your log for this day is empty. Search for a food above, pick a serving size and meal, then press Add to log.</p>`;
-    log.innerHTML = intro + sections;
-  }
-
-  function renderChart() {
-    const W = 340, H = 170, top = 18, bottom = 28, left = 6, right = 6;
-    const days = Array.from({ length: 7 }, (_, i) => shiftKey(state.date, i - 6));
-    const vals = days.map((k) => totals(entriesFor(k)).kcal);
-    const max = Math.max(state.goal * 1.15, ...vals, 1);
-    const plotH = H - top - bottom;
-    const y = (v) => top + plotH - (v / max) * plotH;
-    const slot = (W - left - right) / 7, bw = slot * 0.56;
-    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Calories eaten each of the last 7 days compared with your goal">`;
-    s += `<line x1="${left}" x2="${W - right}" y1="${y(0)}" y2="${y(0)}" stroke="var(--line)"/>`;
-    days.forEach((k, i) => {
-      const v = vals[i], x = left + slot * i + (slot - bw) / 2;
-      const fill = v > state.goal ? "var(--over)" : k === state.date ? "var(--leaf)" : "var(--leaf-soft)";
-      const stroke = k === state.date || v > state.goal ? "none" : "var(--leaf)";
-      if (v > 0) s += `<rect x="${x}" y="${y(v)}" width="${bw}" height="${y(0) - y(v)}" rx="4" fill="${fill}" stroke="${stroke}" stroke-width="1"/>`;
-      if (v > 0) s += `<text class="val" x="${x + bw / 2}" y="${y(v) - 4}" text-anchor="middle">${round(v)}</text>`;
-      const lbl = keyToDate(k).toLocaleDateString(undefined, { weekday: "short" });
-      s += `<text x="${x + bw / 2}" y="${H - 9}" text-anchor="middle"${k === state.date ? ' style="fill:var(--ink);font-weight:600"' : ""}>${lbl}</text>`;
+  function renderTabs() {
+    const show = state.ready && profile() && !state.editingProfile;
+    $("#tabs").hidden = !show;
+    document.querySelectorAll("#tabs [data-tab]").forEach((b) => {
+      const cur = b.dataset.tab === state.tab || (state.tab === "review" && b.dataset.tab === "log");
+      if (cur) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
     });
-    s += `<line x1="${left}" x2="${W - right}" y1="${y(state.goal)}" y2="${y(state.goal)}" stroke="var(--ink)" stroke-dasharray="4 4" opacity="0.55"/>`;
-    s += `<text x="${W - right}" y="${y(state.goal) - 4}" text-anchor="end">goal ${state.goal}</text></svg>`;
-    const logged = vals.filter((v) => v > 0);
-    const avg = logged.length ? round(logged.reduce((a, b) => a + b, 0) / logged.length) : 0;
-    s += `<p class="hint">${logged.length ? `Average ${avg.toLocaleString()} kcal over ${logged.length} logged day${logged.length > 1 ? "s" : ""}.` : "Bars appear here as you log days."}</p>`;
-    $("chart").innerHTML = s;
   }
 
-  // ---------- add food ----------
-  let mode = "search", picked = null, activeIdx = -1, matches = [];
-
-  function setMode(m) {
-    mode = m;
-    $("tabSearch").setAttribute("aria-pressed", m === "search");
-    $("tabCustom").setAttribute("aria-pressed", m === "custom");
-    $("customFields").hidden = m !== "custom";
-    $("searchFields").hidden = m !== "search";
-    updatePreview();
+  function viewProfile() {
+    const p = profile() || {};
+    const first = !profile();
+    const opt = (list, val) => list.map(([v, l]) => `<option value="${v}"${Number(val) === v ? " selected" : ""}>${l}</option>`).join("");
+    return `<form class="card" id="profileForm" novalidate style="gap:14px">
+      <div><p class="eyebrow">${first ? "Welcome" : "Your details"}</p><h1>${first ? "Let's set your daily budget" : "Goal and pace"}</h1></div>
+      <p class="muted small">We use your details to estimate how much you burn each day (the Mifflin–St Jeor equation). Your weigh-ins fine-tune it after two weeks.</p>
+      <div class="grid2">
+        <label class="field">Sex<select id="pSex"><option value="female"${p.sex === "female" ? " selected" : ""}>Female</option><option value="male"${p.sex === "male" ? " selected" : ""}>Male</option></select></label>
+        <label class="field">Age<input id="pAge" type="number" inputmode="numeric" min="18" max="100" value="${p.age ?? ""}" placeholder="29"></label>
+        <label class="field">Height (cm)<input id="pHeight" type="number" inputmode="decimal" value="${p.height ?? ""}" placeholder="165"></label>
+        <label class="field">Weight now (kg)<input id="pWeight" type="number" inputmode="decimal" step="0.1" value="${p.weight ?? ""}" placeholder="84"></label>
+        <label class="field">Goal weight (kg)<input id="pGoal" type="number" inputmode="decimal" step="0.1" value="${p.goal ?? ""}" placeholder="76"></label>
+        <label class="field">How active are you?<select id="pAct">${opt(ACTIVITY, p.activity ?? 1.375)}</select></label>
+      </div>
+      <label class="field">How fast?<select id="pPace">${opt(PACES, p.pace ?? 0.5)}</select></label>
+      <p class="err" id="pErr" hidden></p>
+      <div id="pPreview"></div>
+      <div class="row">${first ? "" : `<button type="button" class="btn ghost" data-act="cancelProfile">Cancel</button>`}<button class="btn grow" type="submit">${first ? "Start tracking" : "Save changes"}</button></div>
+      <p class="muted small">PlateWise gives estimates for general wellness. It is not medical advice. Budgets never go below 1,200 kcal (women) or 1,500 kcal (men), and loss is capped at 1% of your weight a week.</p>
+    </form>`;
+  }
+  function readProfileForm() {
+    const n = (id) => parseFloat($("#" + id).value);
+    return { sex: $("#pSex").value, age: n("pAge"), height: n("pHeight"), weight: n("pWeight"), goal: n("pGoal"), activity: n("pAct"), pace: n("pPace") };
+  }
+  function updateProfilePreview() {
+    const box = $("#pPreview"); if (!box) return;
+    const p = readProfileForm();
+    if (validateProfile(p)) { box.innerHTML = ""; return; }
+    const old = profile();
+    const pl = plan({ ...p, learnedTdee: old && old.weight === p.weight && old.activity === p.activity ? old.learnedTdee : null });
+    const weeks = pl.lose && pl.pace > 0 ? Math.ceil((p.weight - p.goal) / pl.pace) : null;
+    box.innerHTML = `<div class="good"><b style="font-size:24px;letter-spacing:-0.02em">about ${fmt(pl.budget)} kcal a day</b><br>
+      You burn about ${fmt(pl.tdee)} kcal a day${weeks ? `. At ${pl.pace} kg a week you'd reach ${p.goal} kg in roughly ${weeks} weeks` : ""}.
+      ${pl.floored ? `<br>Raised to the ${fmt(pl.floor)} kcal safety floor.` : ""}${pl.paceCapped ? `<br>Pace capped at 1% of your weight a week.` : ""}</div>`;
   }
 
-  function search(q) {
-    q = q.trim().toLowerCase();
-    if (!q) return [];
+  function ringSvg(frac, over) {
+    const C = 2 * Math.PI * 70;
+    return `<svg viewBox="0 0 160 160" aria-hidden="true"><circle cx="80" cy="80" r="70" fill="none" stroke="var(--line)" stroke-width="14"/>
+      <circle cx="80" cy="80" r="70" fill="none" stroke="${over ? "var(--danger)" : "var(--mint)"}" stroke-width="14" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - Math.min(frac, 1))}"/></svg>`;
+  }
+
+  function viewToday() {
+    const p = profile(), pl = plan(p);
+    const k = state.date, t = dayTotals(k), meals = dayDoc(k).meals;
+    const left = pl.budget - t.kcal, today = dayKey();
+    const d = keyDate(k);
+    const label = k === today ? "Today" : k === shift(today, -1) ? "Yesterday" : d.toLocaleDateString(undefined, { weekday: "long" });
+    const macro = (name, v, goal) => `<div class="macro"><b>${name}</b><div class="bar"><i style="width:${Math.min(v / goal, 1) * 100}%"></i></div><span class="small muted num">${r(v)} of ${goal} g</span></div>`;
+    const yMeals = dayDoc(shift(k, -1)).meals;
+    return `<div style="display:grid;gap:14px">
+      <div class="row between">
+        <div><p class="eyebrow">${d.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}</p><h1>${label}</h1></div>
+        <div class="date-nav">
+          <button class="icon-btn" data-act="prevDay" aria-label="Previous day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <button class="icon-btn" data-act="nextDay" aria-label="Next day" ${k >= today ? "disabled style='opacity:.35'" : ""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></button>
+        </div>
+      </div>
+      <section class="card"><div class="ring-wrap">
+        <div class="ring ${left < 0 ? "over" : ""}" role="img" aria-label="${fmt(t.kcal)} of ${fmt(pl.budget)} kcal eaten">${ringSvg(t.kcal / pl.budget, left < 0)}
+          <div class="center"><span class="big num">${fmt(Math.abs(left))}</span><span class="small muted" style="font-weight:600">kcal ${left < 0 ? "over" : "left"}</span></div></div>
+        <div class="kv"><div><span class="small muted">Eaten</span><b class="num">about ${fmt(t.kcal)}</b></div><div><span class="small muted">Budget</span><b class="num">${fmt(pl.budget)} kcal</b></div>
+        <span class="small muted">Photo estimates can be off by about a fifth either way.</span></div>
+      </div></section>
+      <div class="macros">${macro("Protein", t.p, pl.protein)}${macro("Carbs", t.c, pl.carbs)}${macro("Fat", t.f, pl.fat)}</div>
+      <div class="row between"><h2>Meals</h2>${!meals.length && yMeals.length ? `<button class="btn ghost sm" data-act="sameAsYesterday">Same as yesterday</button>` : ""}</div>
+      <div style="display:grid;gap:8px">
+        ${meals.map((m) => `<div class="meal"><span class="meal-ico" aria-hidden="true">${esc(m.type[0])}</span>
+          <div class="grow"><span class="small muted" style="font-weight:600">${esc(m.type)} · ${esc(m.time)}</span><div class="names">${esc(m.items.map((i) => i.name).join(", "))}</div></div>
+          <span class="kcal num">~${fmt(m.kcal)}</span>
+          <button class="x-btn" data-act="delMeal" data-id="${esc(m.id)}" aria-label="Delete ${esc(m.type)}">×</button></div>`).join("")}
+        <button class="add-tile" data-act="goLog"><span class="meal-ico" style="background:var(--surface);color:var(--ink)" aria-hidden="true">+</span>
+          <span><b>${meals.length ? "Log another meal" : "Log your first meal"}</b><br><span class="small muted">${left > 0 ? `${fmt(left)} kcal left in this day's budget` : "Snap a photo, describe it, or search"}</span></span></button>
+      </div>
+    </div>`;
+  }
+
+  function viewScanning() {
+    const s = state.scan;
+    return `<section class="card scanning">
+      ${s.preview ? `<img src="${s.preview}" alt="Your meal" style="width:100%;max-height:260px;object-fit:cover;border-radius:18px">` : ""}
+      <div class="spark" aria-hidden="true"></div>
+      <h2>${s.kind === "photo" ? "Looking at your plate…" : "Reading your meal…"}</h2>
+      <p class="muted small">Naming each food and estimating portions. This usually takes 5–30 seconds.</p>
+      <button class="btn ghost sm" data-act="stopScan">Stop</button></section>`;
+  }
+
+  function viewLog() {
+    const L = state.log, ai = !!state.sample;
+    const modes = [["photo", "Photo", ai && state.canImages], ["text", "Describe it", ai], ["search", "Search", true], ["saved", "Saved meals", true]].filter((m) => m[2]);
+    if (!modes.some((m) => m[0] === L.mode)) L.mode = modes[0][0];
+    const mealSel = `<label class="field">Meal<select id="logMeal">${MEALS.map((m) => `<option${m === L.meal ? " selected" : ""}>${m}</option>`).join("")}</select></label>`;
+    let body = "";
+    if (L.mode === "photo") {
+      body = `<label class="drop" for="photoIn">
+          ${L.preview ? `<img src="${L.preview}" alt="Meal photo to scan">` : `<span class="cam" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--on-ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span>
+          <b>Snap or choose a meal photo</b><span class="small muted">Whole plate in view, at a slight angle</span>`}
+          <input id="photoIn" type="file" accept="image/jpeg,image/png,image/webp" capture="environment">
+        </label>
+        ${L.preview ? `<button class="btn ghost sm" data-act="clearPhoto" style="justify-self:start">Choose a different photo</button>` : ""}
+        <label class="field">Anything the photo can't show? (optional)<input id="logNote" type="text" value="${esc(L.note)}" placeholder="From a chop bar · shared bowl · extra oil"></label>
+        ${mealSel}
+        <button class="btn full" data-act="scanPhoto" ${L.file ? "" : "disabled"}>Scan my plate</button>
+        <p class="muted small">Your photo is sent to Claude to identify the food. PlateWise doesn't store it.</p>`;
+    } else if (L.mode === "text") {
+      body = `<label class="field">What did you eat?<textarea id="logText" placeholder="Waakye with one egg, a ladle of stew, gari and two pieces of wele">${esc(L.text)}</textarea></label>
+        ${mealSel}
+        <button class="btn full" data-act="scanText" ${L.text.trim() ? "" : "disabled"}>Work it out</button>`;
+    } else if (L.mode === "search") {
+      const res = searchFoods(L.q);
+      body = `<label class="field">Search foods<input id="logQ" type="search" value="${esc(L.q)}" placeholder="banku, tilapia, kelewele…" autocomplete="off"></label>
+        ${mealSel}
+        <ul class="results">${(L.q.trim() ? res : FOODS.slice(0, 8)).map((f) => `<li><button data-act="pickFood" data-id="${f.id}"><span>${esc(f.name)}</span><small>${r((f.per[0] * f.portion) / 100)} kcal · ${esc(f.unit)}</small></button></li>`).join("") || `<li class="muted small">No match. Try another name${ai ? ", or use Describe it" : ""}.</li>`}</ul>`;
+    } else {
+      const s = saved();
+      body = s.length ? `<ul class="results">${s.map((m) => `<li class="row"><button class="grow" data-act="useSaved" data-id="${esc(m.id)}"><span>${esc(m.name)}</span><small>~${fmt(m.kcal)} kcal</small></button><button class="x-btn" data-act="delSaved" data-id="${esc(m.id)}" aria-label="Remove ${esc(m.name)}">×</button></li>`).join("")}</ul>${mealSel}`
+        : `<p class="muted">No saved meals yet. When you save a meal, tick "Save as a favourite" to log it again in one tap.</p>`;
+    }
+    return `<div style="display:grid;gap:14px">
+      <div><p class="eyebrow">${esc(L.meal)} · ${keyDate(state.date).toLocaleDateString(undefined, { day: "numeric", month: "short" })}</p><h1>Log a meal</h1></div>
+      <div class="chips" role="group" aria-label="How to log">${modes.map(([id, l]) => `<button class="chip" data-act="mode" data-id="${id}" aria-pressed="${L.mode === id}">${l}</button>`).join("")}</div>
+      ${L.error ? `<div class="notice">${esc(L.error)}</div>` : ""}
+      <section class="card">${body}</section>
+      ${!ai ? `<p class="muted small">Photo and describe logging use Claude. They work when PlateWise is opened in Claude; search works everywhere.</p>` : ""}
+    </div>`;
+  }
+  function searchFoods(q) {
+    q = q.trim().toLowerCase(); if (!q) return [];
     const words = q.split(/\s+/);
-    return FOODS.filter((f) => words.every((w) => f.name.toLowerCase().includes(w)))
-      .sort((a, b) => a.name.toLowerCase().indexOf(q) - b.name.toLowerCase().indexOf(q))
-      .slice(0, 8);
+    return FOODS.filter((f) => words.every((w) => (f.name + " " + f.id).toLowerCase().includes(w))).slice(0, 8);
   }
 
-  function showSuggest() {
-    const ul = $("suggest");
-    if (!matches.length) {
-      const q = $("foodSearch").value.trim();
-      ul.innerHTML = q ? `<li aria-disabled="true">No match. Use the Custom tab to enter “${esc(q)}”.</li>` : "";
-      ul.hidden = !q; $("foodSearch").setAttribute("aria-expanded", String(!!q)); return;
+  function reviewTotals() {
+    const R = state.review;
+    return R.items.reduce((t, it) => { const c = itemCalc(it, R.oil); return { kcal: t.kcal + c.kcal, p: t.p + c.p, c: t.c + c.c, f: t.f + c.f }; }, { kcal: 0, p: 0, c: 0, f: 0 });
+  }
+  function itemRow(it) {
+    const c = itemCalc(it, state.review.oil);
+    const max = Math.max(50, r(Math.max(it.aiGrams, it.portion || 100) * 2.5));
+    const low = it.conf === "low";
+    const ai = state.review.source === "photo" || state.review.source === "text";
+    const swap = `<select data-act="swap" data-key="${it.key}" aria-label="Change food"><option value="">${it.fid ? "Change food…" : "Match to a food…"}</option>${FOODS.map((f) => `<option value="${f.id}"${f.id === it.fid ? " selected" : ""}>${esc(f.name)}</option>`).join("")}</select>`;
+    return `<div class="item ${low && ai ? "low" : ""}" data-key="${it.key}">
+      <div class="row between"><b class="grow" style="overflow-wrap:anywhere">${esc(it.name)}</b>
+        ${it.aiPer ? `<span class="badge plain">AI estimate</span>` : ai ? `<span class="badge ${low ? "check" : "ok"}">${low ? "Check this" : "Looks right"}</span>` : ""}
+        <button class="x-btn" data-act="rmItem" data-key="${it.key}" aria-label="Remove ${esc(it.name)}">×</button></div>
+      <div class="row between small"><span class="muted"><span class="g num">${it.grams}</span> g${it.unit ? ` · typical ${esc(it.unit)} is ${it.portion} g` : ""}</span><b class="k num">${fmt(c.kcal)} kcal</b></div>
+      <input type="range" min="5" max="${max}" step="5" value="${it.grams}" data-act="grams" data-key="${it.key}" aria-label="Portion of ${esc(it.name)} in grams">
+      ${swap}
+    </div>`;
+  }
+  function viewReview() {
+    const R = state.review, t = reviewTotals(), pl = plan(profile());
+    const share = pl.budget ? r((t.kcal / pl.budget) * 100) : 0;
+    const anyOily = R.items.some((i) => i.oily);
+    const res = searchFoods(R.q);
+    return `<div style="display:grid;gap:14px">
+      <div class="row"><button class="icon-btn" data-act="cancelReview" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <div><p class="eyebrow">${esc(R.meal)}</p><h1>Check your plate</h1></div></div>
+      ${R.preview ? `<img src="${R.preview}" alt="Your meal" style="width:100%;max-height:220px;object-fit:cover;border-radius:20px">` : ""}
+      ${R.note ? `<div class="good">${esc(R.note)}</div>` : ""}
+      <div style="display:grid;gap:8px" id="items">${R.items.map(itemRow).join("") || `<p class="muted">No items. Add one below.</p>`}</div>
+      <div><label class="field">Add an item<input id="revQ" type="search" value="${esc(R.q)}" placeholder="e.g. gari, egg, shito" autocomplete="off"></label>
+        ${R.q.trim() ? `<ul class="suggest">${res.map((f) => `<li><button data-act="addItem" data-id="${f.id}" style="width:100%"><span>${esc(f.name)}</span><small>${esc(f.unit)}</small></button></li>`).join("") || `<li class="small muted" style="padding:8px">No match</li>`}</ul>` : ""}</div>
+      ${anyOily ? `<section class="card"><b>How much oil was it cooked with?</b><p class="small muted">Oil hides in stews, soups and fried food, so photos undercount it.</p>
+        <div class="chips">${[["light", "Light"], ["normal", "Normal"], ["heavy", "A lot"]].map(([k, l]) => `<button class="chip" data-act="oil" data-id="${k}" aria-pressed="${R.oil === k}">${l}</button>`).join("")}</div></section>` : ""}
+      <section class="card">
+        <div class="total"><span class="big num" id="revTotal">about ${fmt(t.kcal)}</span><span class="muted">kcal</span></div>
+        <p class="small muted" id="revRange">Likely ${fmt(t.kcal * 0.8)}–${fmt(t.kcal * 1.2)} kcal · ${share}% of your ${fmt(pl.budget)} kcal budget · P ${r(t.p)} g · C ${r(t.c)} g · F ${r(t.f)} g</p>
+        <label class="field">Meal<select id="revMeal">${MEALS.map((m) => `<option${m === R.meal ? " selected" : ""}>${m}</option>`).join("")}</select></label>
+        <label class="row small" style="font-weight:600"><input type="checkbox" id="revFav" ${R.fav ? "checked" : ""} style="width:20px;height:20px;accent-color:var(--mint)"> Save as a favourite meal</label>
+        <input id="revFavName" type="text" placeholder="Name it, e.g. My usual waakye" value="${esc(R.favName)}" ${R.fav ? "" : "hidden"}>
+        <button class="btn full" data-act="saveMeal" ${R.items.length ? "" : "disabled"}>Save meal</button>
+      </section>
+    </div>`;
+  }
+  function refreshReviewNumbers() {
+    const R = state.review; if (!R) return;
+    const t = reviewTotals(), pl = plan(profile());
+    $("#revTotal").textContent = `about ${fmt(t.kcal)}`;
+    $("#revRange").textContent = `Likely ${fmt(t.kcal * 0.8)}–${fmt(t.kcal * 1.2)} kcal · ${r((t.kcal / pl.budget) * 100)}% of your ${fmt(pl.budget)} kcal budget · P ${r(t.p)} g · C ${r(t.c)} g · F ${r(t.f)} g`;
+  }
+
+  function weightChart(tr, goal) {
+    const W = 340, H = 180, L = 34, Rr = 8, T = 12, B = 24;
+    if (tr.length < 2) return `<p class="muted small">Log at least two weigh-ins to see your trend. Weigh yourself at the same time each day, ideally in the morning.</p>`;
+    const pts = tr.slice(-60);
+    const d0 = pts[0].date, span = Math.max(daysBetween(d0, pts[pts.length - 1].date), 1);
+    const vals = pts.flatMap((p) => [p.kg, p.trend]).concat(goal ? [goal] : []);
+    const lo = Math.floor(Math.min(...vals) - 0.5), hi = Math.ceil(Math.max(...vals) + 0.5);
+    const x = (d) => L + (daysBetween(d0, d) / span) * (W - L - Rr), y = (v) => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
+    const step = Math.max(1, Math.ceil((hi - lo) / 4));
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Weight trend chart">`;
+    for (let v = lo; v <= hi; v += step) s += `<line x1="${L}" x2="${W - Rr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L - 6}" y="${y(v) + 3.5}" text-anchor="end">${v}</text>`;
+    if (goal && goal >= lo && goal <= hi) s += `<line x1="${L}" x2="${W - Rr}" y1="${y(goal)}" y2="${y(goal)}" stroke="var(--mint-text)" stroke-dasharray="4 4"/><text x="${W - Rr}" y="${y(goal) - 4}" text-anchor="end" style="fill:var(--mint-text)">goal ${goal}</text>`;
+    pts.forEach((p) => (s += `<circle cx="${x(p.date)}" cy="${y(p.kg)}" r="3" fill="var(--muted)" opacity="0.45"/>`));
+    s += `<polyline fill="none" stroke="var(--mint)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="${pts.map((p) => `${x(p.date)},${y(p.trend)}`).join(" ")}"/>`;
+    const last = pts[pts.length - 1];
+    s += `<circle cx="${x(last.date)}" cy="${y(last.trend)}" r="5" fill="var(--mint)" stroke="var(--bg)" stroke-width="2"/>`;
+    const fmtD = (k) => keyDate(k).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+    s += `<text x="${L}" y="${H - 6}">${fmtD(d0)}</text><text x="${W - Rr}" y="${H - 6}" text-anchor="end">${fmtD(last.date)}</text></svg>`;
+    return s + `<p class="small muted">Dots are your weigh-ins; the line is your smoothed trend, which ignores day-to-day water swings of 1–2 kg.</p>`;
+  }
+  function weekBars() {
+    const W = 340, H = 150, T = 16, B = 22, pl = plan(profile());
+    const days = Array.from({ length: 7 }, (_, i) => shift(dayKey(), i - 6)), vals = days.map((k) => dayTotals(k).kcal);
+    const max = Math.max(pl.budget * 1.2, ...vals), y = (v) => T + (1 - v / max) * (H - T - B), slot = W / 7, bw = slot * 0.55;
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Calories eaten each of the last 7 days against your budget">`;
+    days.forEach((k, i) => {
+      const v = vals[i], x = slot * i + (slot - bw) / 2;
+      if (v > 0) s += `<rect x="${x}" y="${y(v)}" width="${bw}" height="${y(0) - y(v)}" rx="6" fill="${v > pl.budget * 1.05 ? "var(--sun)" : "var(--mint)"}"/><text x="${x + bw / 2}" y="${y(v) - 4}" text-anchor="middle" style="fill:var(--ink)">${fmt(v)}</text>`;
+      s += `<text x="${x + bw / 2}" y="${H - 6}" text-anchor="middle">${keyDate(k).toLocaleDateString(undefined, { weekday: "short" })}</text>`;
+    });
+    s += `<line x1="0" x2="${W}" y1="${y(pl.budget)}" y2="${y(pl.budget)}" stroke="var(--ink)" stroke-dasharray="4 4" opacity="0.5"/></svg>`;
+    return s;
+  }
+  function viewProgress() {
+    const p = profile(), pl = plan(p), tr = ema(weights()), last = tr[tr.length - 1];
+    let weekly = null;
+    if (tr.length >= 2) { const ref = tr.find((t) => daysBetween(t.date, last.date) <= 14) || tr[0]; const sp = daysBetween(ref.date, last.date); if (sp >= 5) weekly = ((last.trend - ref.trend) / sp) * 7; }
+    const learn = learnBurn();
+    let learnCard = "";
+    if (learn?.tdee) {
+      const newPlan = plan(p, learn.tdee);
+      const diff = Math.abs(newPlan.budget - pl.budget);
+      learnCard = `<section class="card"><h2>Weekly check-in</h2>
+        <p class="small">Over ${learn.span} days you ate about <b>${fmt(learn.avg)}</b> kcal a day on logged days, and your trend moved ${learn.change > 0 ? "+" : ""}${r1(learn.change)} kg. That means you burn about <b>${fmt(learn.tdee)} kcal a day</b> (our first guess was ${fmt(pl.guess)}).</p>
+        ${diff >= 30 ? `<p class="small">To stay on your ${pl.pace} kg-a-week pace, your budget should be <b>${fmt(newPlan.budget)} kcal</b>.</p><div class="row wrap"><button class="btn sm" data-act="useLearned" data-v="${r(learn.tdee)}">Use ${fmt(newPlan.budget)} kcal</button><button class="btn ghost sm" data-act="keepBudget">Keep ${fmt(pl.budget)}</button></div>`
+          : `<p class="good">Your budget of ${fmt(pl.budget)} kcal is still right for your pace.</p>`}</section>`;
+    } else if (learn?.need) learnCard = `<p class="small muted">PlateWise learns your real daily burn from your weigh-ins and logs. Still needed: ${learn.need}.</p>`;
+    return `<div style="display:grid;gap:14px">
+      <div><p class="eyebrow">Goal ${p.goal} kg · ${pl.pace} kg a week</p><h1>Progress</h1></div>
+      <form class="card" id="weighForm"><b>Weigh in</b><div class="row">
+        <input id="wKg" type="number" step="0.1" inputmode="decimal" placeholder="kg" aria-label="Weight in kilograms" style="flex:1">
+        <input id="wDate" type="date" value="${dayKey()}" max="${dayKey()}" aria-label="Date" style="flex:1"></div>
+        <button class="btn full" type="submit">Save weight</button></form>
+      <div class="stats">
+        <div class="stat"><span class="small muted">Trend now</span><b class="num">${last ? r1(last.trend) + " kg" : "–"}</b></div>
+        <div class="stat"><span class="small muted">Per week</span><b class="num">${weekly == null ? "–" : (weekly > 0 ? "+" : "") + r1(weekly) + " kg"}</b></div>
+        <div class="stat"><span class="small muted">To goal</span><b class="num">${r1(Math.abs((last ? last.trend : p.weight) - p.goal))} kg</b></div>
+      </div>
+      <section class="card chart"><h2>Weight trend</h2>${weightChart(tr, p.goal)}</section>
+      ${learnCard}
+      <section class="card chart"><h2>Last 7 days</h2>${weekBars()}<p class="small muted">The dashed line is your ${fmt(pl.budget)} kcal budget. One day doesn't change your weight; the weekly pattern does.</p></section>
+      ${tr.length ? `<section class="card"><h2>Weigh-ins</h2><div class="list">${tr.slice().reverse().slice(0, 30).map((w) => `<div><span>${keyDate(w.date).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}</span><span class="row"><b class="num">${w.kg} kg</b><button class="x-btn" data-act="delWeight" data-id="${w.date}" aria-label="Delete weigh-in">×</button></span></div>`).join("")}</div></section>` : ""}
+    </div>`;
+  }
+
+  function viewMe() {
+    const p = profile(), pl = plan(p);
+    const act = ACTIVITY.find((a) => a[0] === p.activity)?.[1] || "";
+    return `<div style="display:grid;gap:14px">
+      <div><p class="eyebrow">Your plan</p><h1>Me</h1></div>
+      <section class="card"><div class="row between"><b>Daily budget</b><b class="num" style="font-size:22px">${fmt(pl.budget)} kcal</b></div>
+        <div class="list small">
+          <div><span class="muted">Resting burn (BMR)</span><span class="num">${fmt(pl.bmr)} kcal</span></div>
+          <div><span class="muted">Daily burn ${p.learnedTdee ? "(learned from your scale)" : `(${esc(act.toLowerCase())})`}</span><span class="num">${fmt(pl.tdee)} kcal</span></div>
+          <div><span class="muted">Weight</span><span class="num">${p.weight} kg → ${p.goal} kg</span></div>
+          <div><span class="muted">Pace</span><span>${pl.lose ? "−" : pl.gain ? "+" : ""}${pl.lose || pl.gain ? pl.pace + " kg a week" : "maintain"}</span></div>
+          <div><span class="muted">Targets</span><span class="num">P ${pl.protein} g · C ${pl.carbs} g · F ${pl.fat} g</span></div>
+        </div>
+        ${pl.floored ? `<p class="notice">Your budget is held at the ${fmt(pl.floor)} kcal safety floor.</p>` : ""}
+        ${p.learnedTdee ? `<button class="btn ghost sm" data-act="resetLearned" style="justify-self:start">Go back to the formula estimate</button>` : ""}
+        <button class="btn" data-act="editProfile">Edit details and goal</button></section>
+      <section class="card"><b>How PlateWise counts</b>
+        <p class="small muted">Claude names each food and estimates the grams. Calories come from a food table built on USDA and FAO West Africa data, not from the AI. Expect photo estimates to be off by about 20% either way; your weekly weigh-ins correct for that over time.</p></section>
+      <section class="card"><b>Your data</b>
+        <p class="small muted">${store.mode === "db" ? "Your log is stored privately in your Claude account. Nobody else who opens this page can see it." : "Your log is stored in this browser only."} Meal photos are never stored.</p>
+        ${state.confirmDelete ? `<p class="err">Delete every meal, weigh-in and your profile? This can't be undone.</p><div class="row"><button class="btn ghost sm" data-act="cancelDelete">Keep my data</button><button class="btn danger sm" data-act="deleteAll">Delete everything</button></div>`
+          : `<button class="btn danger sm" data-act="askDelete" style="justify-self:start">Delete all my data</button>`}</section>
+    </div>`;
+  }
+
+  // ---------- actions ----------
+  function saveMeal() {
+    const R = state.review, t = reviewTotals();
+    const meal = {
+      id: uid(), type: R.meal, time: new Date().toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }), source: R.source, oil: R.oil,
+      kcal: r(t.kcal), p: r1(t.p), c: r1(t.c), f: r1(t.f),
+      items: R.items.map((it) => { const c = itemCalc(it, R.oil); return { name: it.name, fid: it.fid, grams: it.grams, aiGrams: it.aiGrams, per: it.per, oily: !!it.oily, conf: it.conf, corrected: it.grams !== it.aiGrams || !!it.swapped, kcal: r(c.kcal), unit: it.unit || "", portion: it.portion || 0 }; }),
+    };
+    const k = state.date, doc = dayDoc(k);
+    put("d" + k, { date: k, meals: [...doc.meals, meal] });
+    if (R.fav) put("saved", { meals: [{ id: uid(), name: R.favName.trim() || meal.items.map((i) => i.name).join(", ").slice(0, 60), kcal: meal.kcal, items: meal.items, oil: R.oil }, ...saved()].slice(0, 50) });
+    state.review = null; state.log = { ...state.log, file: null, preview: null, note: "", text: "", q: "", error: "" };
+    state.tab = "today"; render(); window.scrollTo(0, 0);
+    toast(`${meal.type} saved · about ${fmt(meal.kcal)} kcal`);
+  }
+  function fromSaved(items) {
+    return items.map((i) => ({ key: uid(), fid: i.fid, name: i.name, per: i.per, grams: i.grams, aiGrams: i.grams, oily: i.oily, conf: "high", unit: i.unit, portion: i.portion || i.grams }));
+  }
+
+  document.addEventListener("click", (e) => {
+    const tab = e.target.closest("#tabs [data-tab]");
+    if (tab) {
+      if (state.scan) { state.scan.ctl.abort(); state.scan = null; }
+      state.tab = tab.dataset.tab; state.review = null; state.confirmDelete = false;
+      if (state.tab === "log" && state.date === dayKey()) state.log.meal = defaultMeal();
+      render(); window.scrollTo(0, 0); return;
     }
-    ul.innerHTML = matches.map((f, i) => `<li role="option" data-i="${i}" aria-selected="${i === activeIdx}"><span>${esc(f.name)}</span><small>${f.kcal} kcal · ${esc(f.serving)}</small></li>`).join("");
-    ul.hidden = false; $("foodSearch").setAttribute("aria-expanded", "true");
-  }
-  function hideSuggest() { $("suggest").hidden = true; $("foodSearch").setAttribute("aria-expanded", "false"); }
-
-  function pick(f) {
-    picked = f; $("foodSearch").value = f.name; hideSuggest(); updatePreview(); $("servings").focus();
-  }
-
-  function currentEntry() {
-    if (mode === "search") {
-      const n = parseFloat($("servings").value);
-      if (!picked || !(n > 0)) return null;
-      return { name: picked.name, qty: `${n} × ${picked.serving}`, kcal: picked.kcal * n, p: picked.p * n, c: picked.c * n, f: picked.f * n };
+    const b = e.target.closest("[data-act]"); if (!b || b.tagName === "SELECT" || b.type === "range") return;
+    const id = b.dataset.id, act = b.dataset.act;
+    switch (act) {
+      case "prevDay": state.date = shift(state.date, -1); render(); break;
+      case "nextDay": if (state.date < dayKey()) { state.date = shift(state.date, 1); render(); } break;
+      case "goLog": state.tab = "log"; render(); window.scrollTo(0, 0); break;
+      case "delMeal": { const d = dayDoc(state.date); const m = d.meals.find((x) => x.id === id); const rest = d.meals.filter((x) => x.id !== id); put("d" + state.date, rest.length ? { date: state.date, meals: rest } : null); render(); if (m) toast(`Deleted ${m.type.toLowerCase()}`); break; }
+      case "sameAsYesterday": { const y = dayDoc(shift(state.date, -1)).meals.map((m) => ({ ...m, id: uid() })); put("d" + state.date, { date: state.date, meals: y }); render(); toast(`Copied ${y.length} meal${y.length > 1 ? "s" : ""} from the day before`); break; }
+      case "mode": state.log.mode = id; state.log.error = ""; render(); break;
+      case "clearPhoto": state.log.file = null; state.log.preview = null; render(); break;
+      case "scanPhoto": runScan("photo"); break;
+      case "scanText": runScan("text"); break;
+      case "stopScan": state.scan?.ctl.abort(); break;
+      case "pickFood": openReview([newItem(FOOD[id], FOOD[id].portion)], "search", ""); break;
+      case "useSaved": { const m = saved().find((x) => x.id === id); if (m) { openReview(fromSaved(m.items), "saved", ""); state.review.oil = m.oil || "normal"; render(); } break; }
+      case "delSaved": put("saved", { meals: saved().filter((x) => x.id !== id) }); render(); break;
+      case "cancelReview": state.review = null; state.tab = "log"; render(); break;
+      case "rmItem": state.review.items = state.review.items.filter((i) => i.key !== b.dataset.key); render(); break;
+      case "addItem": state.review.items.push(newItem(FOOD[id], FOOD[id].portion)); state.review.q = ""; render(); break;
+      case "oil": state.review.oil = id; render(); break;
+      case "saveMeal": saveMeal(); break;
+      case "useLearned": { put("profile", { ...profile(), learnedTdee: Number(b.dataset.v) }); render(); toast(`Budget updated to ${fmt(plan(profile()).budget)} kcal`); break; }
+      case "keepBudget": toast("Budget kept"); break;
+      case "resetLearned": { const { learnedTdee, ...p } = profile(); put("profile", p); render(); break; }
+      case "delWeight": put("weights", { entries: weights().filter((w) => w.date !== id) }); render(); break;
+      case "editProfile": state.editingProfile = true; render(); updateProfilePreview(); window.scrollTo(0, 0); break;
+      case "cancelProfile": state.editingProfile = false; render(); break;
+      case "askDelete": state.confirmDelete = true; render(); break;
+      case "cancelDelete": state.confirmDelete = false; render(); break;
+      case "deleteAll": Object.keys(state.docs).forEach((k) => put(k, null)); state.confirmDelete = false; state.tab = "today"; render(); toast("All your data was deleted"); break;
     }
-    const name = $("cName").value.trim();
-    const kcal = parseFloat($("cKcal").value);
-    if (!name || !(kcal >= 0)) return null;
-    const num = (id) => Math.max(parseFloat($(id).value) || 0, 0);
-    return { name, qty: "custom", kcal, p: num("cP"), c: num("cC"), f: num("cF") };
-  }
-
-  function updatePreview() {
-    const e = currentEntry();
-    $("addBtn").disabled = !e || !state.ready;
-    $("preview").textContent = e ? `${round(e.kcal)} kcal · P ${r1(e.p)} g · C ${r1(e.c)} g · F ${r1(e.f)} g` :
-      mode === "search" ? "Pick a food from the list to see its calories." : "Enter a name and calories. Macros are optional.";
-  }
-
-  function defaultMeal() {
-    const h = new Date().getHours();
-    return h < 11 ? "Breakfast" : h < 16 ? "Lunch" : h < 21 ? "Dinner" : "Snacks";
-  }
-
-  async function saveDay(key, entries) {
-    state.days = { ...state.days, [key]: entries };
-    render();
-    try { await store.saveDay(key, entries); } catch (e) { persistError(e); }
-  }
-
-  let toastTimer;
-  function toast(msg) {
-    const t = $("toast"); t.textContent = msg; t.hidden = false;
-    clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.hidden = true), 2200);
-  }
-
-  // ---------- events ----------
-  $("foodSearch").addEventListener("input", (e) => {
-    picked = null; matches = search(e.target.value); activeIdx = matches.length ? 0 : -1; showSuggest(); updatePreview();
-  });
-  $("foodSearch").addEventListener("keydown", (e) => {
-    if ($("suggest").hidden || !matches.length) return;
-    if (e.key === "ArrowDown") { activeIdx = (activeIdx + 1) % matches.length; showSuggest(); e.preventDefault(); }
-    else if (e.key === "ArrowUp") { activeIdx = (activeIdx - 1 + matches.length) % matches.length; showSuggest(); e.preventDefault(); }
-    else if (e.key === "Enter" && activeIdx >= 0) { pick(matches[activeIdx]); e.preventDefault(); }
-    else if (e.key === "Escape") hideSuggest();
-  });
-  $("foodSearch").addEventListener("blur", () => setTimeout(hideSuggest, 150));
-  $("suggest").addEventListener("mousedown", (e) => {
-    const li = e.target.closest("li[data-i]"); if (li) { e.preventDefault(); pick(matches[+li.dataset.i]); }
-  });
-  ["servings", "cName", "cKcal", "cP", "cC", "cF"].forEach((id) => $(id).addEventListener("input", updatePreview));
-  $("tabSearch").addEventListener("click", () => setMode("search"));
-  $("tabCustom").addEventListener("click", () => setMode("custom"));
-
-  $("addForm").addEventListener("submit", (ev) => {
-    ev.preventDefault();
-    const e = currentEntry(); if (!e || !state.ready) return;
-    const entry = { id: uid(), meal: $("meal").value, ...e, kcal: r1(e.kcal), p: r1(e.p), c: r1(e.c), f: r1(e.f) };
-    saveDay(state.date, [...entriesFor(state.date), entry]);
-    toast(`Added ${entry.name} to ${entry.meal.toLowerCase()}`);
-    if (mode === "search") { picked = null; $("foodSearch").value = ""; $("servings").value = 1; $("foodSearch").focus(); }
-    else { ["cName", "cKcal", "cP", "cC", "cF"].forEach((id) => ($(id).value = "")); $("cName").focus(); }
-    updatePreview();
   });
 
-  $("log").addEventListener("click", (ev) => {
-    const btn = ev.target.closest(".del"); if (!btn) return;
-    const entries = entriesFor(state.date);
-    const removed = entries.find((e) => e.id === btn.dataset.id);
-    saveDay(state.date, entries.filter((e) => e.id !== btn.dataset.id));
-    if (removed) toast(`Removed ${removed.name}`);
+  document.addEventListener("input", (e) => {
+    const t = e.target;
+    if (t.id === "logNote") state.log.note = t.value;
+    else if (t.id === "logText") { state.log.text = t.value; const btn = $('[data-act="scanText"]'); if (btn) btn.disabled = !t.value.trim(); }
+    else if (t.id === "logQ") { state.log.q = t.value; const pos = t.selectionStart; render(); const n = $("#logQ"); n.focus(); n.setSelectionRange(pos, pos); }
+    else if (t.id === "revQ") { state.review.q = t.value; const pos = t.selectionStart; render(); const n = $("#revQ"); n.focus(); n.setSelectionRange(pos, pos); }
+    else if (t.id === "revFavName") state.review.favName = t.value;
+    else if (t.dataset.act === "grams") {
+      const it = state.review.items.find((i) => i.key === t.dataset.key); if (!it) return;
+      it.grams = Number(t.value);
+      const row = t.closest(".item"); $(".g", row).textContent = it.grams; $(".k", row).textContent = `${fmt(itemCalc(it, state.review.oil).kcal)} kcal`;
+      refreshReviewNumbers();
+    } else if (t.closest("#profileForm")) updateProfilePreview();
   });
 
-  $("goalForm").addEventListener("submit", async (ev) => {
-    ev.preventDefault();
-    const g = Math.round(parseFloat($("goalInput").value));
-    if (!(g >= 800 && g <= 6000) || !state.ready) return;
-    state.goal = g; render(); toast(`Daily goal set to ${g.toLocaleString()} kcal`);
-    try { await store.saveGoal(g); } catch (e) { persistError(e); }
+  document.addEventListener("change", (e) => {
+    const t = e.target;
+    if (t.id === "photoIn" && t.files?.[0]) {
+      const f = t.files[0];
+      if (state.log.preview) URL.revokeObjectURL(state.log.preview);
+      state.log.file = f; state.log.preview = URL.createObjectURL(f); state.log.error = ""; render();
+    } else if (t.id === "logMeal") state.log.meal = t.value;
+    else if (t.id === "revMeal") state.review.meal = t.value;
+    else if (t.id === "revFav") { state.review.fav = t.checked; $("#revFavName").hidden = !t.checked; }
+    else if (t.dataset.act === "swap" && t.value) {
+      const it = state.review.items.find((i) => i.key === t.dataset.key), f = FOOD[t.value];
+      Object.assign(it, { fid: f.id, name: f.name, per: f.per, oily: f.oily, unit: f.unit, portion: f.portion, aiPer: false, swapped: true, conf: "high" });
+      render();
+    } else if (t.closest("#profileForm")) updateProfilePreview();
   });
 
-  $("prevDay").addEventListener("click", () => { state.date = shiftKey(state.date, -1); render(); });
-  $("nextDay").addEventListener("click", () => { if (state.date < todayKey()) { state.date = shiftKey(state.date, 1); render(); } });
-  $("todayBtn").addEventListener("click", () => { state.date = todayKey(); render(); });
+  document.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (e.target.id === "profileForm") {
+      const p = readProfileForm(), err = validateProfile(p);
+      const box = $("#pErr");
+      if (err) { box.textContent = err; box.hidden = false; return; }
+      const old = profile();
+      const keepLearned = old?.learnedTdee && old.weight === p.weight && old.activity === p.activity;
+      const next = { ...p, ...(keepLearned ? { learnedTdee: old.learnedTdee } : {}), start: old?.start || p.weight, startDate: old?.startDate || dayKey() };
+      put("profile", next);
+      if (!old && !weights().length) put("weights", { entries: [{ date: dayKey(), kg: p.weight }] });
+      state.editingProfile = false; state.tab = "today"; render(); window.scrollTo(0, 0);
+      toast(old ? "Details saved" : `Your budget is ${fmt(plan(next).budget)} kcal a day`);
+    } else if (e.target.id === "weighForm") {
+      const kg = parseFloat($("#wKg").value), date = $("#wDate").value || dayKey();
+      if (!(kg >= 30 && kg <= 300)) { toast("Enter your weight in kilograms"); return; }
+      put("weights", { entries: [...weights().filter((w) => w.date !== date), { date, kg: r1(kg) }] });
+      render(); toast(`Saved ${r1(kg)} kg`);
+    }
+  });
 
-  $("meal").value = defaultMeal();
   render();
   connect();
 })();
