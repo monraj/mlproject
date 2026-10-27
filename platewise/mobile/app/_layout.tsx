@@ -15,6 +15,7 @@ import {
 import { ThemeProvider, useTheme } from '../src/theme/ThemeProvider';
 import { AppStateProvider, useApp } from '../src/state/AppState';
 import { syncReminders } from '../src/lib/reminders';
+import { loadServerSettings } from '../src/api/client';
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
@@ -63,11 +64,16 @@ export default function RootLayout() {
     PlusJakartaSans_800ExtraBold,
   });
 
+  const [serverReady, setServerReady] = React.useState(false);
   useEffect(() => {
-    if (loaded) SplashScreen.hideAsync().catch(() => undefined);
-  }, [loaded]);
+    loadServerSettings().finally(() => setServerReady(true));
+  }, []);
 
-  if (!loaded) return null;
+  useEffect(() => {
+    if (loaded && serverReady) SplashScreen.hideAsync().catch(() => undefined);
+  }, [loaded, serverReady]);
+
+  if (!loaded || !serverReady) return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

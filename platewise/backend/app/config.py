@@ -25,6 +25,12 @@ class Settings(BaseSettings):
     openfoodfacts_url: str = "https://world.openfoodfacts.org"
     cors_origins: str = "*"
 
+    # When set, every request except /health must send this code in the X-PlateWise-Code header.
+    # Set it on any server reachable from the internet so strangers can't spend your AI quota.
+    app_access_code: str | None = None
+    # Most AI requests one address may make per hour (0 = no limit).
+    ai_requests_per_hour: int = 120
+
 
 @lru_cache
 def get_settings() -> Settings:

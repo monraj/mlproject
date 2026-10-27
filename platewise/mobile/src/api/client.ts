@@ -1,12 +1,39 @@
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Candidate, DraftItem, FlexPlan, OilLevel, Per100 } from '../state/types';
 
+const SERVER_KEY = 'platewise:server';
+let saved: { url: string; code: string } = { url: '', code: '' };
+
+/** Load the server address and access code the person typed in Me (call once at startup). */
+export async function loadServerSettings(): Promise<void> {
+  try {
+    const raw = await AsyncStorage.getItem(SERVER_KEY);
+    if (raw) saved = { url: '', code: '', ...(JSON.parse(raw) as Partial<typeof saved>) };
+  } catch {
+    // keep defaults
+  }
+}
+
+export function serverSettings(): { url: string; code: string } {
+  return saved;
+}
+
+export async function saveServerSettings(url: string, code: string): Promise<void> {
+  let u = url.trim().replace(/\/$/, '');
+  // No scheme typed: local addresses (this Wi-Fi) use http, anything else https.
+  if (u && !/^https?:\/\//.test(u)) u = `${/^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(u) ? 'http' : 'https'}://${u}`;
+  saved = { url: u, code: code.trim() };
+  await AsyncStorage.setItem(SERVER_KEY, JSON.stringify(saved));
+}
+
 /**
- * Where the PlateWise server is. Set EXPO_PUBLIC_API_URL to override. Otherwise, in development we
- * assume the server runs on the same computer as `expo start`, on port 8000.
+ * Where the PlateWise server is: the address saved in Me, else EXPO_PUBLIC_API_URL, else (in
+ * development) the computer running `expo start`, port 8000.
  */
 export function apiBase(): string {
+  if (saved.url) return saved.url;
   const env = process.env.EXPO_PUBLIC_API_URL;
   if (env) return env.replace(/\/$/, '');
   const host = Constants.expoConfig?.hostUri?.split(':')[0];
@@ -25,9 +52,16 @@ async function call<T>(path: string, init: RequestInit = {}, timeoutMs = 90000):
   const timer = setTimeout(() => ctl.abort(), timeoutMs);
   let res: Response;
   try {
-    res = await fetch(`${apiBase()}${path}`, { ...init, signal: ctl.signal });
+    const headers = new Headers(init.headers);
+    if (saved.code) headers.set('X-PlateWise-Code', saved.code);
+    res = await fetch(`${apiBase()}${path}`, { ...init, headers, signal: ctl.signal });
   } catch {
-    throw new ApiError("Can't reach the PlateWise server. Check it's running and your phone is on the same Wi-Fi.", 0);
+    throw new ApiError(
+      saved.url
+        ? "Can't reach the PlateWise server. Check your internet. A free server can take up to a minute to wake up, so try again."
+        : "Can't reach the PlateWise server. Set its address in Me → PlateWise server.",
+      0,
+    );
   } finally {
     clearTimeout(timer);
   }
@@ -122,7 +156,13 @@ export type Idea = { id: string; name: string; detail: string; badge: string; ca
 export type ProductInfo = { barcode: string | null; name: string; per100: Per100; serving_g: number | null; serving_label: string; source: string };
 
 export const api = {
-  health: () => call<Health>('/health', {}, 6000),
+  health: () => call<Health>('/health', {}, 70000),
+  /** Checks the access code too (health doesn't need one). */
+  check: async () => {
+    const h = await call<Health>('/health', {}, 70000);
+    await call<unknown>('/foods/search?q=egg', {}, 20000);
+    return h;
+  },
   scanPhoto: async (uri: string, meal: string, note?: string) => toScan(await call<ApiScan>('/scans', { method: 'POST', body: await imageForm(uri, { meal, note }) })),
   parseText: async (text: string, lang: 'en' | 'tw' | 'pcm', meal: string) => toScan(await call<ApiScan>('/parse', json({ text, lang, meal }))),
   coach: (messages: { role: 'user' | 'assistant'; content: string }[], context: string, sex: string, hideNumbers: boolean) =>

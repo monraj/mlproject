@@ -10,7 +10,7 @@ import { useTheme, type ThemePref } from '../../src/theme/ThemeProvider';
 import { useApp } from '../../src/state/AppState';
 import { kcal } from '../../src/lib/format';
 import { profileBudget } from '../../src/state/calc';
-import { api, apiBase, type Health } from '../../src/api/client';
+import { api, apiBase, saveServerSettings, serverSettings, type Health } from '../../src/api/client';
 import { askPermission } from '../../src/lib/reminders';
 import { WEEKDAYS } from '../../src/lib/dates';
 import { font } from '../../src/theme/tokens';
@@ -40,9 +40,32 @@ export default function Me() {
   const router = useRouter();
   const p = s.profile!;
   const [health, setHealth] = useState<Health | null | 'down'>(null);
+  const [healthError, setHealthError] = useState<string | null>(null);
+  const [serverUrl, setServerUrl] = useState(serverSettings().url);
+  const [serverCode, setServerCode] = useState(serverSettings().code);
+  const [testing, setTesting] = useState(false);
+  const check = () => {
+    setHealth(null);
+    setHealthError(null);
+    return api
+      .check()
+      .then(setHealth)
+      .catch((e: Error) => {
+        setHealth('down');
+        setHealthError(e.message);
+      });
+  };
   useEffect(() => {
-    api.health().then(setHealth).catch(() => setHealth('down'));
+    check();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  const saveServer = async () => {
+    setTesting(true);
+    await saveServerSettings(serverUrl, serverCode);
+    setServerUrl(serverSettings().url);
+    await check();
+    setTesting(false);
+  };
   const r = p.reminders;
   const setReminders = async (patch: Partial<Reminders>) => {
     const next = { ...r, ...patch };
@@ -202,11 +225,41 @@ export default function Me() {
           PlateWise server
         </T>
         <T v="small" weight="semibold" color={health === 'down' ? c.amberText : c.mintText}>
-          {health === null ? 'Checking…' : health === 'down' ? 'Not connected. Photo, voice, coach and ideas need the server.' : health.demo ? 'Connected · demo answers (no AI key on the server yet)' : `Connected · AI by ${health.ai}`}
+          {health === null ? 'Checking… (a sleeping free server can take a minute)' : health === 'down' ? healthError ?? 'Not connected.' : health.demo ? 'Connected · demo answers (no AI key on the server yet)' : `Connected · AI by ${health.ai}`}
         </T>
-        <T v="small" size={12} muted selectable>
-          {apiBase()}
+        <T v="small" muted>
+          Server address
         </T>
+        <TextInput
+          value={serverUrl}
+          onChangeText={setServerUrl}
+          placeholder={apiBase()}
+          placeholderTextColor={c.faint}
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="url"
+          accessibilityLabel="Server address"
+          style={[styles.time, { backgroundColor: c.bg, color: c.ink, fontSize: 14 }]}
+        />
+        <T v="small" muted>
+          Access code
+        </T>
+        <TextInput
+          value={serverCode}
+          onChangeText={setServerCode}
+          placeholder="From your server's settings"
+          placeholderTextColor={c.faint}
+          autoCapitalize="none"
+          autoCorrect={false}
+          secureTextEntry
+          accessibilityLabel="Access code"
+          style={[styles.time, { backgroundColor: c.bg, color: c.ink, fontSize: 14 }]}
+        />
+        <Press onPress={saveServer} accessibilityRole="button" style={[styles.saveBtn, { backgroundColor: c.button }]}>
+          <T v="small" weight="bold" color={c.buttonText}>
+            {testing ? 'Connecting…' : 'Save and connect'}
+          </T>
+        </Press>
       </Card>
 
       <T v="small" muted center>
@@ -224,5 +277,6 @@ const styles = StyleSheet.create({
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56 },
   time: { height: 44, borderRadius: 12, paddingHorizontal: 12, fontFamily: font.bold, fontSize: 16 },
+  saveBtn: { height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
   day: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
 });

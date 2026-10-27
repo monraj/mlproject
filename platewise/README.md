@@ -10,7 +10,12 @@ platewise/
   CLAUDE.md  rules the code follows · ROADMAP.md  the full plan
 ```
 
-## Run it on your phone (easiest)
+## Install it as a real Android app
+
+Follow **[INSTALL-ANDROID.md](INSTALL-ANDROID.md)**: server on Render, app built by Expo, installed from a
+link. No computer needs to stay on.
+
+## Try it with Expo Go (computer stays on)
 
 Install **Python 3.12+** and **Node.js 20+** on your computer and the **Expo Go** app on your phone
 (same Wi-Fi). Then:

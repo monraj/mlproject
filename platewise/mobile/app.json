@@ -13,7 +13,20 @@
     },
     "android": {
       "package": "app.platewise.mobile",
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
+      },
+      "versionCode": 1,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.POST_NOTIFICATIONS"
+      ],
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.SYSTEM_ALERT_WINDOW"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -22,8 +35,11 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#FFFFFF",
-          "dark": { "backgroundColor": "#0C111D" },
-          "imageWidth": 120
+          "dark": {
+            "backgroundColor": "#0C111D"
+          },
+          "imageWidth": 120,
+          "image": "./assets/splash-icon.png"
         }
       ],
       [
@@ -33,10 +49,20 @@
           "microphonePermission": false,
           "recordAudioAndroid": false
         }
-      ]
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "PlateWise uses your photos so you can log a meal you already photographed.",
+          "cameraPermission": "PlateWise uses the camera to photograph your meals.",
+          "microphonePermission": false
+        }
+      ],
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": false
-    }
+    },
+    "icon": "./assets/icon.png"
   }
 }

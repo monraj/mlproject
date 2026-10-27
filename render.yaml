@@ -1,0 +1,26 @@
+# Render Blueprint for the PlateWise server (https://render.com/docs/blueprint-spec).
+# New → Blueprint → pick this repo. Render asks for GEMINI_API_KEY and generates the access code.
+services:
+  - type: web
+    name: platewise-api
+    runtime: python
+    plan: free
+    rootDir: platewise/backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: VISION_PROVIDER
+        value: gemini
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-3.5-flash
+      - key: GEMINI_FALLBACK_MODEL
+        value: gemini-flash-lite-latest
+      - key: APP_ACCESS_CODE
+        generateValue: true
+      - key: AI_REQUESTS_PER_HOUR
+        value: "120"
