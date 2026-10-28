@@ -25,12 +25,21 @@ class GeminiProvider:
                 parts.append(types.Part.from_bytes(data=image, mime_type="image/jpeg"))
             parts.append(types.Part.from_text(text=t.content))
             contents.append(types.Content(role="model" if t.role == "assistant" else "user", parts=parts))
-        config = types.GenerateContentConfig(system_instruction=system, response_mime_type="application/json", response_json_schema=schema)
+        def config_for(model: str) -> types.GenerateContentConfig:
+            # Default thinking adds ~4 s to every answer. The AI only identifies foods and chats (the
+            # backend counts calories), so keep thinking minimal; photos get a little more.
+            thinking = None
+            if model == self.model:
+                thinking = types.ThinkingConfig(thinking_level="low" if image is not None else "minimal")
+            return types.GenerateContentConfig(
+                system_instruction=system, response_mime_type="application/json", response_json_schema=schema, thinking_config=thinking
+            )
+
         # Gemini sometimes answers 503 when busy: retry once, then try the lighter fallback model.
         attempts = [self.model, self.model] + ([self.fallback_model] if self.fallback_model else [])
         for i, model in enumerate(attempts):
             try:
-                resp = self.client.models.generate_content(model=model, contents=contents, config=config)
+                resp = self.client.models.generate_content(model=model, contents=contents, config=config_for(model))
                 break
             except errors.ServerError:
                 if i == len(attempts) - 1:
