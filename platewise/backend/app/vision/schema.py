@@ -1,5 +1,6 @@
 """What the models are allowed to return. The models never return calories (CLAUDE.md rule 1)."""
 
+import copy
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
@@ -159,3 +160,13 @@ LABEL_SCHEMA = _obj(
         "from_label": {"type": "boolean"},
     }
 )
+
+
+def meal_schema() -> dict[str, Any]:
+    """MEAL_SCHEMA with catalog_id limited to ids in the food table, so the model can't invent one."""
+    from app.nutrition.foods import load_foods
+
+    schema = copy.deepcopy(MEAL_SCHEMA)
+    item = schema["properties"]["items"]["items"]
+    item["properties"]["catalog_id"] = {"anyOf": [{"type": "string", "enum": sorted(load_foods())}, {"type": "null"}]}
+    return schema

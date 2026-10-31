@@ -23,6 +23,7 @@ import { useTheme } from '../src/theme/ThemeProvider';
 import { useApp } from '../src/state/AppState';
 import { duration } from '../src/lib/motion';
 import { api } from '../src/api/client';
+import { fixDishWords } from '../src/lib/dishWords';
 import { mealForHour } from '../src/lib/format';
 import { font } from '../src/theme/tokens';
 import type { DraftItem } from '../src/state/types';
@@ -85,7 +86,7 @@ export default function Voice() {
     setError(null);
     input.current?.blur();
     try {
-      const r = await api.parseText(text.trim(), CODES[lang], mealForHour(new Date().getHours()));
+      const r = await api.parseText(fixDishWords(text.trim()), CODES[lang], mealForHour(new Date().getHours()));
       if (!r.isFood) {
         setError(r.note ? `No food heard: ${r.note}` : 'We couldn’t find a food in that. Try naming the dish and how much.');
         return;

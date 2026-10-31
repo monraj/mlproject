@@ -3,7 +3,7 @@
 from typing import Any
 
 from app.vision.provider import Turn
-from app.vision.schema import COACH_SCHEMA, IDEAS_SCHEMA, LABEL_SCHEMA, MEAL_SCHEMA
+from app.vision.schema import COACH_SCHEMA, IDEAS_SCHEMA, LABEL_SCHEMA
 
 
 def _item(
@@ -29,7 +29,7 @@ class DemoProvider:
 
     def generate_json(self, *, system: str, turns: list[Turn], schema: dict[str, Any], image: bytes | None = None) -> dict[str, Any]:
         last = turns[-1].content.lower() if turns else ""
-        if schema is MEAL_SCHEMA:
+        if "is_food" in schema.get("properties", {}):
             if image is not None:
                 return {
                     "is_food": True,

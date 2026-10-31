@@ -1,0 +1,111 @@
+import { matchFood } from '../src/ai/matcher';
+import { buildItem, buildScan } from '../src/ai/pipeline';
+import { recommend, type DeviceInfo } from '../src/ai/capability';
+import { GB } from '../src/ai/models';
+
+// Expected values come from backend/app/nutrition/matcher.py, so the phone matches like the server.
+describe('matcher parity with the server', () => {
+  const top = (name: string, aliases: string[] = [], id: string | null = null) => matchFood(name, aliases, id).slice(0, 3).map((m) => [m.food.id, m.score]);
+
+  test('exact names', () => {
+    expect(top('waakye')[0]).toEqual(['waakye', 1]);
+    expect(top('light soup')[0]).toEqual(['light_soup', 1]);
+    expect(top('jollof rice').slice(0, 2)).toEqual([['jollof', 1], ['rice', 0.8]]);
+  });
+
+  test('fuzzy scores and aliases', () => {
+    expect(top('boiled egg').slice(0, 2)).toEqual([['egg', 1], ['fried_egg', 0.737]]);
+    expect(top('kenkey and fish', ['kenkey']).slice(0, 2)).toEqual([['kenkey', 0.95], ['fried_fish', 0.8]]);
+    expect(top('plantain', ['kelewele']).slice(0, 2)).toEqual([['fried_plantain', 1], ['kelewele', 0.95]]);
+  });
+
+  test('catalogue hint and weak matches', () => {
+    expect(top('fufu', [], 'fufu')[0]).toEqual(['fufu', 1]);
+    expect(top('xyzzy')[0][1]).toBeLessThan(0.75);
+  });
+});
+
+describe('pipeline', () => {
+  const base = { grams_estimate: 300, grams_low: 250, grams_high: 350, confidence: 0.9 };
+
+  test('a clear match becomes a draft item with per-100 g values and no calories from the model', () => {
+    const it = buildItem({ ...base, food_name: 'waakye' }, 0);
+    expect(it.foodId).toBe('waakye');
+    expect(it.per100?.kcal).not.toBeNull();
+    expect(it.grams).toBe(300);
+    expect(it.confidence).toBe('ok');
+  });
+
+  test('countable foods use whole pieces', () => {
+    const it = buildItem({ ...base, food_name: 'egg', count: 2, grams_estimate: 100, grams_low: 90, grams_high: 110 }, 0);
+    expect(it.kind).toBe('count');
+    expect(it.count).toBe(2);
+  });
+
+  test('unknown foods stay unmatched and low confidence', () => {
+    const it = buildItem({ ...base, food_name: 'xyzzy' }, 0);
+    expect(it.foodId).toBeNull();
+    expect(it.confidence).toBe('low');
+    expect(it.per100).toBeNull();
+  });
+
+  test('not-food photos return no items', () => {
+    expect(buildScan({ is_food: false, items: [{ ...base, food_name: 'waakye' }] }, 'gemma-on-device').isFood).toBe(false);
+  });
+});
+
+describe('device recommendation', () => {
+  const phone = (over: Partial<DeviceInfo>): DeviceInfo => ({ name: 'Test', ramBytes: 16 * GB, freeBytes: 80 * GB, is64Bit: true, androidApi: 35, ...over });
+
+  test('a 16 GB phone with space gets the full 4B model', () => {
+    const r = recommend(phone({}));
+    expect(r.model?.id).toBe('gemma-3-4b');
+    expect(r.alternative?.id).toBe('gemma-3-1b');
+    expect(r.offline).toContain('Photo scan');
+  });
+
+  test('a 6 GB phone gets the 1B text model', () => {
+    const r = recommend(phone({ ramBytes: 6 * GB }));
+    expect(r.model?.id).toBe('gemma-3-1b');
+    expect(r.offline).not.toContain('Photo scan');
+  });
+
+  test('plenty of memory but little storage falls back to 1B', () => {
+    expect(recommend(phone({ freeBytes: 3 * GB })).model?.id).toBe('gemma-3-1b');
+  });
+
+  test('too little memory, storage, or an old or 32-bit phone gets no model', () => {
+    expect(recommend(phone({ ramBytes: 2 * GB })).model).toBeNull();
+    expect(recommend(phone({ ramBytes: 4 * GB, freeBytes: 1 * GB })).model).toBeNull();
+    expect(recommend(phone({ is64Bit: false })).model).toBeNull();
+    expect(recommend(phone({ androidApi: 26 })).model).toBeNull();
+  });
+});
+
+describe('clarifying question', () => {
+  const { pickQuestion } = require('../src/lib/clarify');
+  const item = (over: object) => ({ ...buildItem({ food_name: 'waakye', grams_estimate: 300, grams_low: 250, grams_high: 350, confidence: 0.9 }, 0), ...over });
+
+  test('asks about the biggest uncertain food first', () => {
+    const q = pickQuestion([item({ id: 'a', confidence: 'low' }), item({ id: 'b', grams: 20, gramsLow: 15, gramsHigh: 25 })]);
+    expect(q).toMatchObject({ itemId: 'a', kind: 'identity' });
+  });
+
+  test('otherwise asks about oil on a big oily dish', () => {
+    const stew = buildItem({ food_name: 'palm nut soup', grams_estimate: 300, grams_low: 250, grams_high: 350, confidence: 0.9 }, 1);
+    if (stew.kind === 'oil') expect(pickQuestion([stew])).toMatchObject({ kind: 'oil' });
+  });
+
+  test('stays quiet when everything is clear', () => {
+    expect(pickQuestion([item({ id: 'a' })])).toBeNull();
+  });
+});
+
+describe('voice dish spellings', () => {
+  const { fixDishWords } = require('../src/lib/dishWords');
+  test('fixes near-miss dish names and leaves everything else', () => {
+    expect(fixDishWords('I had kelewelle with fish')).toBe('I had kelewele with fish');
+    expect(fixDishWords('wakye')).toBe('wakye'); // already a known alias
+    expect(fixDishWords('two balls of kenkey and pepper')).toBe('two balls of kenkey and pepper');
+  });
+});

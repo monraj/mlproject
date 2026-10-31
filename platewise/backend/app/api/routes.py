@@ -15,7 +15,7 @@ from app.safety.rules import calorie_floor
 from app.vision.pipeline import build_scan, prepare_image
 from app.vision.prompts import LABEL_PROMPT, PROMPT_VERSION, coach_system, ideas_prompt, photo_prompt, scan_system, text_prompt
 from app.vision.provider import ProviderError, Turn, get_provider
-from app.vision.schema import COACH_SCHEMA, IDEAS_SCHEMA, LABEL_SCHEMA, MEAL_SCHEMA, CoachAnswer, Ideas, LabelRead, MealAnalysis
+from app.vision.schema import COACH_SCHEMA, IDEAS_SCHEMA, LABEL_SCHEMA, CoachAnswer, Ideas, LabelRead, MealAnalysis, meal_schema
 
 router = APIRouter()
 
@@ -56,7 +56,7 @@ def foods_search(q: str) -> dict[str, Any]:
 @router.post("/scans")
 async def scan(image: UploadFile = File(...), meal: str | None = Form(None), note: str | None = Form(None)) -> dict[str, Any]:
     jpeg = await _read_image(image)  # held in memory only; never stored (CLAUDE.md rule 6)
-    raw = _ai(scan_system(), [Turn("user", photo_prompt(meal, note))], MEAL_SCHEMA, jpeg)
+    raw = _ai(scan_system(), [Turn("user", photo_prompt(meal, note))], meal_schema(), jpeg)
     try:
         analysis = MealAnalysis.model_validate(raw)
     except ValidationError as e:
@@ -66,7 +66,7 @@ async def scan(image: UploadFile = File(...), meal: str | None = Form(None), not
 
 @router.post("/parse")
 def parse(req: ParseRequest) -> dict[str, Any]:
-    raw = _ai(scan_system(), [Turn("user", text_prompt(req.text, req.lang))], MEAL_SCHEMA)
+    raw = _ai(scan_system(), [Turn("user", text_prompt(req.text, req.lang))], meal_schema())
     try:
         analysis = MealAnalysis.model_validate(raw)
     except ValidationError as e:

@@ -24,9 +24,12 @@ import { Chip } from '../../src/components/Chip';
 import { PlateArt } from '../../src/components/PlateArt';
 import { useTheme } from '../../src/theme/ThemeProvider';
 import { useApp } from '../../src/state/AppState';
-import { itemKcal, mealKcal, share } from '../../src/state/calc';
+import { itemGrams, itemKcal, mealKcal, share } from '../../src/state/calc';
 import type { DraftItem } from '../../src/state/types';
 import { approx, range } from '../../src/lib/format';
+import { SHARES, portionPresets } from '../../src/lib/portions';
+import { pickQuestion } from '../../src/lib/clarify';
+import { food as foodById } from '../../src/data/foods';
 import { duration, stagger } from '../../src/lib/motion';
 
 function ItemCard({ item, index }: { item: DraftItem; index: number }) {
@@ -49,6 +52,7 @@ function ItemCard({ item, index }: { item: DraftItem; index: number }) {
   }));
 
   const set = (patch: Partial<DraftItem>) => dispatch({ type: 'updateItem', id: item.id, patch });
+  const f = foodById(item.foodId);
   const max = Math.max(item.gramsHigh * 1.5, item.grams + 20);
 
   return (
@@ -123,6 +127,19 @@ function ItemCard({ item, index }: { item: DraftItem; index: number }) {
         </View>
       )}
 
+      {item.kind !== 'count' && f ? (
+        <View style={[styles.row, { gap: 6, flexWrap: 'wrap' }]} accessibilityLabel="Quick portions">
+          {portionPresets(f).map((p) => (
+            <Chip key={p.label} label={p.label} selected={Math.abs(item.grams - p.grams) < 3} onPress={() => set({ grams: p.grams })} />
+          ))}
+        </View>
+      ) : null}
+      {(item.portionShare ?? 1) < 1 ? (
+        <T v="small" muted>
+          Your share: about {Math.round(itemGrams(item))} g
+        </T>
+      ) : null}
+
       {item.kind === 'oil' ? (
         <View style={[styles.row, { gap: 8 }]} accessibilityRole="radiogroup" accessibilityLabel="How oily was it?">
           {(['light', 'normal', 'very'] as const).map((o) => (
@@ -144,6 +161,13 @@ export default function Review() {
   const hide = !!s.profile?.hideNumbers;
   const unmatched = s.draft.filter((i) => i.per100?.kcal == null);
   const back = { voice: '/voice', text: '/type', barcode: '/barcode' }[s.draftSource as string] ?? '/scan/camera';
+  // Chosen once when the screen opens, so the question doesn't jump around while editing.
+  const [question, setQuestion] = useState(() => pickQuestion(s.draft));
+  const asked = question ? s.draft.find((i) => i.id === question.itemId) : undefined;
+  const answer = (patch: Partial<DraftItem>) => {
+    if (asked) dispatch({ type: 'updateItem', id: asked.id, patch: { ...patch, hint: 'Looks right' } });
+    setQuestion(null);
+  };
 
   return (
     <Screen
@@ -171,6 +195,11 @@ export default function Review() {
           <T v="small" muted>
             {s.draft.length} {s.draft.length === 1 ? 'item' : 'items'} found · tap a name to change it
           </T>
+          {s.draft.some((i) => i.onDevice) ? (
+            <T v="small" weight="semibold" color={c.amberText}>
+              Estimated by Gemma on this phone · ranges are wider
+            </T>
+          ) : null}
         </View>
       </View>
 
@@ -200,6 +229,55 @@ export default function Review() {
           )}
         </View>
       </Animated.View>
+
+      {question && asked ? (
+        <Animated.View entering={FadeInDown.duration(duration.base)} style={[styles.question, { backgroundColor: c.amberTint, borderColor: c.amber }]}>
+          <T v="body" weight="bold" color={c.amberText}>
+            {question.text}
+          </T>
+          {question.kind === 'identity' ? (
+            <View style={[styles.row, { gap: 8 }]}>
+              <Chip label="Yes" onPress={() => answer({ confidence: 'ok' })} style={{ flex: 1, alignItems: 'center' }} />
+              <Chip
+                label="No, change it"
+                onPress={() => {
+                  setQuestion(null);
+                  router.push({ pathname: '/scan/swap', params: { id: asked.id } });
+                }}
+                style={{ flex: 1, alignItems: 'center' }}
+              />
+            </View>
+          ) : (
+            <View style={[styles.row, { gap: 8 }]} accessibilityRole="radiogroup">
+              {(['light', 'normal', 'very'] as const).map((o) => (
+                <Chip key={o} label={o === 'light' ? 'Light' : o === 'normal' ? 'Normal' : 'Very oily'} onPress={() => answer({ oil: o })} style={{ flex: 1, alignItems: 'center' }} />
+              ))}
+            </View>
+          )}
+        </Animated.View>
+      ) : null}
+
+      {s.draft.length ? (
+        <View style={{ gap: 6 }}>
+          <T v="small" weight="semibold" muted>
+            Sharing one bowl or plate?
+          </T>
+          <View style={[styles.row, { gap: 6 }]} accessibilityRole="radiogroup" accessibilityLabel="Your share of the dish">
+            {SHARES.map((x) => {
+              const current = s.draft[0]?.portionShare ?? 1;
+              return (
+                <Chip
+                  key={x.label}
+                  label={x.label}
+                  selected={Math.abs(current - x.value) < 0.01}
+                  onPress={() => s.draft.forEach((it) => dispatch({ type: 'updateItem', id: it.id, patch: { portionShare: x.value } }))}
+                  style={{ flex: 1, alignItems: 'center' }}
+                />
+              );
+            })}
+          </View>
+        </View>
+      ) : null}
 
       <View style={{ gap: 10 }}>
         {s.draft.map((it, i) => (
@@ -235,6 +313,7 @@ export default function Review() {
 }
 
 const styles = StyleSheet.create({
+  question: { gap: 10, padding: 16, borderRadius: 20, borderWidth: 2 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   summary: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 12, borderRadius: 22 },
   thumb: { width: 64, height: 64, borderRadius: 16, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
