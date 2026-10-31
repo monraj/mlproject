@@ -4,8 +4,9 @@ import { food as foodById } from '../data/foods';
 import { CALORIE_FLOOR, OIL_FACTOR } from '../state/calc';
 import type { FlexPlan } from '../state/types';
 import { dayKey, daysBetween } from '../lib/dates';
-import { GemmaError, generateJson } from './gemma';
+import { GemmaError, generateJson, generateText } from './gemma';
 import { buildScan, type MealAnalysis } from './pipeline';
+import { foodFacts, stripUnverifiedNumbers } from './facts';
 import { LABEL_PROMPT, coachSystemCompact, ideasPrompt, photoPrompt, scanSystem, textPrompt } from './prompts';
 import { COACH_SCHEMA, IDEAS_SCHEMA, LABEL_SCHEMA, MEAL_SCHEMA } from './schemas';
 
@@ -37,11 +38,12 @@ export async function parseText(text: string, lang: 'en' | 'tw' | 'pcm', _meal: 
   return buildScan(analysis, PROVIDER);
 }
 
-function trimTurns(messages: { role: 'user' | 'assistant'; content: string }[]) {
-  const t = messages.slice(-4).map((m) => ({ ...m, content: m.content.slice(0, 300) }));
-  while (t.length && t[0].role !== 'user') t.shift();
-  return t;
+function withFacts(system: string, question: string): string {
+  const facts = foodFacts(question);
+  return facts.length ? `${system}\nFacts from the PlateWise food table (use these; don't contradict them):\n${facts.join('\n')}` : system;
 }
+
+const EVENT = /\b(wedding|funeral|party|festival|outdooring|naming|birthday|christmas|easter|ramadan|eid|event|plan (for|around))\b/i;
 
 export async function coach(
   messages: { role: 'user' | 'assistant'; content: string }[],
@@ -50,12 +52,23 @@ export async function coach(
   hideNumbers: boolean,
 ): Promise<{ reply: string; flex_plan: FlexPlan | null }> {
   const floor = CALORIE_FLOOR[sex === 'male' ? 'male' : 'female'];
+  const question = [...messages].reverse().find((m) => m.role === 'user')?.content.slice(0, 500) ?? '';
+  // Only the latest question: earlier answers in the history get copied, mistakes included.
+  const turns = [{ role: 'user' as const, content: question }];
+  const withPlan = EVENT.test(question);
+
+  if (!withPlan) {
+    // Plain text is several times faster on a phone than schema-constrained JSON.
+    const system = withFacts(coachSystemCompact(context, floor, hideNumbers, false), question);
+    const reply = await generateText({ system, turns, maxTokens: 160 });
+    return { reply: stripUnverifiedNumbers(reply.replace(/^["'\s]+|["'\s]+$/g, ''), system + question), flex_plan: null };
+  }
+
   const ans = await generateJson<{ reply: string; flex_plan: { reason: string; days: { date: string; kcal: number }[] } | null }>({
-    system: coachSystemCompact(context, floor, hideNumbers),
-    // Short history keeps the prompt small enough for a phone's CPU.
-    turns: trimTurns(messages),
+    system: withFacts(coachSystemCompact(context, floor, hideNumbers, true), question),
+    turns,
     schema: COACH_SCHEMA,
-    maxTokens: 400,
+    maxTokens: 350,
   });
   let plan: FlexPlan | null = null;
   if (ans.flex_plan) {

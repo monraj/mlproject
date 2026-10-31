@@ -22,6 +22,9 @@ import { useApp } from '../../src/state/AppState';
 import { newId } from '../../src/state/AppState';
 import type { ChatMsg, FlexPlan as Plan } from '../../src/state/types';
 import { api } from '../../src/api/client';
+import { getPrivacy } from '../../src/api/privacy';
+import { warmGemma } from '../../src/ai/gemma';
+import { getGemmaState } from '../../src/ai/modelStore';
 import { coachContext } from '../../src/state/insights';
 import { shortDate, weekdayShort } from '../../src/lib/dates';
 import { mealForHour } from '../../src/lib/format';
@@ -105,6 +108,11 @@ export default function Coach() {
   const scroll = useRef<ScrollView>(null);
   const opening: ChatMsg = { id: 'hello', from: 'coach', text: `Hi${s.profile?.name ? ` ${s.profile.name}` : ''}! Ask me about food, portions or your plan. I can see what you've logged. To log by chat, start with “Log:”.` };
   const msgs = [opening, ...s.chat];
+
+  // When answers will come from the phone, load the model now so the first question doesn't wait.
+  useEffect(() => {
+    if (getGemmaState().mode === 'offline' || !getPrivacy().aiConsent) warmGemma();
+  }, []);
 
   const send = async (value: string) => {
     const v = value.trim();

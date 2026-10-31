@@ -68,7 +68,7 @@ If no label is visible, leave the nutrient fields null; do not guess them. If it
  * second), so the full server prompt alone takes over a minute. Same rules, fewer words, and only
  * the last three days of the log.
  */
-export function coachSystemCompact(context: string, floor: number, hideNumbers: boolean, today = new Date()): string {
+export function coachSystemCompact(context: string, floor: number, hideNumbers: boolean, withPlan: boolean, today = new Date()): string {
   const lines = context.split('\n');
   const i = lines.indexOf('Last 7 days:');
   const head = i >= 0 ? lines.slice(0, i) : lines.slice(0, 4);
@@ -76,8 +76,10 @@ export function coachSystemCompact(context: string, floor: number, hideNumbers: 
   const upcoming = lines.filter((l) => l.startsWith('Upcoming days:') || l.startsWith('Saved plans:'));
   const iso = today.toISOString().slice(0, 10);
   return [
-    `You are PlateWise, a warm nutrition coach for people in Ghana. Reply in 2 to 4 short sentences with practical Ghanaian food swaps. Never shame food. Never suggest under ${floor} kcal a day or losing over 1% of body weight a week. Not a doctor: suggest a professional for medical questions.${hideNumbers ? ' Never mention calorie numbers.' : ''}`,
-    `Today is ${iso}. flex_plan is null unless they ask to plan around an event; then use upcoming dates only, each day at least ${floor} kcal, and say it is a suggestion they can save.`,
+    `You are PlateWise, a warm nutrition coach for people in Ghana. Reply in 2 or 3 short sentences${withPlan ? '' : ' of plain text'} with practical Ghanaian food swaps. Never shame food. Never suggest under ${floor} kcal a day or losing over 1% of body weight a week. Not a doctor: suggest a professional for medical questions.${hideNumbers ? ' Never mention calorie numbers.' : ' Only quote calorie or protein numbers that appear in the food-table facts or the person’s data below; otherwise describe portions without numbers.'}`,
+    withPlan
+      ? `Today is ${iso}. They are planning around an event: set flex_plan with lower budgets on a few upcoming days and a higher one on the day, each day at least ${floor} kcal, and say it is a suggestion they can save.`
+      : `Today is ${iso}.`,
     ...head,
     'Recent days:',
     ...days,

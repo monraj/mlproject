@@ -109,3 +109,34 @@ describe('voice dish spellings', () => {
     expect(fixDishWords('two balls of kenkey and pepper')).toBe('two balls of kenkey and pepper');
   });
 });
+
+describe('food facts for the on-device coach', () => {
+  const { foodFacts } = require('../src/ai/facts');
+  test('grounds named dishes in the food table', () => {
+    const facts = foodFacts('Is red-red a good lunch?');
+    expect(facts[0]).toMatch(/^Red-red \(Beans in palm oil\): a usual portion is .*, about \d+ g, about \d+ kcal/);
+  });
+  test('adds nothing when no food is named', () => {
+    expect(foodFacts('How am I doing this week?')).toEqual([]);
+  });
+});
+
+describe('made-up numbers', () => {
+  const { stripUnverifiedNumbers } = require('../src/ai/facts');
+  const given = 'Kelewele (Spiced fried plantain): a usual portion is 1 portion, about 150 g, about 405 kcal and 2 g protein.';
+  test('drops the clause with invented figures and keeps the advice', () => {
+    expect(stripUnverifiedNumbers('Kelewele is delicious! Try pairing it with black-eyed peas – they’ll add about 180 kcal and 15g of protein to your meal. You could also have spinach stew.', given)).toBe(
+      'Kelewele is delicious! Try pairing it with black-eyed peas. You could also have spinach stew.',
+    );
+  });
+  test('drops invented figures in brackets', () => {
+    expect(stripUnverifiedNumbers('Pair it with boiled plantain (about 150g, 120 kcal, 2g protein) for balance.', given)).toBe('Pair it with boiled plantain for balance.');
+  });
+  test('checks both ends of a range, and dates are not evidence', () => {
+    expect(stripUnverifiedNumbers('Add grilled fish or boiled eggs for extra protein – about 20-30g more.', `${given} Today is 2026-10-30.`)).toBe('Add grilled fish or boiled eggs for extra protein.');
+  });
+  test('keeps numbers that came from the food table', () => {
+    const s = 'A portion of kelewele is about 405 kcal and 2 g protein.';
+    expect(stripUnverifiedNumbers(s, given)).toBe(s);
+  });
+});

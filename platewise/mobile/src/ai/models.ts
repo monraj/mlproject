@@ -14,6 +14,8 @@ export type GemmaModel = {
 const HF = 'https://huggingface.co/ggml-org';
 
 // Public files from ggml-org on Hugging Face (no sign-in needed). Sizes are checked after download.
+// QAT (quantization-aware trained) Q4_0 builds: close to full-precision quality, and Q4_0 uses
+// llama.cpp's fastest ARM kernels (dotprod / i8mm), so phones read prompts much faster.
 export const MODELS: Record<ModelId, GemmaModel> = {
   'gemma-3-4b': {
     id: 'gemma-3-4b',
@@ -21,8 +23,8 @@ export const MODELS: Record<ModelId, GemmaModel> = {
     vision: true,
     nCtx: 4096,
     files: {
-      weights: { name: 'gemma-3-4b-it-Q4_K_M.gguf', url: `${HF}/gemma-3-4b-it-GGUF/resolve/main/gemma-3-4b-it-Q4_K_M.gguf`, bytes: 2489757856 },
-      projector: { name: 'gemma-3-4b-mmproj-f16.gguf', url: `${HF}/gemma-3-4b-it-GGUF/resolve/main/mmproj-model-f16.gguf`, bytes: 851251104 },
+      weights: { name: 'gemma-3-4b-it-qat-Q4_0.gguf', url: `${HF}/gemma-3-4b-it-qat-GGUF/resolve/main/gemma-3-4b-it-qat-Q4_0.gguf`, bytes: 2526080992 },
+      projector: { name: 'gemma-3-4b-qat-mmproj-f16.gguf', url: `${HF}/gemma-3-4b-it-qat-GGUF/resolve/main/mmproj-model-f16-4B.gguf`, bytes: 851251744 },
     },
   },
   'gemma-3-1b': {
@@ -31,7 +33,7 @@ export const MODELS: Record<ModelId, GemmaModel> = {
     vision: false,
     nCtx: 4096,
     files: {
-      weights: { name: 'gemma-3-1b-it-Q4_K_M.gguf', url: `${HF}/gemma-3-1b-it-GGUF/resolve/main/gemma-3-1b-it-Q4_K_M.gguf`, bytes: 806058240 },
+      weights: { name: 'gemma-3-1b-it-qat-Q4_0.gguf', url: `${HF}/gemma-3-1b-it-qat-GGUF/resolve/main/gemma-3-1b-it-qat-Q4_0.gguf`, bytes: 720425600 },
     },
   },
 };

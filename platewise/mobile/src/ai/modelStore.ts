@@ -14,9 +14,11 @@ export type GemmaState = {
   mode: AiMode;
   download: { model: ModelId; done: number; total: number } | null;
   error: string | null;
+  /** How the last on-device answer's time was spent; shown in Me so slowness can be diagnosed. */
+  lastRun: { seconds: number; promptTokens: number; promptPerSec: number; outTokens: number; outPerSec: number } | null;
 };
 
-let state: GemmaState = { loaded: false, installed: null, mode: 'auto', download: null, error: null };
+let state: GemmaState = { loaded: false, installed: null, mode: 'auto', download: null, error: null, lastRun: null };
 const listeners = new Set<() => void>();
 let current: FileSystem.DownloadResumable | null = null;
 let currentKey = '';
@@ -28,6 +30,7 @@ function set(patch: Partial<GemmaState>) {
 }
 
 export const getGemmaState = () => state;
+export const setLastRun = (lastRun: GemmaState['lastRun']) => set({ lastRun });
 export const useGemma = (): GemmaState => useSyncExternalStore((cb) => (listeners.add(cb), () => listeners.delete(cb)), getGemmaState);
 
 const dir = () => `${FileSystem.documentDirectory}gemma/`;
@@ -49,8 +52,23 @@ async function intact(model: GemmaModel): Promise<boolean> {
   return true;
 }
 
+/** Deletes model files the app no longer uses (e.g. after a model update), so they don't eat storage. */
+async function removeStaleFiles(): Promise<void> {
+  try {
+    const keep = new Set(Object.values(MODELS).flatMap((m) => modelFiles(m).flatMap((f) => [f.name, `${f.name}.part`])));
+    const info = await FileSystem.getInfoAsync(dir());
+    if (!info.exists) return;
+    for (const name of await FileSystem.readDirectoryAsync(dir())) {
+      if (!keep.has(name)) await FileSystem.deleteAsync(fileUri(name), { idempotent: true });
+    }
+  } catch {
+    // best effort
+  }
+}
+
 /** Call once at startup: restores the mode and checks that the downloaded files are still there. */
 export async function loadGemmaState(): Promise<void> {
+  await removeStaleFiles();
   let saved: { installed?: ModelId | null; mode?: AiMode } = {};
   try {
     saved = JSON.parse((await AsyncStorage.getItem(KEY)) ?? '{}');

@@ -81,6 +81,11 @@ export function OnDeviceAi({ order }: { order: number }) {
           <T v="small" muted>
             {MODES.find((m) => m.id === g.mode)?.hint}
           </T>
+          {g.lastRun ? (
+            <T v="small" muted>
+              Last answer: {g.lastRun.seconds} s · read {g.lastRun.promptTokens} tokens at {g.lastRun.promptPerSec}/s · wrote {g.lastRun.outTokens} at {g.lastRun.outPerSec}/s
+            </T>
+          ) : null}
           <Press onPress={confirmDelete} accessibilityRole="button" style={styles.textBtn}>
             <T v="small" weight="bold" color={c.muted}>
               Delete model
