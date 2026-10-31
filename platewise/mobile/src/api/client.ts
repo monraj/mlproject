@@ -2,6 +2,10 @@ import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Candidate, DraftItem, FlexPlan, OilLevel, Per100 } from '../state/types';
+import { GemmaError } from '../ai/gemma';
+import * as onDevice from '../ai/local';
+import { getGemmaState, installedModel, isGemmaReady } from '../ai/modelStore';
+import { getPrivacy } from './privacy';
 
 const SERVER_KEY = 'platewise:server';
 let saved: { url: string; code: string } = { url: '', code: '' };
@@ -25,6 +29,7 @@ export async function saveServerSettings(url: string, code: string): Promise<voi
   // No scheme typed: local addresses (this Wi-Fi) use http, anything else https.
   if (u && !/^https?:\/\//.test(u)) u = `${/^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(u) ? 'http' : 'https'}://${u}`;
   saved = { url: u, code: code.trim() };
+  reach = null;
   await AsyncStorage.setItem(SERVER_KEY, JSON.stringify(saved));
 }
 
@@ -155,6 +160,60 @@ export type Health = { status: string; ai: string; demo: boolean; foods: number 
 export type Idea = { id: string; name: string; detail: string; badge: string; category: 'home' | 'chop' | 'quick'; kcal: number; protein: number; items: { food_id: string; name: string; grams: number }[] };
 export type ProductInfo = { barcode: string | null; name: string; per100: Per100; serving_g: number | null; serving_label: string; source: string };
 
+/** Is the server answering right now? Remembered for 20 s so offline use doesn't wait on every request. */
+let reach: { at: number; ok: boolean } | null = null;
+async function serverReachable(): Promise<boolean> {
+  if (reach && Date.now() - reach.at < 20000) return reach.ok;
+  let ok = false;
+  try {
+    await call<Health>('/health', {}, 5000);
+    ok = true;
+  } catch {
+    ok = false;
+  }
+  reach = { at: Date.now(), ok };
+  return ok;
+}
+
+async function onDeviceCall<T>(run: () => Promise<T>): Promise<T> {
+  try {
+    return await run();
+  } catch (e) {
+    if (e instanceof GemmaError) throw new ApiError(e.message, 503);
+    throw e;
+  }
+}
+
+/**
+ * Online or on the phone. Auto mode uses the server when it answers and Gemma on the phone when it
+ * doesn't (no signal, server asleep or down). Without a downloaded model it behaves as before.
+ */
+async function route<T>(online: () => Promise<T>, offline: () => Promise<T>, needsVision = false): Promise<T> {
+  const model = installedModel();
+  const canRun = isGemmaReady() && (!needsVision || !!model?.vision);
+  // Without consent nothing goes to the server: on-device only.
+  const mode = getPrivacy().aiConsent ? getGemmaState().mode : 'offline';
+  if (mode === 'offline' && !canRun && !getPrivacy().aiConsent) {
+    throw new ApiError('To use AI, allow it in Me → Privacy, or download the on-device model in Me → On-device AI.', 403);
+  }
+  if (mode === 'offline') {
+    if (!isGemmaReady()) throw new ApiError('Offline mode is on, but the on-device model is not downloaded. Open Me → On-device AI.', 503);
+    if (!canRun) throw new ApiError('The smaller on-device model cannot read photos. Switch to Auto or Online, or download the larger model.', 503);
+    return onDeviceCall(offline);
+  }
+  if (mode === 'online' || !canRun) return online();
+  if (!(await serverReachable())) return onDeviceCall(offline);
+  try {
+    return await online();
+  } catch (e) {
+    if (e instanceof ApiError && (e.status === 0 || e.status >= 500)) {
+      reach = null;
+      return onDeviceCall(offline);
+    }
+    throw e;
+  }
+}
+
 export const api = {
   health: () => call<Health>('/health', {}, 70000),
   /** Checks the access code too (health doesn't need one). */
@@ -163,12 +222,33 @@ export const api = {
     await call<unknown>('/foods/search?q=egg', {}, 20000);
     return h;
   },
-  scanPhoto: async (uri: string, meal: string, note?: string) => toScan(await call<ApiScan>('/scans', { method: 'POST', body: await imageForm(uri, { meal, note }) })),
-  parseText: async (text: string, lang: 'en' | 'tw' | 'pcm', meal: string) => toScan(await call<ApiScan>('/parse', json({ text, lang, meal }))),
+  scanPhoto: (uri: string, meal: string, note?: string) =>
+    route(
+      async () => toScan(await call<ApiScan>('/scans', { method: 'POST', body: await imageForm(uri, { meal, note }) })),
+      () => onDevice.scanPhoto(uri, meal, note),
+      true,
+    ),
+  parseText: (text: string, lang: 'en' | 'tw' | 'pcm', meal: string) =>
+    route(
+      async () => toScan(await call<ApiScan>('/parse', json({ text, lang, meal }))),
+      () => onDevice.parseText(text, lang, meal),
+    ),
   coach: (messages: { role: 'user' | 'assistant'; content: string }[], context: string, sex: string, hideNumbers: boolean) =>
-    call<{ reply: string; flex_plan: FlexPlan | null }>('/coach', json({ messages, context, sex, hide_numbers: hideNumbers })),
+    route(
+      () => call<{ reply: string; flex_plan: FlexPlan | null }>('/coach', json({ messages, context, sex, hide_numbers: hideNumbers })),
+      () => onDevice.coach(messages, context, sex, hideNumbers),
+    ),
   ideas: (req: { kcal_left: number; protein_left: number; greens_today: number; meal: string; category: string }) =>
-    call<{ ideas: Idea[]; tip: string }>('/ideas', json(req)),
+    route(
+      () => call<{ ideas: Idea[]; tip: string }>('/ideas', json(req)),
+      () => onDevice.ideas(req),
+    ),
+  /** Barcode lookup needs the internet (Open Food Facts); photograph the label to read it offline. */
   product: (code: string) => call<ProductInfo>(`/products/${encodeURIComponent(code)}`, {}, 15000),
-  productLabel: async (uri: string) => call<ProductInfo>('/products/label', { method: 'POST', body: await imageForm(uri) }),
+  productLabel: (uri: string) =>
+    route(
+      async () => call<ProductInfo>('/products/label', { method: 'POST', body: await imageForm(uri) }),
+      () => onDevice.productLabel(uri),
+      true,
+    ),
 };

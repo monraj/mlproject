@@ -16,6 +16,8 @@ import { ThemeProvider, useTheme } from '../src/theme/ThemeProvider';
 import { AppStateProvider, useApp } from '../src/state/AppState';
 import { syncReminders } from '../src/lib/reminders';
 import { loadServerSettings } from '../src/api/client';
+import { loadGemmaState } from '../src/ai/modelStore';
+import { loadPrivacy } from '../src/api/privacy';
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
@@ -66,7 +68,8 @@ export default function RootLayout() {
 
   const [serverReady, setServerReady] = React.useState(false);
   useEffect(() => {
-    loadServerSettings().finally(() => setServerReady(true));
+    loadGemmaState().catch(() => undefined);
+    Promise.all([loadServerSettings(), loadPrivacy()]).finally(() => setServerReady(true));
   }, []);
 
   useEffect(() => {

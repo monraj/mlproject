@@ -5,6 +5,8 @@ import { Screen } from '../../src/components/Screen';
 import { T } from '../../src/components/T';
 import { Card, Rise } from '../../src/components/Card';
 import { Press } from '../../src/components/Press';
+import { OnDeviceAi } from '../../src/components/OnDeviceAi';
+import { PrivacyCard } from '../../src/components/PrivacyCard';
 import { Icon, type IconName } from '../../src/components/Icon';
 import { useTheme, type ThemePref } from '../../src/theme/ThemeProvider';
 import { useApp } from '../../src/state/AppState';
@@ -220,7 +222,11 @@ export default function Me() {
         />
       </Card>
 
-      <Card order={5} style={{ gap: 4 }}>
+      <PrivacyCard order={5} />
+
+      <OnDeviceAi order={6} />
+
+      <Card order={7} style={{ gap: 4 }}>
         <T v="label" muted>
           PlateWise server
         </T>
