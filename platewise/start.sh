@@ -157,6 +157,13 @@ if [ "$PORT" != 8000 ]; then
   IP=$( (ipconfig getifaddr en0 || ipconfig getifaddr en1 || hostname -I | awk '{print $1}') 2>/dev/null | head -1)
   export EXPO_PUBLIC_API_URL="http://${IP:-localhost}:$PORT"
 fi
+open_url "http://localhost:$PORT/admin"
+echo
+echo "============================================================"
+echo "  SERVER CONSOLE (opened in your browser):  http://localhost:$PORT/admin"
+echo "  Expo below also mentions localhost:8081: that's only a web"
+echo "  preview of the phone app, not the server. You can ignore it."
+echo "============================================================"
 echo
 echo "Starting the app. Scan the QR code with Expo Go (Android) or the Camera app (iPhone)."
 echo "Your phone must be on the same Wi-Fi as this computer. Press Ctrl+C (or close this window) to stop."
