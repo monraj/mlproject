@@ -88,8 +88,37 @@ export function generateJson<T>(a: Args): Promise<T> {
         top_p: 0.9,
         stop: STOP,
       });
-      return JSON.parse(res.text) as T;
+      const t = res.timings;
+      const diag = {
+        promptTokens: t?.prompt_n,
+        outTokens: t?.predicted_n,
+        promptPerSec: t?.prompt_per_second?.toFixed(1),
+        outPerSec: t?.predicted_per_second?.toFixed(1),
+        contextFull: res.context_full,
+        hitLimit: res.stopped_limit,
+        eos: res.stopped_eos,
+      };
+      const raw = (res.content || res.text || '').trim();
+      try {
+        const out = JSON.parse(raw) as T;
+        console.log('[gemma] ok', JSON.stringify(diag));
+        return out;
+      } catch {
+        // Some answers wrap the object in extra text; keep just the object.
+        const a = raw.indexOf('{');
+        const b = raw.lastIndexOf('}');
+        if (a >= 0 && b > a) {
+          try {
+            return JSON.parse(raw.slice(a, b + 1)) as T;
+          } catch {
+            // fall through to the error below
+          }
+        }
+        console.warn('[gemma] unreadable', JSON.stringify(diag), JSON.stringify(raw.slice(0, 200)), '…', JSON.stringify(raw.slice(-200)));
+        throw new SyntaxError(diag.contextFull ? 'context full' : diag.hitLimit ? 'token limit' : 'bad json');
+      }
     } catch (e) {
+      console.warn('[gemma] failed', e instanceof Error ? e.message : String(e));
       if (e instanceof SyntaxError) throw new GemmaError('Gemma gave an unreadable answer. Try again.');
       throw new GemmaError('Gemma could not finish this answer. Try again.');
     } finally {

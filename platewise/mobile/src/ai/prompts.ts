@@ -62,3 +62,25 @@ ${catalogue()}`;
 export const LABEL_PROMPT = `This photo shows a packaged food or drink: a barcode, a nutrition label, or the front of the pack.
 Read the barcode digits if visible. Read the nutrition label if visible and give values per 100 g (or per 100 ml for drinks); set from_label true only when you read the numbers from a label in the photo.
 If no label is visible, leave the nutrient fields null; do not guess them. If it is not a food product, set found to false.`;
+
+/**
+ * A much shorter coach prompt for the phone. A phone's CPU reads prompts slowly (tens of tokens a
+ * second), so the full server prompt alone takes over a minute. Same rules, fewer words, and only
+ * the last three days of the log.
+ */
+export function coachSystemCompact(context: string, floor: number, hideNumbers: boolean, today = new Date()): string {
+  const lines = context.split('\n');
+  const i = lines.indexOf('Last 7 days:');
+  const head = i >= 0 ? lines.slice(0, i) : lines.slice(0, 4);
+  const days = i >= 0 ? lines.slice(i + 1, i + 8).slice(-3) : [];
+  const upcoming = lines.filter((l) => l.startsWith('Upcoming days:') || l.startsWith('Saved plans:'));
+  const iso = today.toISOString().slice(0, 10);
+  return [
+    `You are PlateWise, a warm nutrition coach for people in Ghana. Reply in 2 to 4 short sentences with practical Ghanaian food swaps. Never shame food. Never suggest under ${floor} kcal a day or losing over 1% of body weight a week. Not a doctor: suggest a professional for medical questions.${hideNumbers ? ' Never mention calorie numbers.' : ''}`,
+    `Today is ${iso}. flex_plan is null unless they ask to plan around an event; then use upcoming dates only, each day at least ${floor} kcal, and say it is a suggestion they can save.`,
+    ...head,
+    'Recent days:',
+    ...days,
+    ...upcoming,
+  ].join('\n');
+}

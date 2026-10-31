@@ -6,7 +6,7 @@ import type { FlexPlan } from '../state/types';
 import { dayKey, daysBetween } from '../lib/dates';
 import { GemmaError, generateJson } from './gemma';
 import { buildScan, type MealAnalysis } from './pipeline';
-import { LABEL_PROMPT, coachSystem, ideasPrompt, photoPrompt, scanSystem, textPrompt } from './prompts';
+import { LABEL_PROMPT, coachSystemCompact, ideasPrompt, photoPrompt, scanSystem, textPrompt } from './prompts';
 import { COACH_SCHEMA, IDEAS_SCHEMA, LABEL_SCHEMA, MEAL_SCHEMA } from './schemas';
 
 // The same five jobs the server does, run by Gemma on the phone. As on the server, the model only
@@ -37,6 +37,12 @@ export async function parseText(text: string, lang: 'en' | 'tw' | 'pcm', _meal: 
   return buildScan(analysis, PROVIDER);
 }
 
+function trimTurns(messages: { role: 'user' | 'assistant'; content: string }[]) {
+  const t = messages.slice(-4).map((m) => ({ ...m, content: m.content.slice(0, 300) }));
+  while (t.length && t[0].role !== 'user') t.shift();
+  return t;
+}
+
 export async function coach(
   messages: { role: 'user' | 'assistant'; content: string }[],
   context: string,
@@ -45,10 +51,11 @@ export async function coach(
 ): Promise<{ reply: string; flex_plan: FlexPlan | null }> {
   const floor = CALORIE_FLOOR[sex === 'male' ? 'male' : 'female'];
   const ans = await generateJson<{ reply: string; flex_plan: { reason: string; days: { date: string; kcal: number }[] } | null }>({
-    system: coachSystem(context, floor, hideNumbers),
-    turns: messages.slice(-12),
+    system: coachSystemCompact(context, floor, hideNumbers),
+    // Short history keeps the prompt small enough for a phone's CPU.
+    turns: trimTurns(messages),
     schema: COACH_SCHEMA,
-    maxTokens: 600,
+    maxTokens: 400,
   });
   let plan: FlexPlan | null = null;
   if (ans.flex_plan) {

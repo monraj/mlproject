@@ -120,6 +120,7 @@ describe('portions', () => {
       ['3 pieces', 120],
       ['6 pieces', 240],
     ]);
+    expect(portionPresets({ portionG: 15, portionLabel: '1 tbsp' }).map((p: { label: string }) => p.label)).toEqual(['½ tbsp', '1 tbsp', '1½ tbsp', '2 tbsp']);
   });
 
   it('counts only your share of a shared bowl, without calling it a correction', () => {

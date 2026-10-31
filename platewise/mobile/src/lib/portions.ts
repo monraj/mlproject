@@ -4,7 +4,9 @@ export type PortionPreset = { label: string; grams: number };
 
 const MULTIPLES = [0.5, 1, 1.5, 2] as const;
 
-const plural = (unit: string) => (/(s|sh|ch|x)$/.test(unit) ? `${unit}es` : `${unit}s`);
+// Abbreviations ("tbsp", "tsp") don't take a plural.
+const NO_PLURAL = new Set(['tbsp', 'tsp', 'g', 'kg', 'ml', 'oz']);
+const plural = (unit: string) => (NO_PLURAL.has(unit) ? unit : /(s|sh|ch|x)$/.test(unit) ? `${unit}es` : `${unit}s`);
 const singular = (unit: string) => (/(sses|shes|ches|xes)$/.test(unit) ? unit.slice(0, -2) : unit.endsWith('s') && !unit.endsWith('ss') ? unit.slice(0, -1) : unit);
 
 /** "1 ball", "2 balls", "half" → quick portion chips built from the food table's typical portion. */
