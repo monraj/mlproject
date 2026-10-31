@@ -154,7 +154,7 @@ export default function Coach() {
   }, [msgs, typing]);
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.bg }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.bg }} behavior="padding">
       <View style={[styles.head, { paddingTop: insets.top + 12, borderBottomColor: c.line }]}>
         <View style={[styles.avatar, { backgroundColor: c.mintTint }]}>
           <Icon name="chat" color={c.mintDeep} size={20} />

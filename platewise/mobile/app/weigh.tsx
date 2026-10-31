@@ -61,7 +61,7 @@ export default function Weigh() {
       <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: c.scrim }, scrimStyle]}>
         <Pressable style={StyleSheet.absoluteFill} onPress={close} accessibilityLabel="Close" />
       </Animated.View>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, justifyContent: 'flex-end' }} pointerEvents="box-none">
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1, justifyContent: 'flex-end' }} pointerEvents="box-none">
         <Animated.View accessibilityViewIsModal style={[styles.sheet, { backgroundColor: c.raised, paddingBottom: insets.bottom + 20 }, sheetStyle]}>
           <View style={[styles.handle, { backgroundColor: c.line }]} />
           <View style={styles.head}>

@@ -136,7 +136,7 @@ export default function Barcode() {
       </View>
 
       {form ? (
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
           <ScrollView contentContainerStyle={{ gap: 12, paddingBottom: 20 }}>
             {status ? <T v="small" muted>{status}</T> : null}
             {field('name', 'Product name', false)}
