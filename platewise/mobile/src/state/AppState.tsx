@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useReducer, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { BudgetChange, ChatMsg, Day, DraftItem, FlexPlan, Meal, MealItem, MealType, PlanDay, Product, Profile, SavedMeal, Source, Weight } from './types';
-import { dayKcal, macroTargets, mealKcal, profileBudget, toMealItem, weekLogged } from './calc';
+import type { BudgetChange, ChatMsg, Day, DraftItem, FlexPlan, Meal, MealItem, MealType, PlanDay, Product, Profile, SavedMeal, Source, WatchDay, Weight } from './types';
+import { activityBonus, dayKcal, macroTargets, mealKcal, profileBudget, toMealItem, weekLogged } from './calc';
 import { clock, mealForHour } from '../lib/format';
 import { dayKey } from '../lib/dates';
 
@@ -46,6 +46,7 @@ type Action =
   | { type: 'habit'; date: string; key: 'water' | 'greensExtra' | 'steps'; value: number }
   | { type: 'skip'; what: string }
   | { type: 'addWeight'; weight: Weight }
+  | { type: 'watchSync'; days: Record<string, WatchDay>; weights: Weight[] }
   | { type: 'deleteWeight'; date: string }
   | { type: 'setLearnedTdee'; tdee: number | null; reason: string }
   | { type: 'setPlans'; plan: FlexPlan }
@@ -162,6 +163,18 @@ function reducer(s: State, a: Action): State {
     }
     case 'deleteWeight':
       return { ...s, weights: s.weights.filter((w) => w.date !== a.date) };
+    case 'watchSync': {
+      // Watch steps fill the steps habit (never lowering a higher manual entry); a weigh-in the
+      // person typed for a day wins over the scale's.
+      let next = s;
+      for (const [date, watch] of Object.entries(a.days)) {
+        next = withDay(next, date, (d) => ({ ...d, watch, steps: Math.max(d.steps, watch.steps ?? 0) }));
+      }
+      const have = new Set(next.weights.map((w) => w.date));
+      const added = a.weights.filter((w) => !have.has(w.date));
+      if (!added.length) return next;
+      return { ...next, weights: [...next.weights, ...added].sort((x, y) => (x.date < y.date ? -1 : 1)) };
+    }
     case 'setLearnedTdee': {
       if (!s.profile) return s;
       const from = profileBudget(s.profile);
@@ -208,6 +221,8 @@ export type Ctx = {
   day: Day;
   budget: number;
   budgetFor: (date: string) => number;
+  /** Extra kcal added to today's budget for exercise the watch measured (0 when off). */
+  activityBonus: number;
   eatenKcal: number;
   leftKcal: number;
   protein: number;
@@ -253,7 +268,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     const day = s.days[today] ?? emptyDay();
     const base = s.profile ? profileBudget(s.profile) : 2000;
     const floor = s.profile?.sex === 'male' ? 1500 : 1200;
-    const budgetFor = (date: string) => (s.plans[date] ? Math.max(floor, s.plans[date].kcal) : base);
+    const adjust = !!s.profile?.watch?.adjustBudget;
+    const bonusFor = (date: string) => activityBonus(s.days[date]?.watch?.activeKcal, adjust);
+    const budgetFor = (date: string) => (s.plans[date] ? Math.max(floor, s.plans[date].kcal) : base) + bonusFor(date);
     const budget = budgetFor(today);
     const eatenKcal = dayKcal(day);
     return {
@@ -263,6 +280,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       day,
       budget,
       budgetFor,
+      activityBonus: bonusFor(today),
       eatenKcal,
       leftKcal: Math.max(0, budget - eatenKcal),
       protein: Math.round(day.meals.reduce((sum, m) => sum + m.protein, 0)),

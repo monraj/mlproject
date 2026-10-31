@@ -28,6 +28,8 @@ export type Profile = {
   health?: Health;
   /** Opt-in: also describe meals as minutes of brisk walking. */
   showWalking?: boolean;
+  /** Smartwatch via Health Connect. adjustBudget adds part of measured exercise to the day's budget. */
+  watch?: { connected: boolean; adjustBudget: boolean };
 };
 
 export type Candidate = { foodId: string; name: string; detail: string };
@@ -99,7 +101,21 @@ export type Meal = {
   swatch: string;
 };
 
-export type Day = { meals: Meal[]; water: number; greensExtra: number; steps: number; skipped: string[] };
+/** One day's totals from a smartwatch, via Health Connect. Missing values are null. */
+export type WatchDay = {
+  steps: number | null;
+  activeKcal: number | null;
+  totalKcal: number | null;
+  distanceM: number | null;
+  exerciseMin: number | null;
+  sleepMin: number | null;
+  restingHr: number | null;
+  avgHr: number | null;
+  sources: string[];
+  syncedAt: string;
+};
+
+export type Day = { meals: Meal[]; water: number; greensExtra: number; steps: number; skipped: string[]; watch?: WatchDay };
 export type Weight = { date: string; kg: number };
 export type SavedMeal = { id: string; name: string; kcal: number; items: MealItem[] };
 export type Product = { code: string; name: string; per100: Per100; servingG: number; servingLabel: string; source: string };

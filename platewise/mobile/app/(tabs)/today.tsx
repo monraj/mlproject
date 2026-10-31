@@ -20,7 +20,7 @@ import { duration, stagger } from '../../src/lib/motion';
 
 export default function Today() {
   const { c } = useTheme();
-  const { s, day, today, budget, eatenKcal, leftKcal, protein, proteinGoal, greens, weekLogged, dispatch } = useApp();
+  const { s, day, today, budget, eatenKcal, leftKcal, protein, proteinGoal, greens, weekLogged, activityBonus, dispatch } = useApp();
   const router = useRouter();
   const now = new Date();
   const progress = eatenKcal / budget;
@@ -117,6 +117,11 @@ export default function Today() {
                 {plan ? (
                   <T v="small" size={12} muted>
                     {plan.reason}
+                  </T>
+                ) : null}
+                {activityBonus ? (
+                  <T v="small" size={12} color={c.mintText}>
+                    Includes +{kcal(activityBonus)} from exercise
                   </T>
                 ) : null}
               </View>

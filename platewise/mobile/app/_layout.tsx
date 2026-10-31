@@ -17,6 +17,7 @@ import { AppStateProvider, useApp } from '../src/state/AppState';
 import { syncReminders } from '../src/lib/reminders';
 import { loadServerSettings } from '../src/api/client';
 import { loadGemmaState } from '../src/ai/modelStore';
+import { WatchSync } from '../src/health/WatchSync';
 import { loadPrivacy } from '../src/api/privacy';
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
@@ -84,6 +85,7 @@ export default function RootLayout() {
         <ThemeProvider>
           <AppStateProvider>
             <ReminderSync />
+            <WatchSync />
             <Nav />
           </AppStateProvider>
         </ThemeProvider>

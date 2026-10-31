@@ -159,6 +159,18 @@ export function weekLogged(days: Record<string, Day>, today: string): number {
   return Array.from({ length: 7 }, (_, i) => days[shiftKey(today, -i)]).filter((d) => !!d?.meals.length).length;
 }
 
+/**
+ * Extra budget for exercise a watch measured: half of the active calories, up to 500 a day.
+ * Watches tend to overestimate calories burned, and eating all of it back often stalls progress;
+ * the weight trend still corrects the budget over time.
+ */
+export const ACTIVITY_SHARE = 0.5;
+export const ACTIVITY_CAP = 500;
+export function activityBonus(activeKcal: number | null | undefined, enabled: boolean): number {
+  if (!enabled || !activeKcal || activeKcal <= 0) return 0;
+  return Math.min(ACTIVITY_CAP, Math.round((activeKcal * ACTIVITY_SHARE) / 10) * 10);
+}
+
 // ---- Energy: mirror backend/app/energy/bmr.py ----
 
 export function bmr(p: ProfileInput): number {

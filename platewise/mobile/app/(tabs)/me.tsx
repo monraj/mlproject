@@ -7,6 +7,7 @@ import { Card, Rise } from '../../src/components/Card';
 import { Press } from '../../src/components/Press';
 import { OnDeviceAi } from '../../src/components/OnDeviceAi';
 import { PrivacyCard } from '../../src/components/PrivacyCard';
+import { SmartwatchCard } from '../../src/components/SmartwatchCard';
 import { Icon, type IconName } from '../../src/components/Icon';
 import { useTheme, type ThemePref } from '../../src/theme/ThemeProvider';
 import { useApp } from '../../src/state/AppState';
@@ -238,6 +239,8 @@ export default function Me() {
           })}
         />
       </Card>
+
+      <SmartwatchCard order={4} />
 
       <PrivacyCard order={5} />
 

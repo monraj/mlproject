@@ -1,4 +1,4 @@
-import type { Day, Meal, Profile, Weight } from './types';
+import type { Day, Meal, Profile, WatchDay, Weight } from './types';
 import { CALORIE_FLOOR, dayKcal, healthNotes, macroTargets, minGoalWeight, trendLine, weeklyRate } from './calc';
 import { WEEKDAYS, dayKey, keyDate, shiftKey, shortDate } from '../lib/dates';
 import { kcal } from '../lib/format';
@@ -71,14 +71,28 @@ export function weekStory(days: Record<string, Day>, weights: Weight[], budgetFo
 }
 
 /** A compact summary of the person's data for the coach. */
+/** "; watch: 8,200 steps, 310 kcal active, 35 min exercise, slept 6 h 40 min, resting heart 62" */
+export function watchSummary(w: WatchDay | undefined): string {
+  if (!w) return '';
+  const parts = [
+    w.steps != null ? `${kcal(w.steps)} steps` : null,
+    w.activeKcal != null ? `${kcal(w.activeKcal)} kcal active` : null,
+    w.exerciseMin ? `${w.exerciseMin} min exercise` : null,
+    w.sleepMin ? `slept ${Math.floor(w.sleepMin / 60)} h ${w.sleepMin % 60} min` : null,
+    w.restingHr ? `resting heart ${w.restingHr}` : null,
+  ].filter(Boolean);
+  return parts.length ? `; watch: ${parts.join(', ')}` : '';
+}
+
 export function coachContext(profile: Profile, days: Record<string, Day>, weights: Weight[], budgetFor: (d: string) => number, plansNote: string): string {
   const today = dayKey();
   const lines = Array.from({ length: 7 }, (_, i) => shiftKey(today, i - 6)).map((k) => {
     const d = days[k];
     const label = `${WEEKDAYS[keyDate(k).getDay()]} ${k}`;
-    if (!d?.meals.length) return `${label}: nothing logged`;
+    const watch = watchSummary(d?.watch);
+    if (!d?.meals.length) return `${label}: nothing logged${watch}`;
     const protein = Math.round(d.meals.reduce((s, m) => s + m.protein, 0));
-    return `${label}: ${kcal(dayKcal(d))} of ${kcal(budgetFor(k))} kcal, protein ${protein} g; ${d.meals.map((m) => `${m.type}: ${m.title}`).join(' | ')}`;
+    return `${label}: ${kcal(dayKcal(d))} of ${kcal(budgetFor(k))} kcal, protein ${protein} g; ${d.meals.map((m) => `${m.type}: ${m.title}`).join(' | ')}${watch}`;
   });
   const upcoming = Array.from({ length: 10 }, (_, i) => shiftKey(today, i)).map((k) => `${WEEKDAYS[keyDate(k).getDay()]} ${k}`).join(', ');
   const t = trendLine(weights);
