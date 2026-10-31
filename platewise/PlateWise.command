@@ -2,7 +2,8 @@
 # PlateWise launcher: double-click in Finder. Shows a small menu to start, open or stop PlateWise.
 cd "$(dirname "$0")" || exit 1
 
-running() { curl -s -m 3 http://localhost:8000/health 2>/dev/null | grep -q '"status":"ok"'; }
+PORT=$(cat backend/.server-port 2>/dev/null || echo 8000)
+running() { curl -s -m 3 "http://localhost:$PORT/health" 2>/dev/null | grep -q '"prompt_version"'; }
 
 ask() {  # $1 = message, rest = up to 3 buttons (last one is the default). Prints the choice.
   local msg="$1"; shift
@@ -21,9 +22,13 @@ ask() {  # $1 = message, rest = up to 3 buttons (last one is the default). Print
   fi
 }
 
-stop_server() {
-  pids=$(lsof -t -iTCP:8000 -sTCP:LISTEN 2>/dev/null)
-  if [ -n "$pids" ]; then kill $pids && echo "PlateWise server stopped."; else echo "No PlateWise server was running."; fi
+stop_server() {  # only ever stops PlateWise, never another program on the port
+  stopped=""
+  for pid in $(lsof -t -iTCP:"$PORT" -sTCP:LISTEN 2>/dev/null); do
+    if ps -o command= -p "$pid" 2>/dev/null | grep -q "app.main:app"; then kill "$pid" && stopped=1; fi
+  done
+  rm -f backend/.server-port
+  if [ -n "$stopped" ]; then echo "PlateWise server stopped."; else echo "No PlateWise server was running."; fi
 }
 
 if running; then
@@ -36,7 +41,7 @@ status=0
 case "$choice" in
   "Start server") bash start.sh --server-only || status=$? ;;
   "Server + phone app" | "Start phone app") bash start.sh || status=$? ;;
-  "Open console") open http://localhost:8000/admin 2>/dev/null || xdg-open http://localhost:8000/admin 2>/dev/null || echo "Open http://localhost:8000/admin in your browser." ;;
+  "Open console") open "http://localhost:$PORT/admin" 2>/dev/null || xdg-open "http://localhost:$PORT/admin" 2>/dev/null || echo "Open http://localhost:$PORT/admin in your browser." ;;
   "Stop server") stop_server; sleep 1 ;;
   *) exit 0 ;;
 esac

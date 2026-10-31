@@ -66,15 +66,21 @@ if [ "$MODE" = all ]; then
   [ -d mobile/node_modules ] || (cd mobile && npm install --no-audit --no-fund)
 fi
 
-port_busy() { command -v lsof >/dev/null 2>&1 && lsof -nP -iTCP:8000 -sTCP:LISTEN >/dev/null 2>&1; }
-plate_running() { curl -s -m 3 http://localhost:8000/health 2>/dev/null | grep -q '"status":"ok"'; }
+PORT_FILE="$PWD/backend/.server-port"
+PORT=8000
+
+listeners() { command -v lsof >/dev/null 2>&1 && lsof -t -nP -iTCP:"$1" -sTCP:LISTEN 2>/dev/null; }
+plate_running() { curl -s -m 3 "http://localhost:$1/health" 2>/dev/null | grep -q '"prompt_version"'; }
+is_plate_pid() { ps -o command= -p "$1" 2>/dev/null | grep -q "app.main:app"; }
+port_owner() { ps -o comm= -p "$1" 2>/dev/null | xargs basename 2>/dev/null; }
 
 start_server() {
   LOG="$PWD/backend/server.log"
-  echo "Starting the server on port 8000 (the very first start can take a minute or two)…"
-  (cd backend && exec .venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000) >"$LOG" 2>&1 &
+  echo "Starting the server on port $PORT (the very first start can take a minute or two)…"
+  (cd backend && exec .venv/bin/uvicorn app.main:app --host 0.0.0.0 --port "$PORT") >"$LOG" 2>&1 &
   SERVER_PID=$!
-  trap 'kill $SERVER_PID 2>/dev/null' EXIT INT TERM
+  echo "$PORT" >"$PORT_FILE"
+  trap 'kill $SERVER_PID 2>/dev/null; rm -f "$PORT_FILE"' EXIT INT TERM
   HEALTH=""
   for i in $(seq 1 180); do
     if ! kill -0 "$SERVER_PID" 2>/dev/null; then
@@ -86,7 +92,7 @@ start_server() {
       echo "Copy the lines above and send them to Claude to get it fixed."
       exit 1
     fi
-    HEALTH=$(curl -s http://localhost:8000/health 2>/dev/null || true)
+    HEALTH=$(curl -s "http://localhost:$PORT/health" 2>/dev/null || true)
     [ -n "$HEALTH" ] && break
     [ $((i % 15)) -eq 0 ] && echo "  still starting… (${i}s)"
     sleep 1
@@ -99,30 +105,44 @@ start_server() {
       tail -n 30 "$LOG"
       exit 1 ;;
   esac
-  echo "Server console: http://localhost:8000/admin   (server messages are saved in platewise/backend/server.log)"
+  echo "Server console: http://localhost:$PORT/admin   (server messages are saved in platewise/backend/server.log)"
 }
 
+# Is a PlateWise server already running (on the port we used last time, or 8000)?
 ALREADY=""
-if port_busy || plate_running; then
-  if plate_running; then
-    ALREADY=1
-    echo "PlateWise server is already running."
-  else
-    echo
-    echo "Something else is using port 8000, so the PlateWise server can't start."
-    echo "Close that program, or run:  kill \$(lsof -t -iTCP:8000 -sTCP:LISTEN)   and try again."
-    exit 1
+for p in $(cat "$PORT_FILE" 2>/dev/null) 8000; do
+  if plate_running "$p"; then PORT=$p; ALREADY=1; echo "PlateWise server is already running."; break; fi
+done
+
+if [ -z "$ALREADY" ]; then
+  pids=$(listeners 8000 || true)
+  if [ -n "$pids" ]; then
+    stuck=1
+    for pid in $pids; do is_plate_pid "$pid" || stuck=""; done
+    if [ -n "$stuck" ]; then
+      echo "An old PlateWise server was stuck on port 8000. Stopping it…"
+      kill $pids 2>/dev/null || true
+      for _ in 1 2 3 4 5; do [ -z "$(listeners 8000 || true)" ] && break; sleep 1; done
+      [ -z "$(listeners 8000 || true)" ] || kill -9 $pids 2>/dev/null || true
+      sleep 1
+    else
+      owner=$(port_owner "$(echo "$pids" | head -1)")
+      for p in $(seq 8001 8020); do
+        if [ -z "$(listeners "$p" || true)" ]; then PORT=$p; break; fi
+      done
+      echo "Port 8000 is used by another program (${owner:-unknown}), so PlateWise will use port $PORT."
+    fi
   fi
 fi
 
 if [ "$MODE" = server ]; then
   if [ -n "$ALREADY" ]; then
     echo "Opening the console…"
-    open_url "http://localhost:8000/admin"
+    open_url "http://localhost:$PORT/admin"
     exit 0
   fi
   start_server
-  open_url "http://localhost:8000/admin"
+  open_url "http://localhost:$PORT/admin"
   echo
   echo "The server is running. Leave this window open while you use PlateWise."
   echo "To stop it, close this window (or press Ctrl+C)."
@@ -131,6 +151,12 @@ if [ "$MODE" = server ]; then
 fi
 
 [ -n "$ALREADY" ] || start_server
+
+if [ "$PORT" != 8000 ]; then
+  # The app looks for the server on port 8000 by default; tell it where it really is.
+  IP=$( (ipconfig getifaddr en0 || ipconfig getifaddr en1 || hostname -I | awk '{print $1}') 2>/dev/null | head -1)
+  export EXPO_PUBLIC_API_URL="http://${IP:-localhost}:$PORT"
+fi
 echo
 echo "Starting the app. Scan the QR code with Expo Go (Android) or the Camera app (iPhone)."
 echo "Your phone must be on the same Wi-Fi as this computer. Press Ctrl+C (or close this window) to stop."
