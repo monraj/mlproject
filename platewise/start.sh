@@ -44,20 +44,45 @@ backend/.venv/bin/pip install -q -r backend/requirements.txt
 echo "Installing the app (first time takes a few minutes)…"
 [ -d mobile/node_modules ] || (cd mobile && npm install --no-audit --no-fund)
 
-echo "Starting the server on port 8000…"
-(cd backend && exec .venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000) &
+if command -v lsof >/dev/null 2>&1 && lsof -nP -iTCP:8000 -sTCP:LISTEN >/dev/null 2>&1; then
+  echo
+  echo "Something is already using port 8000 (often a PlateWise server you started earlier)."
+  echo "  - If it's PlateWise, it's already running: open http://localhost:8000/admin"
+  echo "  - To stop it and start fresh, run:  kill \$(lsof -t -iTCP:8000 -sTCP:LISTEN)   then run this script again."
+  exit 1
+fi
+
+LOG="$PWD/backend/server.log"
+echo "Starting the server on port 8000 (the very first start can take a minute or two)…"
+(cd backend && exec .venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000) >"$LOG" 2>&1 &
 SERVER_PID=$!
 trap 'kill $SERVER_PID 2>/dev/null' EXIT INT TERM
 
-for _ in $(seq 1 30); do
-  if HEALTH=$(curl -s http://localhost:8000/health 2>/dev/null) && [ -n "$HEALTH" ]; then break; fi
+HEALTH=""
+for i in $(seq 1 180); do
+  if ! kill -0 "$SERVER_PID" 2>/dev/null; then
+    echo
+    echo "The server stopped while starting. Here is what it said:"
+    echo "------------------------------------------------------------"
+    tail -n 30 "$LOG"
+    echo "------------------------------------------------------------"
+    echo "Copy the lines above and send them to Claude to get it fixed."
+    exit 1
+  fi
+  HEALTH=$(curl -s http://localhost:8000/health 2>/dev/null || true)
+  [ -n "$HEALTH" ] && break
+  [ $((i % 15)) -eq 0 ] && echo "  still starting… (${i}s)"
   sleep 1
 done
 case "$HEALTH" in
-  *'"demo":true'*) echo "Server running in DEMO mode (no AI key found)." ;;
-  *'"status":"ok"'*) echo "Server running with real AI: $HEALTH" ;;
-  *) echo "The server didn't start. Scroll up for the error."; exit 1 ;;
+  *'"demo":true'*) echo "Server running in DEMO mode (no AI key found in backend/.env)." ;;
+  *'"status":"ok"'*) echo "Server running with real AI." ;;
+  *)
+    echo "The server didn't answer after 3 minutes. Here is what it said:"
+    tail -n 30 "$LOG"
+    exit 1 ;;
 esac
+echo "Server console: http://localhost:8000/admin   (server messages are saved in platewise/backend/server.log)"
 
 echo
 echo "Starting the app. Scan the QR code with Expo Go (Android) or the Camera app (iPhone)."
