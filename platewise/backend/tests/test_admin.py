@@ -94,3 +94,49 @@ def test_add_and_delete_food(client, food_file):
 def test_download_table(client, food_file):
     r = client.get("/admin/api/foods.json")
     assert r.status_code == 200 and r.json()["foods"]
+
+
+@pytest.fixture
+def env_file(tmp_path, monkeypatch):
+    import app.admin.keys as keys_mod
+
+    f = tmp_path / ".env"
+    f.write_text("VISION_PROVIDER=auto\nGEMINI_API_KEY=\nGEMINI_MODEL=gemini-3.5-flash\n")
+    monkeypatch.setattr(keys_mod, "ENV_PATH", f)
+    s = get_settings()
+    for name in ("gemini_api_key", "openai_api_key", "anthropic_api_key"):
+        monkeypatch.setattr(s, name, None)
+    yield f
+
+
+def test_set_key_checks_saves_and_switches_live(client, env_file, monkeypatch):
+    import app.admin.keys as keys_mod
+    from app.vision.provider import set_provider
+
+    monkeypatch.setattr(keys_mod, "check_key", lambda p, k: None)
+    set_provider(None)
+    r = client.post("/admin/api/keys", json={"provider": "gemini", "key": "AIzaTESTKEY12345678"})
+    assert r.status_code == 200 and r.json()["ai"] == "gemini" and r.json()["hint"] == "••••5678"
+    assert "GEMINI_API_KEY=AIzaTESTKEY12345678" in env_file.read_text()
+    assert "GEMINI_MODEL=gemini-3.5-flash" in env_file.read_text()  # other lines kept
+    status = client.get("/admin/api/status").json()
+    assert status["key_hints"]["gemini"] == "••••5678" and "AIzaTESTKEY" not in str(status)
+    r = client.delete("/admin/api/keys/gemini")
+    assert r.json()["ai"] == "demo" and "GEMINI_API_KEY=\n" in env_file.read_text()
+    set_provider(None)
+
+
+def test_rejected_key_is_not_saved(client, env_file, monkeypatch):
+    import app.admin.keys as keys_mod
+
+    def reject(p, k):
+        raise keys_mod.KeyRejected("PermissionDenied")
+
+    monkeypatch.setattr(keys_mod, "check_key", reject)
+    r = client.post("/admin/api/keys", json={"provider": "gemini", "key": "AIzaBADKEY000000000"})
+    assert r.status_code == 422 and "didn't accept" in r.json()["detail"]
+    assert "AIzaBADKEY" not in env_file.read_text()
+
+
+def test_key_needs_admin(client, password, env_file):
+    assert client.post("/admin/api/keys", json={"provider": "gemini", "key": "AIzaTESTKEY12345678"}).status_code == 401

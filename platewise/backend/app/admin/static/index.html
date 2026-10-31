@@ -628,14 +628,62 @@ pre.json { background: var(--surface); border-radius: 14px; padding: 14px; overf
       ['Allowed web origins', `<span class="mono">${esc(s.cors_origins)}</span>`, 'CORS_ORIGINS'],
       ['Prompt version', `<span class="mono">${esc(s.prompt_version)}</span>`, ''],
     ];
+    const PROVIDERS = [['gemini', 'Gemini', 'Get one free at aistudio.google.com/apikey'], ['openai', 'OpenAI', 'Optional backup'], ['anthropic', 'Anthropic', 'Optional backup']];
+    const hints = s.key_hints || {};
     $('#view').innerHTML = `
-      <div class="page-head"><div><h1>Settings</h1><p class="muted">What this server is running with. Keys are never shown.</p></div></div>
+      <div class="page-head"><div><h1>Settings</h1><p class="muted">What this server is running with. Keys are never shown in full.</p></div></div>
+      <section class="card raised" style="margin-bottom:14px"><h2>AI keys</h2>
+        <p class="small muted">Paste a key and press <b>Check and save</b>. The server checks it with the provider first, then switches over straight away. No restart needed.</p>
+        ${s.on_render ? '<div class="notice" style="margin-bottom:12px">This server runs on Render. A key saved here works until the next deploy. To keep it, also set it in Render → platewise-api → Environment.</div>' : ''}
+        ${PROVIDERS.map(([p, name, help]) => `
+          <form class="keyForm" data-p="${p}" style="padding:10px 0;border-top:1px solid var(--line)">
+            <div class="row" style="margin-bottom:8px"><b class="grow">${name}</b>${hints[p] ? `<span class="badge ok">Set <span class="mono">${esc(hints[p])}</span></span>` : '<span class="badge warn">Not set</span>'}</div>
+            <div class="row">
+              <input class="grow" type="password" name="key" autocomplete="off" spellcheck="false" placeholder="${hints[p] ? 'Paste a new key to replace it' : 'Paste your key'}" aria-label="${name} API key">
+              <button class="btn sm" type="submit">Check and save</button>
+              ${hints[p] ? '<button class="btn danger sm" type="button" data-remove>Remove</button>' : ''}
+            </div>
+            <p class="small muted" style="margin:6px 0 0">${help}</p>
+            <p class="small" data-err hidden style="margin:6px 0 0;color:var(--red-text)"></p>
+          </form>`).join('')}
+      </section>
       <div class="table-wrap"><table><thead><tr><th>Setting</th><th>Value</th><th>Change it with</th></tr></thead><tbody>
       ${rows.map(([a, b, c]) => `<tr><td><b>${a}</b></td><td>${b}</td><td class="mono small muted">${c}</td></tr>`).join('')}</tbody></table></div>
       <div class="grid2">
         <section class="card raised"><h2>On your computer</h2><p class="small muted">Edit <span class="mono">platewise/backend/.env</span>, then stop the server (Ctrl+C) and start it again.</p></section>
         <section class="card raised"><h2>On Render</h2><p class="small muted">Open the <b>platewise-api</b> service → <b>Environment</b>, change the value and save. Render restarts the server for you.</p></section>
       </div>`;
+    document.querySelectorAll('.keyForm').forEach((form) => {
+      const p = form.dataset.p;
+      const err = form.querySelector('[data-err]');
+      const fail = (msg) => { err.textContent = msg; err.hidden = false; };
+      form.addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const key = form.key.value.trim();
+        err.hidden = true;
+        if (!key) return fail('Paste a key first.');
+        const btn = form.querySelector('button[type=submit]');
+        btn.disabled = true; btn.textContent = 'Checking…';
+        try {
+          await api('/admin/api/keys', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ provider: p, key }) });
+          toast('Key saved. The server is using it now.');
+          await viewSettings();
+        } catch (e) {
+          if (e instanceof AuthError) throw e;
+          btn.disabled = false; btn.textContent = 'Check and save';
+          fail(e.message);
+        }
+      });
+      const rm = form.querySelector('[data-remove]');
+      if (rm) rm.addEventListener('click', async () => {
+        if (!confirm('Remove this key from the server?')) return;
+        try {
+          await api(`/admin/api/keys/${p}`, { method: 'DELETE' });
+          toast('Key removed.');
+          await viewSettings();
+        } catch (e) { fail(e.message); }
+      });
+    });
   }
 
   boot();

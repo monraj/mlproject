@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, Field
 
-from app.admin import stats
+from app.admin import keys, stats
 from app.config import get_settings
 from app.nutrition.foods import FOODS_PATH, load_foods, read_raw, save_raw
 from app.vision.prompts import PROMPT_VERSION
@@ -54,6 +54,8 @@ def status() -> dict[str, Any]:
         "provider_calls": p.calls,
         "models": {"gemini": s.gemini_model, "gemini_fallback": s.gemini_fallback_model, "openai": s.openai_model, "anthropic": s.anthropic_model},
         "keys": {"gemini": bool(s.gemini_api_key), "openai": bool(s.openai_api_key), "anthropic": bool(s.anthropic_api_key)},
+        "key_hints": {"gemini": keys.hint(s.gemini_api_key), "openai": keys.hint(s.openai_api_key), "anthropic": keys.hint(s.anthropic_api_key)},
+        "on_render": keys.on_render(),
         "vision_provider": s.vision_provider,
         "prompt_version": PROMPT_VERSION,
         "foods": len(foods),
@@ -146,3 +148,30 @@ def delete_food(food_id: str) -> Response:
     data["foods"] = rows
     save_raw(data)
     return Response(status_code=204)
+
+
+class KeyIn(BaseModel):
+    provider: keys.Provider
+    key: str = Field(min_length=10, max_length=300)
+
+
+@router.post("/api/keys", dependencies=[Depends(require_admin)])
+def set_key(body: KeyIn) -> dict[str, Any]:
+    key = body.key.strip()
+    if re.search(r"\s", key):
+        raise HTTPException(422, "That key has spaces in it. Copy it again without extra spaces.")
+    try:
+        keys.check_key(body.provider, key)
+    except keys.KeyRejected as e:
+        name = keys.NAMES[body.provider]
+        if "Connection" in str(e) or "Timeout" in str(e):
+            raise HTTPException(422, f"Couldn't reach {name} to check the key ({e}). Check this computer's internet and try again.") from e
+        raise HTTPException(422, f"{name} didn't accept that key ({e}). Check you copied the whole key, and that it's active.") from e
+    keys.apply_key(body.provider, key)
+    return {"ok": True, "provider": body.provider, "hint": keys.hint(key), "ai": get_provider().name}
+
+
+@router.delete("/api/keys/{provider}", dependencies=[Depends(require_admin)])
+def remove_key(provider: keys.Provider) -> dict[str, Any]:
+    keys.apply_key(provider, None)
+    return {"ok": True, "ai": get_provider().name}
