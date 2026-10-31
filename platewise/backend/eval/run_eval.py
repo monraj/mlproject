@@ -201,11 +201,70 @@ def eval_coach() -> dict[str, float]:
     }
 
 
-SUITES = {"parse": eval_parse, "ideas": eval_ideas, "coach": eval_coach}
+# ---- photo scans (Accra Photographic Food Atlas, weighed portions; see eval/atlas_photos.py) ----
+
+ATLAS_FOODS = {
+    "Waakye": ["waakye", "rice_beans"], "Jollof": ["jollof"], "Banku": ["banku"], "Cassava Fufu": ["fufu"],
+    "Ga Kenkey Whole": ["kenkey"], "Rice Ball": ["omo_tuo"], "Tuo Zaa\uf001": ["tuo_zaafi"], "Akple": ["akple", "banku"],
+    "Kokonte": ["kokonte"], "Ripe Plantain Fried": ["fried_plantain", "kelewele"], "Fish Tilapia, Grilled": ["tilapia"],
+    "Grilled Chicken": ["chicken"], "Chicken Fried": ["fried_chicken", "chicken"], "Chicken, Boiled": ["chicken"],
+    "Fish Fried": ["fried_fish", "redfish", "mackerel"], "Meat Goat, Boiled": ["goat"], "Koose": ["koose"],
+    "Palm Nut Soup": ["palmnut_soup", "palmnut_soup_fish"], "Pineapple": ["pineapple"],
+}
+ATLAS_SIZES = ("S", "L")
+
+
+def eval_photos() -> dict[str, float]:
+    folder = Path(__file__).with_name("atlas")
+    if not (folder / "manifest.json").exists():
+        print("  run eval/atlas_photos.py first")
+        return {}
+    cases = [m for m in json.loads((folder / "manifest.json").read_text()) if m["food"] in ATLAS_FOODS and m["size"] in ATLAS_SIZES]
+    found = 0
+    errors: list[float] = []
+    total_errors: list[float] = []
+    lines = []
+    for m in cases:
+        time.sleep(PAUSE_S)
+        with (folder / m["file"]).open("rb") as f:
+            r = client.post("/scans", files={"image": (m["file"], f, "image/jpeg")}, data={"meal": "Lunch"})
+        if r.status_code == 502:
+            time.sleep(30)
+            with (folder / m["file"]).open("rb") as f:
+                r = client.post("/scans", files={"image": (m["file"], f, "image/jpeg")}, data={"meal": "Lunch"})
+        if r.status_code != 200:
+            lines.append(f"  ERROR {m['food']} {m['size']}: {r.status_code}")
+            continue
+        items = r.json()["items"]
+        want = ATLAS_FOODS[m["food"]]
+        hit = next((i for i in items if i["food_id"] in want), None)
+        total = sum(i["grams"] for i in items)
+        total_errors.append(abs(total - m["grams"]) / m["grams"])
+        if not hit:
+            lines.append(f"  miss  {m['food']} {m['size']} ({m['grams']} g): got {[i['food_id'] or i['name'] for i in items]}")
+            continue
+        found += 1
+        err = (hit["grams"] - m["grams"]) / m["grams"]
+        errors.append(err)
+        if abs(err) > 0.3:
+            lines.append(f"  grams {m['food']} {m['size']}: {hit['grams']} g, weighed {m['grams']} g ({err:+.0%})")
+    print("\n".join(lines))
+    n = len(cases)
+    return {
+        "photos scanned": n,
+        "right food found": found / n if n else 0,
+        "median portion error": statistics.median(abs(e) for e in errors) if errors else 0,
+        "portion bias (+ = too big)": statistics.median(errors) if errors else 0,
+        "portions within 25%": sum(abs(e) <= 0.25 for e in errors) / len(errors) if errors else 0,
+        "median whole-plate error": statistics.median(total_errors) if total_errors else 0,
+    }
+
+
+SUITES = {"parse": eval_parse, "ideas": eval_ideas, "coach": eval_coach, "photos": eval_photos}
 
 if __name__ == "__main__":
     picked = sys.argv[1:] or list(SUITES)
     for name in picked:
         print(f"\n== {name} ==")
         for k, v in SUITES[name]().items():
-            print(f"{k:>34}: {v:.0%}" if v <= 1 else f"{k:>34}: {v:.2f}")
+            print(f"{k:>34}: {v:.0%}" if -1 <= v <= 1 else f"{k:>34}: {v:g}")

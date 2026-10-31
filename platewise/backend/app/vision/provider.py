@@ -2,6 +2,7 @@
 
 import json
 import logging
+from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Any, Protocol
 
@@ -71,6 +72,34 @@ class FallbackProvider:
             except Exception as e:  # SDK network/HTTP errors
                 log.warning("provider %s errored: %s", p.name, type(e).__name__)
                 self.calls[p.name]["failed"] += 1
+                errors.append(f"{p.name}: {type(e).__name__}")
+        raise ProviderError("; ".join(errors) or "no provider configured")
+
+    def stream_text(self, *, system: str, turns: list[Turn]) -> Iterator[str]:
+        """Plain text, streamed where the provider supports it; otherwise the whole reply at once.
+        Falls back to the next provider only if nothing has been sent yet."""
+        errors: list[str] = []
+        for p in self.providers:
+            started = False
+            try:
+                streamer = getattr(p, "stream_text", None)
+                if streamer is not None:
+                    for piece in streamer(system=system, turns=turns):
+                        started = True
+                        yield piece
+                else:
+                    schema = {"type": "object", "properties": {"reply": {"type": "string"}}, "required": ["reply"]}
+                    out = p.generate_json(system=system, turns=turns, schema=schema)
+                    started = True
+                    yield str(out.get("reply", ""))
+                self.last_used = p.name
+                self.calls[p.name]["ok"] += 1
+                return
+            except Exception as e:  # never log prompts (CLAUDE.md rule 6)
+                log.warning("provider %s stream failed: %s", p.name, type(e).__name__)
+                self.calls[p.name]["failed"] += 1
+                if started:
+                    return
                 errors.append(f"{p.name}: {type(e).__name__}")
         raise ProviderError("; ".join(errors) or "no provider configured")
 

@@ -1,6 +1,7 @@
 """Gemini via the google-genai SDK (primary provider)."""
 
 import time
+from collections.abc import Iterator
 from typing import Any
 
 from google import genai
@@ -17,7 +18,8 @@ class GeminiProvider:
         self.model = model
         self.fallback_model = fallback_model
 
-    def generate_json(self, *, system: str, turns: list[Turn], schema: dict[str, Any], image: bytes | None = None) -> dict[str, Any]:
+    @staticmethod
+    def _contents(turns: list[Turn], image: bytes | None = None) -> list[types.Content]:
         contents: list[types.Content] = []
         for i, t in enumerate(turns):
             parts: list[types.Part] = []
@@ -25,6 +27,30 @@ class GeminiProvider:
                 parts.append(types.Part.from_bytes(data=image, mime_type="image/jpeg"))
             parts.append(types.Part.from_text(text=t.content))
             contents.append(types.Content(role="model" if t.role == "assistant" else "user", parts=parts))
+        return contents
+
+    def stream_text(self, *, system: str, turns: list[Turn]) -> Iterator[str]:
+        """A plain-text answer, piece by piece, so the app can show it as it's written."""
+        contents = self._contents(turns)
+        models = [self.model] + ([self.fallback_model] if self.fallback_model else [])
+        for i, model in enumerate(models):
+            thinking = types.ThinkingConfig(thinking_level=types.ThinkingLevel.MINIMAL) if model == self.model else None
+            config = types.GenerateContentConfig(system_instruction=system, thinking_config=thinking)
+            started = False
+            try:
+                for chunk in self.client.models.generate_content_stream(model=model, contents=contents, config=config):
+                    if chunk.text:
+                        started = True
+                        yield chunk.text
+                return
+            except (errors.ServerError, errors.ClientError) as e:
+                # Busy (5xx) or quota used up (429) before anything was sent: try the lighter model.
+                retryable = isinstance(e, errors.ServerError) or e.code == 429
+                if started or not retryable or i == len(models) - 1:
+                    raise
+
+    def generate_json(self, *, system: str, turns: list[Turn], schema: dict[str, Any], image: bytes | None = None) -> dict[str, Any]:
+        contents = self._contents(turns, image)
         def config_for(model: str) -> types.GenerateContentConfig:
             # Default thinking adds ~4 s to every answer. The AI only identifies foods and chats (the
             # backend counts calories), so keep thinking minimal; photos get a little more.

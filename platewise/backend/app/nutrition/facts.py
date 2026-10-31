@@ -42,20 +42,24 @@ def strip_unverified_numbers(reply: str, given: str) -> str:
     def unverified(text: str) -> bool:
         return any(not known(m.group(1)) or not known(m.group(2)) for m in AMOUNT.finditer(text))
 
-    text = re.sub(r"\s*\([^)]*\)", lambda m: "" if unverified(m.group(0)) else m.group(0), reply)
-    kept: list[str] = []
-    for sentence in re.findall(r"[^.!?]+[.!?]*", text) or [text]:
-        if not unverified(sentence):
-            kept.append(sentence)
-            continue
-        parts = re.split(r"\s+[–—-]\s+|,\s+", sentence)
-        if unverified(parts[0]):
-            continue
-        keep = [parts[0]]
-        for p in parts[1:]:
-            if unverified(p):
-                break
-            keep.append(p)
-        kept.append(", ".join(keep).rstrip(".!? ") + ".")
-    cleaned = re.sub(r"\s+", " ", " ".join(kept)).strip()
+    def clean(paragraph: str) -> str:
+        text = re.sub(r"\s*\([^)]*\)", lambda m: "" if unverified(m.group(0)) else m.group(0), paragraph)
+        kept: list[str] = []
+        for sentence in re.findall(r"[^.!?]+[.!?]*", text) or [text]:
+            if not unverified(sentence):
+                kept.append(sentence)
+                continue
+            parts = re.split(r"\s+[–—-]\s+|,\s+", sentence)
+            if unverified(parts[0]):
+                continue
+            keep = [parts[0]]
+            for p in parts[1:]:
+                if unverified(p):
+                    break
+                keep.append(p)
+            kept.append(", ".join(keep).rstrip(".!? ") + ".")
+        return re.sub(r"[ \t]+", " ", " ".join(kept)).strip()
+
+    # Paragraph by paragraph, so line breaks survive.
+    cleaned = "\n\n".join(c for c in (clean(p) for p in re.split(r"\n\s*\n|\n", reply)) if c)
     return cleaned or AMOUNT.sub("", reply).strip()

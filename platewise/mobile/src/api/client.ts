@@ -160,6 +160,54 @@ export type Health = { status: string; ai: string; demo: boolean; foods: number 
 export type Idea = { id: string; name: string; detail: string; badge: string; category: 'home' | 'chop' | 'quick'; kcal: number; protein: number; items: { food_id: string; name: string; grams: number }[] };
 export type ProductInfo = { barcode: string | null; name: string; per100: Per100; serving_g: number | null; serving_label: string; source: string };
 
+// Must match FINAL_MARK in backend/app/api/routes.py.
+const FINAL_MARK = '\u001eFINAL\u001e';
+
+/**
+ * POST and read a plain-text reply as it arrives (React Native's fetch can't stream on Android;
+ * XHR reports progress). Resolves with the server's cleaned final text.
+ */
+function streamPost(path: string, body: unknown, onText: (soFar: string) => void, timeoutMs = 90000): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${apiBase()}${path}`);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    if (saved.code) xhr.setRequestHeader('X-PlateWise-Code', saved.code);
+    xhr.timeout = timeoutMs;
+    const shown = () => xhr.responseText.split(FINAL_MARK)[0];
+    xhr.onprogress = () => {
+      if (xhr.status === 200 && xhr.responseText) onText(shown());
+    };
+    xhr.onload = () => {
+      if (xhr.status !== 200) {
+        let msg = 'Something went wrong. Try again.';
+        try {
+          const detail = (JSON.parse(xhr.responseText) as { detail?: unknown }).detail;
+          if (typeof detail === 'string') msg = detail;
+        } catch {
+          // keep the generic message
+        }
+        reject(new ApiError(msg, xhr.status));
+        return;
+      }
+      const parts = xhr.responseText.split(FINAL_MARK);
+      resolve((parts[1] ?? parts[0]).trim());
+    };
+    const offline = () =>
+      reject(
+        new ApiError(
+          saved.url
+            ? "Can't reach the PlateWise server. Check your internet. A free server can take up to a minute to wake up, so try again."
+            : "Can't reach the PlateWise server. Set its address in Me → PlateWise server.",
+          0,
+        ),
+      );
+    xhr.onerror = offline;
+    xhr.ontimeout = offline;
+    xhr.send(JSON.stringify(body));
+  });
+}
+
 /** Is the server answering right now? Remembered for 20 s so offline use doesn't wait on every request. */
 let reach: { at: number; ok: boolean } | null = null;
 async function serverReachable(): Promise<boolean> {
@@ -237,6 +285,18 @@ export const api = {
     route(
       () => call<{ reply: string; flex_plan: FlexPlan | null }>('/coach', json({ messages, context, sex, hide_numbers: hideNumbers })),
       () => onDevice.coach(messages, context, sex, hideNumbers),
+    ),
+  /** Plain-text coach answer shown as it's written. Not for event plans: use coach() for those. */
+  coachStream: (
+    messages: { role: 'user' | 'assistant'; content: string }[],
+    context: string,
+    sex: string,
+    hideNumbers: boolean,
+    onText: (soFar: string) => void,
+  ) =>
+    route(
+      async () => ({ reply: await streamPost('/coach/stream', { messages, context, sex, hide_numbers: hideNumbers }, onText), flex_plan: null as FlexPlan | null }),
+      () => onDevice.coach(messages, context, sex, hideNumbers, onText),
     ),
   ideas: (req: { kcal_left: number; protein_left: number; greens_today: number; meal: string; category: string }) =>
     route(

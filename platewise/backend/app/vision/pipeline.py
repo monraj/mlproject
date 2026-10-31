@@ -12,6 +12,8 @@ from app.nutrition.portions import stated_grams
 from app.vision.schema import AnalysisItem, MealAnalysis
 
 LOW_CONFIDENCE = 0.6
+# How far a seen piece may differ from the table's usual piece weight.
+PIECE_MIN, PIECE_MAX = 0.4, 2.0
 
 
 def prepare_image(data: bytes, max_side: int = 1024) -> bytes:
@@ -39,10 +41,16 @@ def build_item(ai: AnalysisItem, idx: int, said: str | None = None) -> dict[str,
 
     kind = "grams"
     count: int | None = None
+    piece_g = food.count_g if food else None
     if food and food.count_g and (ai.count or food.category in ("protein", "snack", "drink", "fruit", "fast_food")):
         kind = "count"
         count = max(1, ai.count or round(grams / food.count_g))
-        grams, lo, hi = count * food.count_g, (count - 0.25) * food.count_g, (count + 0.25) * food.count_g
+        if not stated:
+            # Pieces vary (a small kenkey, a big piece of chicken): size each piece from what the
+            # model saw, within sensible limits of the table's usual piece, instead of forcing it.
+            piece_g = round(min(max(grams / count, food.count_g * PIECE_MIN), food.count_g * PIECE_MAX))
+        assert piece_g is not None  # set from food.count_g above
+        grams, lo, hi = count * piece_g, (count - 0.25) * piece_g, (count + 0.25) * piece_g
     elif food and food.oily:
         kind = "oil"
     oil = oil_from_visible(ai.visible_oil_level)
@@ -73,7 +81,7 @@ def build_item(ai: AnalysisItem, idx: int, said: str | None = None) -> dict[str,
         "ai_grams": round(grams),
         "kind": kind,
         "count": count,
-        "count_g": food.count_g if food else None,
+        "count_g": piece_g,
         "oil": oil,
         "oily": bool(food and food.oily),
         "greens": bool(food and food.greens),

@@ -143,3 +143,10 @@ def test_product_lookup(client, monkeypatch):
 def test_label_not_found_in_demo(client):
     r = client.post("/products/label", files={"image": ("p.jpg", _jpeg(), "image/jpeg")})
     assert r.status_code == 404
+
+
+def test_coach_stream_sends_text_then_cleaned_final(client):
+    r = client.post("/coach/stream", json={"messages": [{"role": "user", "content": "What should I eat tonight?"}], "context": "", "sex": "female"})
+    assert r.status_code == 200 and r.headers["content-type"].startswith("text/plain")
+    streamed, final = r.text.split("\u001eFINAL\u001e")
+    assert streamed.strip() and final.strip()

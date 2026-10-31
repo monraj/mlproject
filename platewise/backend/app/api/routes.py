@@ -1,8 +1,10 @@
 import datetime as dt
 import re
+from collections.abc import Iterator
 from typing import Any
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi.responses import StreamingResponse
 from pydantic import ValidationError
 
 from app.api.models import CoachRequest, IdeasRequest, ParseRequest
@@ -57,7 +59,7 @@ def foods_search(q: str) -> dict[str, Any]:
 @router.post("/scans")
 async def scan(image: UploadFile = File(...), meal: str | None = Form(None), note: str | None = Form(None)) -> dict[str, Any]:
     jpeg = await _read_image(image)  # held in memory only; never stored (CLAUDE.md rule 6)
-    raw = _ai(scan_system(), [Turn("user", photo_prompt(meal, note))], meal_schema(), jpeg)
+    raw = _ai(scan_system(photo=True), [Turn("user", photo_prompt(meal, note))], meal_schema(), jpeg)
     try:
         analysis = MealAnalysis.model_validate(raw)
     except ValidationError as e:
@@ -75,16 +77,48 @@ def parse(req: ParseRequest) -> dict[str, Any]:
     return build_scan(analysis, get_provider().last_used, PROMPT_VERSION, said=req.text)
 
 
-@router.post("/coach")
-def coach(req: CoachRequest) -> dict[str, Any]:
-    floor = calorie_floor(req.sex)
+def _coach_prompt(req: CoachRequest, plain: bool) -> tuple[str, list[Turn], str, list[str]]:
     turns = [Turn(m.role, m.content) for m in req.messages]
     if turns[0].role != "user" or turns[-1].role != "user":
         raise HTTPException(422, "Conversation must start and end with a user message.")
     question = turns[-1].content
     facts = food_facts(question)
     context = req.context + ("\nFacts from the PlateWise food table (use these; don't contradict them):\n" + "\n".join(facts) if facts else "")
-    system = coach_system(context, floor, req.hide_numbers)
+    return coach_system(context, calorie_floor(req.sex), req.hide_numbers, plain=plain), turns, question, facts
+
+
+# Marks the end of a streamed coach answer; the cleaned final text follows it.
+FINAL_MARK = "\u001eFINAL\u001e"
+
+
+@router.post("/coach/stream")
+def coach_stream(req: CoachRequest) -> StreamingResponse:
+    """The coach's answer as plain text, sent as it's written (no event plans; those use /coach).
+    After the text comes FINAL_MARK and the full answer with any made-up numbers removed."""
+    system, turns, question, _ = _coach_prompt(req, plain=True)
+    pieces = get_provider().stream_text(system=system, turns=turns)
+    try:
+        first = next(pieces)  # fail with a normal error if the AI can't start
+    except StopIteration:
+        first = ""
+    except ProviderError as e:
+        raise HTTPException(502, "The AI service didn't answer. Try again in a moment.") from e
+
+    def body() -> Iterator[str]:
+        text = first
+        yield first
+        for piece in pieces:
+            text += piece
+            yield piece
+        yield FINAL_MARK + strip_unverified_numbers(text.strip(), system + question)
+
+    return StreamingResponse(body(), media_type="text/plain; charset=utf-8", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
+@router.post("/coach")
+def coach(req: CoachRequest) -> dict[str, Any]:
+    floor = calorie_floor(req.sex)
+    system, turns, question, facts = _coach_prompt(req, plain=False)
     raw = _ai(system, turns, COACH_SCHEMA)
     try:
         ans = CoachAnswer.model_validate(raw)

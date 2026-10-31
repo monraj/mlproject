@@ -7,6 +7,7 @@ import { dayKey, daysBetween } from '../lib/dates';
 import { GemmaError, generateJson, generateText } from './gemma';
 import { buildScan, type MealAnalysis } from './pipeline';
 import { foodFacts, stripUnverifiedNumbers } from './facts';
+import { isEventQuestion } from '../lib/coachRules';
 import { LABEL_PROMPT, coachSystemCompact, ideasPrompt, photoPrompt, scanSystem, textPrompt } from './prompts';
 import { COACH_SCHEMA, IDEAS_SCHEMA, LABEL_SCHEMA, MEAL_SCHEMA } from './schemas';
 
@@ -25,7 +26,7 @@ async function preparePhoto(uri: string): Promise<string> {
 
 export async function scanPhoto(uri: string, meal: string, note?: string): Promise<ScanResult> {
   const analysis = await generateJson<MealAnalysis>({
-    system: scanSystem(),
+    system: scanSystem(true),
     turns: [{ role: 'user', content: photoPrompt(meal, note) }],
     schema: MEAL_SCHEMA,
     imageUri: await preparePhoto(uri),
@@ -43,24 +44,24 @@ function withFacts(system: string, question: string): string {
   return facts.length ? `${system}\nFacts from the PlateWise food table (use these; don't contradict them):\n${facts.join('\n')}` : system;
 }
 
-const EVENT = /\b(wedding|funeral|party|festival|outdooring|naming|birthday|christmas|easter|ramadan|eid|event|plan (for|around))\b/i;
 
 export async function coach(
   messages: { role: 'user' | 'assistant'; content: string }[],
   context: string,
   sex: string,
   hideNumbers: boolean,
+  onText?: (soFar: string) => void,
 ): Promise<{ reply: string; flex_plan: FlexPlan | null }> {
   const floor = CALORIE_FLOOR[sex === 'male' ? 'male' : 'female'];
   const question = [...messages].reverse().find((m) => m.role === 'user')?.content.slice(0, 500) ?? '';
   // Only the latest question: earlier answers in the history get copied, mistakes included.
   const turns = [{ role: 'user' as const, content: question }];
-  const withPlan = EVENT.test(question);
+  const withPlan = isEventQuestion(question);
 
   if (!withPlan) {
     // Plain text is several times faster on a phone than schema-constrained JSON.
     const system = withFacts(coachSystemCompact(context, floor, hideNumbers, false), question);
-    const reply = await generateText({ system, turns, maxTokens: 160 });
+    const reply = await generateText({ system, turns, maxTokens: 160, onText });
     return { reply: stripUnverifiedNumbers(reply.replace(/^["'\s]+|["'\s]+$/g, ''), system + question), flex_plan: null };
   }
 

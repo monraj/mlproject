@@ -37,20 +37,27 @@ export function stripUnverifiedNumbers(reply: string, given: string): string {
   const allowed = new Set((given.replace(/\d{4}-\d{2}-\d{2}/g, ' ').match(/\d[\d,.]*/g) ?? []).map((n) => n.replace(/,/g, '')));
   const known = (n?: string) => !n || allowed.has(n.replace(/,/g, '').replace(/\.$/, ''));
   const unverified = (text: string) => [...text.matchAll(AMOUNT)].some((m) => !known(m[1]) || !known(m[2]));
-  const noParens = reply.replace(/\s*\([^)]*\)/g, (p) => (unverified(p) ? '' : p));
-  const sentences = noParens.match(/[^.!?]+[.!?]*/g) ?? [noParens];
-  const kept = sentences
-    .map((s) => {
-      if (!unverified(s)) return s;
-      const parts = s.split(/\s+[–—-]\s+|,\s+/);
-      if (unverified(parts[0])) return '';
-      const keep = [parts[0]];
-      for (const p of parts.slice(1)) {
-        if (unverified(p)) break;
-        keep.push(p);
-      }
-      return `${keep.join(', ').replace(/[.!?\s]+$/, '')}.`;
-    })
-    .filter((s) => s.trim());
-  return kept.join(' ').replace(/\s+/g, ' ').trim() || reply.replace(AMOUNT, '').trim();
+  const clean = (paragraph: string) => {
+    const noParens = paragraph.replace(/\s*\([^)]*\)/g, (p) => (unverified(p) ? '' : p));
+    const sentences = noParens.match(/[^.!?]+[.!?]*/g) ?? [noParens];
+    return sentences
+      .map((s) => {
+        if (!unverified(s)) return s;
+        const parts = s.split(/\s+[–—-]\s+|,\s+/);
+        if (unverified(parts[0])) return '';
+        const keep = [parts[0]];
+        for (const p of parts.slice(1)) {
+          if (unverified(p)) break;
+          keep.push(p);
+        }
+        return `${keep.join(', ').replace(/[.!?\s]+$/, '')}.`;
+      })
+      .filter((s) => s.trim())
+      .join(' ')
+      .replace(/[ \t]+/g, ' ')
+      .trim();
+  };
+  // Paragraph by paragraph, so line breaks survive.
+  const cleaned = reply.split(/\n\s*\n|\n/).map(clean).filter(Boolean).join('\n\n');
+  return cleaned || reply.replace(AMOUNT, '').trim();
 }

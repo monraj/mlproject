@@ -22,6 +22,9 @@ export type AnalysisItem = {
 export type MealAnalysis = { is_food: boolean; items?: AnalysisItem[]; notes?: string | null };
 
 const LOW_CONFIDENCE = 0.6;
+// Same limits as the server: how far a seen piece may differ from the table's usual piece.
+const PIECE_MIN = 0.4;
+const PIECE_MAX = 2;
 // The on-device model is smaller than the server's, so its ranges start wider.
 const MIN_SPREAD_ON_DEVICE = 0.15;
 const COUNT_CATEGORIES = ['protein', 'snack', 'drink', 'fruit', 'fast_food'];
@@ -50,12 +53,17 @@ export function buildItem(ai0: AnalysisItem, idx: number, said?: string): DraftI
 
   let kind: DraftItem['kind'] = 'grams';
   let count: number | undefined;
+  let pieceG = food?.countG ?? null;
   if (food?.countG && (ai.count || COUNT_CATEGORIES.includes(food.category))) {
     kind = 'count';
     count = Math.max(1, ai.count || Math.round(grams / food.countG));
-    grams = count * food.countG;
-    lo = (count - 0.25) * food.countG;
-    hi = (count + 0.25) * food.countG;
+    if (!stated) {
+      // Pieces vary in size: size each from what the model saw, within limits of the usual piece.
+      pieceG = Math.round(Math.min(Math.max(grams / count, food.countG * PIECE_MIN), food.countG * PIECE_MAX));
+    }
+    grams = count * (pieceG as number);
+    lo = (count - 0.25) * (pieceG as number);
+    hi = (count + 0.25) * (pieceG as number);
   } else if (food?.oily) {
     kind = 'oil';
   }
@@ -87,7 +95,7 @@ export function buildItem(ai0: AnalysisItem, idx: number, said?: string): DraftI
     confidence: low ? 'low' : 'ok',
     kind,
     count,
-    countG: food?.countG ?? null,
+    countG: pieceG,
     oil,
     oily: !!food?.oily,
     greens: !!food?.greens,

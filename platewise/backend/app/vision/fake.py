@@ -1,5 +1,6 @@
 """Demo provider: canned answers so the app works end to end without an API key."""
 
+from collections.abc import Iterator
 from typing import Any
 
 from app.vision.provider import Turn
@@ -24,8 +25,15 @@ def _item(
     }
 
 
+DEMO_COACH = "Demo mode: connect an AI key on the server for real coaching. Meanwhile: aim for protein at every meal and greens once a day."
+
+
 class DemoProvider:
     name = "demo"
+
+    def stream_text(self, *, system: str, turns: list[Turn]) -> Iterator[str]:
+        for word in DEMO_COACH.split(" "):
+            yield word + " "
 
     def generate_json(self, *, system: str, turns: list[Turn], schema: dict[str, Any], image: bytes | None = None) -> dict[str, Any]:
         last = turns[-1].content.lower() if turns else ""
@@ -56,10 +64,7 @@ class DemoProvider:
             plan = None
             if any(w in last for w in ("wedding", "funeral", "party", "festival")):
                 plan = None  # the app asks for real dates; demo mode keeps it simple
-            return {
-                "reply": "Demo mode: connect an AI key on the server for real coaching. Meanwhile: aim for protein at every meal and greens once a day.",
-                "flex_plan": plan,
-            }
+            return {"reply": DEMO_COACH, "flex_plan": plan}
         if schema is IDEAS_SCHEMA:
             return {
                 "tip": "At a chop bar, ask for less oil on top and the smaller ball.",

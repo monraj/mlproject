@@ -6,3 +6,4 @@ __pycache__/
 .env
 server.log
 .server-port
+eval/atlas/

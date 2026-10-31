@@ -166,3 +166,12 @@ describe('stated portions (same cases as the server)', () => {
     expect(it.grams).toBe(660);
   });
 });
+
+describe('number cleanup keeps paragraphs', () => {
+  const { stripUnverifiedNumbers } = require('../src/ai/facts');
+  test('line breaks survive and made-up figures go', () => {
+    const given = 'Kelewele: about 345 kcal.';
+    expect(stripUnverifiedNumbers('First idea.\n\nSecond idea with about 345 kcal.', given)).toBe('First idea.\n\nSecond idea with about 345 kcal.');
+    expect(stripUnverifiedNumbers('Tip one.\n\nPeas – they add about 180 kcal.', given)).toBe('Tip one.\n\nPeas.');
+  });
+});

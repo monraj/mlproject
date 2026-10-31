@@ -18,3 +18,9 @@ def test_strips_made_up_numbers_but_keeps_advice() -> None:
     )
     assert strip_unverified_numbers("Add eggs for protein – about 20-30g more.", given) == "Add eggs for protein."
     assert strip_unverified_numbers("A wrap is about 345 kcal.", given) == "A wrap is about 345 kcal."
+
+
+def test_keeps_paragraphs() -> None:
+    given = "Kelewele: about 345 kcal."
+    assert strip_unverified_numbers("First idea.\n\nSecond idea with about 345 kcal.", given) == "First idea.\n\nSecond idea with about 345 kcal."
+    assert strip_unverified_numbers("Tip one.\n\nPeas – they add about 180 kcal.", given) == "Tip one.\n\nPeas."

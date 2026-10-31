@@ -21,7 +21,10 @@ import { useTheme } from '../../src/theme/ThemeProvider';
 import { useApp } from '../../src/state/AppState';
 import { newId } from '../../src/state/AppState';
 import type { ChatMsg, FlexPlan as Plan } from '../../src/state/types';
+import * as Clipboard from 'expo-clipboard';
+import * as Haptics from 'expo-haptics';
 import { api } from '../../src/api/client';
+import { isEventQuestion } from '../../src/lib/coachRules';
 import { getPrivacy } from '../../src/api/privacy';
 import { warmGemma } from '../../src/ai/gemma';
 import { getGemmaState } from '../../src/ai/modelStore';
@@ -98,6 +101,23 @@ function FlexPlan({ msg }: { msg: ChatMsg & { plan: Plan } }) {
   );
 }
 
+/**
+ * Earlier questions that got a real answer, as question/answer pairs. Questions that failed or
+ * were never answered are left out, so the coach doesn't answer them again.
+ */
+function completedExchanges(chat: ChatMsg[]): ChatMsg[] {
+  const out: ChatMsg[] = [];
+  for (let i = 0; i < chat.length - 1; i++) {
+    const q = chat[i];
+    const a = chat[i + 1];
+    if (q.from === 'me' && a.from === 'coach' && !a.text.startsWith("I couldn't answer")) {
+      out.push(q, a);
+      i++;
+    }
+  }
+  return out;
+}
+
 export default function Coach() {
   const { c } = useTheme();
   const insets = useSafeAreaInsets();
@@ -108,6 +128,14 @@ export default function Coach() {
   const scroll = useRef<ScrollView>(null);
   const opening: ChatMsg = { id: 'hello', from: 'coach', text: `Hi${s.profile?.name ? ` ${s.profile.name}` : ''}! Ask me about food, portions or your plan. I can see what you've logged. To log by chat, start with “Log:”.` };
   const msgs = [opening, ...s.chat];
+  const [copied, setCopied] = useState<string | null>(null);
+  const copy = async (id: string, text: string) => {
+    await Clipboard.setStringAsync(text);
+    Haptics.selectionAsync().catch(() => undefined);
+    setCopied(id);
+    setTimeout(() => setCopied((cur) => (cur === id ? null : cur)), 1600);
+  };
+  const copyAll = () => copy('all', s.chat.map((m) => `${m.from === 'me' ? 'You' : 'PlateWise'}: ${m.text}`).join('\n\n'));
 
   // When answers will come from the phone, load the model now so the first question doesn't wait.
   useEffect(() => {
@@ -131,16 +159,34 @@ export default function Coach() {
           return;
         }
       }
-      const history = [...s.chat, mine].slice(-14);
-      while (history.length && history[0].from !== 'me') history.shift();
+      const history = [...completedExchanges(s.chat).slice(-12), mine];
       const plans = Object.entries(s.plans).map(([d, p]) => `${d}: ${p.kcal} (${p.reason})`).join('; ');
-      const r = await api.coach(
-        history.map((m) => ({ role: m.from === 'me' ? 'user' : 'assistant', content: m.text })),
-        coachContext(s.profile, s.days, s.weights, budgetFor, plans ? `Saved plans: ${plans}` : ''),
-        s.profile.sex,
-        s.profile.hideNumbers,
-      );
-      dispatch({ type: 'chat', msg: { id: newId('c'), from: 'coach', text: r.reply, plan: r.flex_plan } });
+      const turns = history.map((m) => ({ role: m.from === 'me' ? ('user' as const) : ('assistant' as const), content: m.text }));
+      const ctx = coachContext(s.profile, s.days, s.weights, budgetFor, plans ? `Saved plans: ${plans}` : '');
+      if (isEventQuestion(v)) {
+        // Event plans need the structured answer.
+        const r = await api.coach(turns, ctx, s.profile.sex, s.profile.hideNumbers);
+        dispatch({ type: 'chat', msg: { id: newId('c'), from: 'coach', text: r.reply, plan: r.flex_plan } });
+        return;
+      }
+      // Everything else is shown as it's written.
+      const id = newId('c');
+      let shown = false;
+      let last = 0;
+      const show = (t: string, force = false) => {
+        const text = t.trim();
+        if (!text) return;
+        if (!shown) {
+          shown = true;
+          setTyping(false);
+          dispatch({ type: 'chat', msg: { id, from: 'coach', text } });
+        } else if (force || Date.now() - last > 80) {
+          dispatch({ type: 'chatPatch', id, patch: { text } });
+        }
+        last = Date.now();
+      };
+      const r = await api.coachStream(turns, ctx, s.profile.sex, s.profile.hideNumbers, (t) => show(t));
+      show(r.reply, true); // the cleaned final answer replaces what was streamed
     } catch (e) {
       dispatch({ type: 'chat', msg: { id: newId('c'), from: 'coach', text: `I couldn't answer just now. ${(e as Error).message}` } });
     } finally {
@@ -168,6 +214,13 @@ export default function Coach() {
           </T>
         </View>
         {s.chat.length ? (
+          <Press onPress={() => void copyAll()} accessibilityLabel="Copy the whole conversation" style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 6 }}>
+            <T v="small" weight="bold" color={c.mintText}>
+              {copied === 'all' ? 'Copied' : 'Copy'}
+            </T>
+          </Press>
+        ) : null}
+        {s.chat.length ? (
           <Press onPress={() => dispatch({ type: 'chatClear' })} accessibilityLabel="Clear the conversation" style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 6 }}>
             <T v="small" weight="bold" color={c.mintText}>
               Clear
@@ -186,7 +239,9 @@ export default function Coach() {
               entering={Enter.duration(duration.slow).delay(i < 2 ? 150 + i * 350 : 0).easing(easeOut)}
               style={{ alignSelf: mine ? 'flex-end' : 'flex-start', maxWidth: '86%', gap: 10 }}
             >
-              <View
+              <Press
+                onLongPress={() => void copy(m.id, m.text)}
+                accessibilityHint="Long-press to copy"
                 style={[
                   styles.bubble,
                   mine
@@ -197,7 +252,12 @@ export default function Coach() {
                 <T v="body" color={mine ? c.buttonText : c.ink}>
                   {m.text}
                 </T>
-              </View>
+              </Press>
+              {copied === m.id ? (
+                <T v="small" size={12} muted style={{ alignSelf: mine ? 'flex-end' : 'flex-start' }}>
+                  Copied
+                </T>
+              ) : null}
               {m.plan && m.plan.days.length ? <FlexPlan msg={m as ChatMsg & { plan: Plan }} /> : null}
             </Animated.View>
           );

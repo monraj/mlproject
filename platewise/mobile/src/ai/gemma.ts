@@ -98,7 +98,7 @@ export function warmGemma(): void {
 
 export type Turn = { role: 'user' | 'assistant'; content: string };
 
-type Args = { system: string; turns: Turn[]; schema?: Record<string, unknown>; imageUri?: string; maxTokens?: number };
+type Args = { system: string; turns: Turn[]; schema?: Record<string, unknown>; imageUri?: string; maxTokens?: number; onText?: (soFar: string) => void };
 
 function enqueue<T>(run: () => Promise<T>): Promise<T> {
   const next = queue.then(run, run);
@@ -122,6 +122,7 @@ async function complete(a: Args): Promise<string> {
   });
   try {
     const started = Date.now();
+    let soFar = '';
     const res = await c.completion({
       messages: messages as never,
       ...(a.schema ? { response_format: { type: 'json_schema' as const, json_schema: { strict: true, schema: a.schema } } } : {}),
@@ -129,7 +130,10 @@ async function complete(a: Args): Promise<string> {
       temperature: 0.2,
       top_p: 0.9,
       stop: STOP,
-    });
+    }, a.onText ? (data: { token: string }) => {
+      soFar += data.token;
+      a.onText?.(soFar);
+    } : undefined);
     const t = res.timings;
     if (t) {
       setLastRun({

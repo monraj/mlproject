@@ -4,10 +4,14 @@ from datetime import date
 
 from app.nutrition.foods import load_foods
 
-PROMPT_VERSION = "v3"
+PROMPT_VERSION = "v6"
 
 
-def catalogue() -> str:
+def catalogue(with_grams: bool = True) -> str:
+    """Food ids and names. Photos get no gram weights: shown "1 ball ≈ 330 g", models copy the
+    number instead of judging the photo (measured on the Accra atlas photos)."""
+    if not with_grams:
+        return "\n".join(f"{f.id}: {f.name}" for f in load_foods().values())
     return "\n".join(f"{f.id}: {f.name} ({f.typical_portion_label} ≈ {f.typical_portion_g:g} g)" for f in load_foods().values())
 
 
@@ -15,7 +19,7 @@ SCAN_SYSTEM = """You are the food-recognition step of PlateWise, a calorie track
 List every distinct food you can identify and estimate its edible weight in grams as a range. Never estimate calories.
 Ghanaian home and chop-bar food is common: waakye, banku, kenkey, fufu, jollof, red-red, kontomire, light soup, shito, wele, kelewele.
 For each food give the closest catalog_id from the catalogue below, or null if nothing fits. Use local names in food_name when that is what the food is.
-Use typical local portions as a guide: a ball of kenkey or banku, a chop-bar bowl of soup, a ladle of stew.
+Estimate the amount actually in front of you. The catalogue portions below are only a reference for a usual serving; real servings are often half or double that. Judge size against the plate, bowl, spoon or hand: a small ball of kenkey can weigh under 200 g and a large one over 400 g; a small piece of chicken can be 70 g. Centre grams_low and grams_high on your own estimate, not on the catalogue portion.
 For countable foods (eggs, pieces of chicken or fish, balls of kenkey) set count. Set visible_oil_level from what you can see.
 confidence is 0 to 1; use under 0.6 when the food or the amount is genuinely unclear.
 
@@ -23,8 +27,8 @@ Catalogue:
 """
 
 
-def scan_system() -> str:
-    return SCAN_SYSTEM + catalogue()
+def scan_system(photo: bool = False) -> str:
+    return SCAN_SYSTEM + catalogue(with_grams=not photo)
 
 
 def photo_prompt(meal: str | None, note: str | None) -> str:
@@ -46,9 +50,12 @@ def text_prompt(text: str, lang: str) -> str:
     )
 
 
-def coach_system(context: str, floor: int, hide_numbers: bool, today: date | None = None) -> str:
+def coach_system(context: str, floor: int, hide_numbers: bool, today: date | None = None, plain: bool = False) -> str:
+    """plain=True: a streamed plain-text answer (no flex_plan); used when no event plan is asked for."""
     today = today or date.today()
-    when = f"Today is {today.strftime('%A')} {today.isoformat()}. Plans can only change today and later days; never put past dates in flex_plan, and don't suggest changing days that have passed."
+    when = f"Today is {today.strftime('%A')} {today.isoformat()}." + (
+        "" if plain else " Plans can only change today and later days; never put past dates in flex_plan, and don't suggest changing days that have passed."
+    )
     numbers = " The person has hide-numbers mode on: never mention calorie numbers; talk about portions and food choices." if hide_numbers else ""
     return f"""You are PlateWise, a warm, practical nutrition coach inside a calorie and weight tracker used mainly in Ghana.
 Answer in 2 to 6 short sentences or a short list. Use the person's own data below. Know Ghanaian food well (chop bars, waakye, banku, kenkey, fufu, soups and stews) and suggest realistic swaps: less oil on top, the smaller ball, more kontomire or garden eggs, grilled instead of fried.
@@ -58,9 +65,13 @@ Only quote calorie or protein numbers that appear in the food-table facts or the
 When asked about a food, first say in a few words what it is, using the food-table description, then give the advice.
 Many people don't know what a calorie is. When you mention calories, also say what it means in everyday terms: a share of their daily budget ("about a third of your day") or a familiar food ("about as much as a ball of kenkey"). Never describe food as exercise to burn off.
 {when}
-Set flex_plan only when the person asks to plan around an event (a wedding, funeral, party, festival): lower budgets on a few days before and a higher budget on the day, keeping the total about the same as their normal budgets, every day at or above {floor} kcal, dates as YYYY-MM-DD from the upcoming days listed below. Otherwise flex_plan is null. A plan only takes effect when the person taps Save in the app, so say you've suggested a plan they can save; never say you've changed their budget.
+{PLAIN if plain else PLAN.format(floor=floor)}
 
 {context[:6000]}"""
+
+
+PLAIN = "Reply in plain text only: no JSON, no markdown, no headings or bullet symbols."
+PLAN = """Set flex_plan only when the person asks to plan around an event (a wedding, funeral, party, festival): lower budgets on a few days before and a higher budget on the day, keeping the total about the same as their normal budgets, every day at or above {floor} kcal, dates as YYYY-MM-DD from the upcoming days listed below. Otherwise flex_plan is null. A plan only takes effect when the person taps Save in the app, so say you've suggested a plan they can save; never say you've changed their budget."""
 
 
 def ideas_prompt(kcal_left: float, protein_left: float, greens_today: int, meal: str, category: str) -> str:

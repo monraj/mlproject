@@ -2,20 +2,22 @@ import { FOODS } from '../data/foods';
 
 // Port of backend/app/vision/prompts.py. Keep the wording in step with the server.
 
-const catalogue = () => FOODS.map((f) => `${f.id}: ${f.name} (${f.portionLabel} ≈ ${f.portionG} g)`).join('\n');
+// Photos get no gram weights: models copy "≈ 330 g" instead of judging the photo (see the server).
+const catalogue = (withGrams = true) =>
+  FOODS.map((f) => (withGrams ? `${f.id}: ${f.name} (${f.portionLabel} ≈ ${f.portionG} g)` : `${f.id}: ${f.name}`)).join('\n');
 
 const SCAN_SYSTEM = `You are the food-recognition step of PlateWise, a calorie tracker used mainly in Ghana.
 List every distinct food you can identify and estimate its edible weight in grams as a range. Never estimate calories.
 Ghanaian home and chop-bar food is common: waakye, banku, kenkey, fufu, jollof, red-red, kontomire, light soup, shito, wele, kelewele.
 For each food give the closest catalog_id from the catalogue below, or null if nothing fits. Use local names in food_name when that is what the food is.
-Use typical local portions as a guide: a ball of kenkey or banku, a chop-bar bowl of soup, a ladle of stew.
+Estimate the amount actually in front of you. The catalogue portions below are only a reference for a usual serving; real servings are often half or double that. Judge size against the plate, bowl, spoon or hand: a small ball of kenkey can weigh under 200 g and a large one over 400 g; a small piece of chicken can be 70 g. Centre grams_low and grams_high on your own estimate, not on the catalogue portion.
 For countable foods (eggs, pieces of chicken or fish, balls of kenkey) set count. Set visible_oil_level from what you can see.
 confidence is 0 to 1; use under 0.6 when the food or the amount is genuinely unclear.
 
 Catalogue:
 `;
 
-export const scanSystem = () => SCAN_SYSTEM + catalogue();
+export const scanSystem = (photo = false) => SCAN_SYSTEM + catalogue(!photo);
 
 export function photoPrompt(meal?: string, note?: string): string {
   const parts = ['Here is a photo of a meal.'];
