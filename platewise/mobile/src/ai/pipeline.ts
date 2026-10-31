@@ -1,6 +1,7 @@
 import type { Food } from '../data/foods';
 import type { Candidate, DraftItem, OilLevel } from '../state/types';
 import { AUTO_ACCEPT, matchFood } from './matcher';
+import { statedGrams } from './portions';
 
 // Port of backend/app/vision/pipeline.py: the model names foods and gram ranges; this code matches
 // them to the food table. Calories are computed later by state/calc.ts, never by the model.
@@ -29,7 +30,8 @@ const oilFromVisible = (level?: string): OilLevel => (({ none: 'light', low: 'li
 
 const cap = (s: string) => (s ? s[0].toUpperCase() + s.slice(1).toLowerCase() : s);
 
-export function buildItem(ai: AnalysisItem, idx: number): DraftItem {
+export function buildItem(ai0: AnalysisItem, idx: number, said?: string): DraftItem {
+  let ai = ai0;
   const cands = matchFood(ai.food_name, ai.local_aliases ?? [], ai.catalog_id ?? null);
   const top = cands[0];
   const food: Food | undefined = top && top.score >= AUTO_ACCEPT ? top.food : undefined;
@@ -37,6 +39,14 @@ export function buildItem(ai: AnalysisItem, idx: number): DraftItem {
   let lo = lo0;
   let hi = hi0;
   let grams = Math.min(Math.max(ai.grams_estimate, lo), hi);
+  // An amount the person stated ("two balls") beats the model's guess: use the table's portion.
+  const stated = said && food ? statedGrams(said, food) : null;
+  if (stated) {
+    grams = stated;
+    lo = stated * 0.88;
+    hi = stated * 1.12;
+    if (food?.countG) ai = { ...ai, count: Math.max(1, Math.round(stated / food.countG)) };
+  }
 
   let kind: DraftItem['kind'] = 'grams';
   let count: number | undefined;
@@ -87,7 +97,7 @@ export function buildItem(ai: AnalysisItem, idx: number): DraftItem {
   };
 }
 
-export function buildScan(a: MealAnalysis, provider: string) {
-  const items = a.is_food ? (a.items ?? []).slice(0, 15).map(buildItem) : [];
+export function buildScan(a: MealAnalysis, provider: string, said?: string) {
+  const items = a.is_food ? (a.items ?? []).slice(0, 15).map((it, i) => buildItem(it, i, said)) : [];
   return { isFood: a.is_food && items.length > 0, note: a.notes ?? null, provider, items };
 }

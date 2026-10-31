@@ -8,6 +8,7 @@ from pydantic import ValidationError
 from app.api.models import CoachRequest, IdeasRequest, ParseRequest
 from app.config import get_settings
 from app.nutrition.calc import nutrients
+from app.nutrition.facts import food_facts, strip_unverified_numbers
 from app.nutrition.foods import get_food, load_foods
 from app.nutrition.matcher import search
 from app.products.openfoodfacts import LookupUnavailable, lookup
@@ -71,7 +72,7 @@ def parse(req: ParseRequest) -> dict[str, Any]:
         analysis = MealAnalysis.model_validate(raw)
     except ValidationError as e:
         raise HTTPException(502, "The AI answer was unreadable. Try again.") from e
-    return build_scan(analysis, get_provider().last_used, PROMPT_VERSION)
+    return build_scan(analysis, get_provider().last_used, PROMPT_VERSION, said=req.text)
 
 
 @router.post("/coach")
@@ -80,7 +81,11 @@ def coach(req: CoachRequest) -> dict[str, Any]:
     turns = [Turn(m.role, m.content) for m in req.messages]
     if turns[0].role != "user" or turns[-1].role != "user":
         raise HTTPException(422, "Conversation must start and end with a user message.")
-    raw = _ai(coach_system(req.context, floor, req.hide_numbers), turns, COACH_SCHEMA)
+    question = turns[-1].content
+    facts = food_facts(question)
+    context = req.context + ("\nFacts from the PlateWise food table (use these; don't contradict them):\n" + "\n".join(facts) if facts else "")
+    system = coach_system(context, floor, req.hide_numbers)
+    raw = _ai(system, turns, COACH_SCHEMA)
     try:
         ans = CoachAnswer.model_validate(raw)
     except ValidationError as e:
@@ -98,7 +103,33 @@ def coach(req: CoachRequest) -> dict[str, Any]:
                 days.append({"date": d.date, "kcal": max(floor, int(round(d.kcal / 10) * 10))})  # safety floor always wins
         if days:
             plan = {"reason": ans.flex_plan.reason[:80], "days": days}
-    return {"reply": ans.reply, "flex_plan": plan}
+    # Numbers the model made up are removed; ones from the table or the person's data stay.
+    reply = strip_unverified_numbers(ans.reply, system + question)
+    return {"reply": reply, "flex_plan": plan, "facts": facts}
+
+
+IDEA_TARGET = 0.9
+IDEA_MIN = 0.7
+IDEA_SCALE = (0.6, 1.6)
+
+
+def _set_badges(ideas: list[dict[str, Any]], target: float) -> None:
+    """Badges come from the numbers, not the model: "Best fit" is closest to the target and
+    "Most protein" really has the most."""
+    if not ideas:
+        return
+    for i in ideas:
+        i["badge"] = "Good fit"
+    best = min(ideas, key=lambda i: abs(i["kcal"] - target))
+    best["badge"] = "Best fit"
+    rest = [i for i in ideas if i is not best]
+    if rest:
+        prot = max(ideas, key=lambda i: i["protein"])
+        if prot is not best:
+            prot["badge"] = "Most protein"
+        green = next((i for i in rest if i["greens"] and i["badge"] == "Good fit"), None)
+        if green:
+            green["badge"] = "Most greens"
 
 
 @router.post("/ideas")
@@ -113,20 +144,24 @@ def ideas(req: IdeasRequest) -> dict[str, Any]:
     except ValidationError as e:
         raise HTTPException(502, "The AI answer was unreadable. Try again.") from e
     out = []
+    target = req.kcal_left * IDEA_TARGET
     for n, idea in enumerate(parsed.ideas[:4]):
         portions = [(f, max(5.0, min(it.grams, 2000.0))) for it in idea.items if (f := get_food(it.catalog_id)) and f.kcal_per_100g is not None]
         total = sum((f.kcal_per_100g or 0.0) * g / 100 for f, g in portions)
-        # Models often overshoot; shrink every portion so the meal fits what's left.
-        scale = min(1.0, req.kcal_left * 0.95 / total) if total else 1.0
-        items, kcal, protein = [], 0.0, 0.0
+        # Models miss the target both ways; scale every portion so the meal lands near what's
+        # left, within limits that keep portions realistic.
+        scale = min(IDEA_SCALE[1], max(IDEA_SCALE[0], target / total)) if total else 1.0
+        items, kcal, protein, greens = [], 0.0, 0.0, False
         for food, g0 in portions:
             g = max(5.0, round(g0 * scale / 5) * 5)
             nut = nutrients(food, g, g, g)
             assert nut is not None
             kcal += nut.kcal
             protein += nut.protein
+            greens = greens or food.greens
             items.append({"food_id": food.id, "name": food.name, "grams": round(g)})
-        if items:
+        # Drop ideas that still don't fit: over what's left, or well short of it.
+        if items and IDEA_MIN * req.kcal_left <= kcal <= req.kcal_left:
             out.append(
                 {
                     "id": f"idea{n}",
@@ -136,9 +171,13 @@ def ideas(req: IdeasRequest) -> dict[str, Any]:
                     "category": idea.category,
                     "kcal": round(kcal),
                     "protein": round(protein),
+                    "greens": greens,
                     "items": items,
                 }
             )
+    _set_badges(out, target)
+    for o in out:
+        o.pop("greens")
     return {"ideas": out, "tip": parsed.tip}
 
 

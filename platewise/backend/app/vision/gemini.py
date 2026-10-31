@@ -30,7 +30,7 @@ class GeminiProvider:
             # backend counts calories), so keep thinking minimal; photos get a little more.
             thinking = None
             if model == self.model:
-                thinking = types.ThinkingConfig(thinking_level="low" if image is not None else "minimal")
+                thinking = types.ThinkingConfig(thinking_level=types.ThinkingLevel.LOW if image is not None else types.ThinkingLevel.MINIMAL)
             return types.GenerateContentConfig(
                 system_instruction=system, response_mime_type="application/json", response_json_schema=schema, thinking_config=thinking
             )
@@ -45,6 +45,13 @@ class GeminiProvider:
                 if i == len(attempts) - 1:
                     raise
                 time.sleep(1.5)
+            except errors.ClientError as e:
+                # Quota used up on the main model (429): go straight to the lighter model, which
+                # has its own quota, instead of failing the request.
+                if e.code != 429 or model == attempts[-1] or not self.fallback_model:
+                    raise
+                resp = self.client.models.generate_content(model=self.fallback_model, contents=contents, config=config_for(self.fallback_model))
+                break
         if not resp.text:
             raise ProviderError("empty reply")
         return parse_json(resp.text)

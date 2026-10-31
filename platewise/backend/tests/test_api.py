@@ -1,6 +1,7 @@
 import io
 from typing import Any
 
+import pytest
 from PIL import Image
 
 from app.vision.provider import FallbackProvider, ProviderError, Turn, set_provider
@@ -84,8 +85,21 @@ def test_coach_requires_user_last(client):
 def test_ideas_computed_from_table(client):
     r = client.post("/ideas", json={"kcal_left": 700, "protein_left": 40, "greens_today": 0}).json()
     assert len(r["ideas"]) == 3
-    soup = r["ideas"][0]
-    assert soup["kcal"] == round(55 * 3.5 + 130 * 1.5 + 130 * 2)
+    from app.nutrition.foods import get_food
+
+    for idea in r["ideas"]:
+        from_table = sum((get_food(i["food_id"]).kcal_per_100g or 0) * i["grams"] / 100 for i in idea["items"])
+        assert idea["kcal"] == pytest.approx(from_table, abs=1)
+        assert 0.7 * 700 <= idea["kcal"] <= 700
+
+
+def test_idea_badges_match_the_numbers(client):
+    r = client.post("/ideas", json={"kcal_left": 700, "protein_left": 40, "greens_today": 0}).json()
+    ideas = r["ideas"]
+    best = next(i for i in ideas if i["badge"] == "Best fit")
+    assert best is min(ideas, key=lambda i: abs(i["kcal"] - 630))
+    prot = [i for i in ideas if i["badge"] == "Most protein"]
+    assert not prot or prot[0]["protein"] == max(i["protein"] for i in ideas)
 
 
 def test_ideas_scaled_to_fit_what_is_left(client):

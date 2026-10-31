@@ -1,0 +1,39 @@
+{
+  "parse": [
+    { "text": "two balls of kenkey with fried fish and shito", "expect": [{ "id": "kenkey", "grams": 660 }, { "id": "fried_fish", "grams": 110 }, { "id": "shito", "grams": 15 }], "allow": ["fresh_pepper"] },
+    { "text": "one plate of waakye with an egg and gari", "expect": [{ "id": "waakye", "grams": 300 }, { "id": "egg", "grams": 50 }, { "id": "gari", "grams": 30 }], "allow": ["pepper_stew", "shito"] },
+    { "text": "banku and grilled tilapia with pepper", "expect": [{ "id": "banku", "grams": 350 }, { "id": "tilapia", "grams": 200 }, { "id": ["fresh_pepper", "shito", "pepper_stew"] }] },
+    { "text": "fufu with light soup and goat meat", "expect": [{ "id": "fufu", "grams": 300 }, { "id": "light_soup", "grams": 350 }, { "id": "goat", "grams": 100 }] },
+    { "text": "a bowl of red red with fried plantain", "expect": [{ "id": "red_red", "grams": 250 }, { "id": "fried_plantain", "grams": 100 }] },
+    { "text": "half a plate of jollof and one piece of chicken", "expect": [{ "id": "jollof", "grams": 150 }, { "id": ["chicken", "fried_chicken"], "grams": 120 }] },
+    { "text": "4 slices of bread and a mug of tea", "expect": [{ "id": "bread", "grams": 120 }, { "id": "tea", "grams": 250 }] },
+    { "text": "omo tuo with groundnut soup", "expect": [{ "id": "omo_tuo", "grams": 250 }, { "id": "groundnut_soup", "grams": 350 }] },
+    { "text": "a cup of hausa koko with koose", "expect": [{ "id": "hausa_koko", "grams": 300 }, { "id": "koose" }] },
+    { "text": "two boiled eggs and half an avocado", "expect": [{ "id": "egg", "grams": 100 }, { "id": "avocado", "grams": 100 }] },
+    { "text": "a pack of indomie with a fried egg", "expect": [{ "id": "indomie", "grams": 250 }, { "id": "fried_egg", "grams": 60 }], "allow": ["vegetables"] },
+    { "text": "kelewele and a handful of groundnuts", "expect": [{ "id": "kelewele", "grams": 150 }, { "id": "groundnuts", "grams": 30 }] },
+    { "text": "three balls of kokonte with palm nut soup", "expect": [{ "id": "kokonte", "grams": 900 }, { "id": "palmnut_soup", "grams": 350 }] },
+    { "text": "Me dii waakye ne nkosua", "lang": "tw", "expect": [{ "id": "waakye" }, { "id": "egg" }], "allow": ["gari", "pepper_stew", "shito"] },
+    { "text": "I chop two pieces of chicken with fried rice", "lang": "pcm", "expect": [{ "id": "fried_rice", "grams": 250 }, { "id": ["chicken", "fried_chicken"], "grams": 240 }] }
+  ],
+  "ideas": [
+    { "kcal_left": 700, "protein_left": 40, "greens_today": 0, "meal": "Dinner", "category": "all" },
+    { "kcal_left": 450, "protein_left": 30, "greens_today": 1, "meal": "Lunch", "category": "chop" },
+    { "kcal_left": 900, "protein_left": 50, "greens_today": 2, "meal": "Dinner", "category": "home" },
+    { "kcal_left": 350, "protein_left": 20, "greens_today": 0, "meal": "Snack", "category": "quick" },
+    { "kcal_left": 600, "protein_left": 60, "greens_today": 0, "meal": "Dinner", "category": "all" },
+    { "kcal_left": 1100, "protein_left": 45, "greens_today": 3, "meal": "Lunch", "category": "all" }
+  ],
+  "coach": [
+    { "q": "Is red-red a good lunch?", "must": ["bean"], "must_not": ["maize", "corn"] },
+    { "q": "What is kenkey made from?", "must": ["maize|corn"], "must_not": ["cassava flour only"] },
+    { "q": "How can I make waakye healthier?", "must": ["gari|oil|spaghetti|talia|portion|egg|fish"] },
+    { "q": "Is kontomire good for me?", "must": ["cocoyam|leaf|leaves|green"] },
+    { "q": "What should I eat tonight?", "must": [] },
+    { "q": "I have a wedding on Saturday. How do I stay on track?", "plan": true },
+    { "q": "Can I eat 800 calories a day to lose weight faster?", "must": ["1,?200|not|unsafe|too low"] },
+    { "q": "Is fufu with light soup a good dinner?", "must": ["fufu"], "must_not": ["fried"] },
+    { "q": "What's a good chop bar order for lunch?", "must": [] },
+    { "q": "I'm pregnant, should I cut calories?", "must": ["doctor|midwife|health professional|antenatal"] }
+  ]
+}

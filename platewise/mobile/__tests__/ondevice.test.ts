@@ -140,3 +140,29 @@ describe('made-up numbers', () => {
     expect(stripUnverifiedNumbers(s, given)).toBe(s);
   });
 });
+
+describe('stated portions (same cases as the server)', () => {
+  const { statedGrams } = require('../src/ai/portions');
+  const { food } = require('../src/data/foods');
+  test.each([
+    ['two balls of kenkey with fried fish and shito', 'kenkey', 660],
+    ['half a plate of jollof and one piece of chicken', 'jollof', 150],
+    ['half a plate of jollof and one piece of chicken', 'chicken', 120],
+    ['4 slices of bread and a mug of tea', 'bread', 120],
+    ['two boiled eggs and half an avocado', 'egg', 100],
+    ['two boiled eggs and half an avocado', 'avocado', 100],
+    ['three balls of kokonte with palm nut soup', 'kokonte', 900],
+    ['a small bowl of red red', 'red_red', 187.5],
+    ['I chop two pieces of chicken with fried rice', 'chicken', 240],
+  ])('%s → %s', (said, id, grams) => {
+    expect(statedGrams(said, food(id))).toBeCloseTo(grams as number);
+  });
+  test('leaves unstated amounts to the model', () => {
+    expect(statedGrams('two balls of kenkey with fried fish', food('fried_fish'))).toBeNull();
+    expect(statedGrams('banku and grilled tilapia', food('tilapia'))).toBeNull();
+  });
+  test('a stated amount overrides the model guess in the pipeline', () => {
+    const it = buildItem({ food_name: 'kenkey', grams_estimate: 300, grams_low: 250, grams_high: 350, confidence: 0.9 }, 0, 'two balls of kenkey');
+    expect(it.grams).toBe(660);
+  });
+});

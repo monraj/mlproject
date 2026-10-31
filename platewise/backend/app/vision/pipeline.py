@@ -8,6 +8,7 @@ from PIL import Image, ImageOps
 
 from app.nutrition.calc import nutrients, oil_from_visible
 from app.nutrition.matcher import AUTO_ACCEPT, match
+from app.nutrition.portions import stated_grams
 from app.vision.schema import AnalysisItem, MealAnalysis
 
 LOW_CONFIDENCE = 0.6
@@ -23,12 +24,18 @@ def prepare_image(data: bytes, max_side: int = 1024) -> bytes:
     return out.getvalue()
 
 
-def build_item(ai: AnalysisItem, idx: int) -> dict[str, Any]:
+def build_item(ai: AnalysisItem, idx: int, said: str | None = None) -> dict[str, Any]:
     cands = match(ai.food_name, ai.local_aliases, ai.catalog_id)
     top = cands[0] if cands else None
     food = top.food if top and top.score >= AUTO_ACCEPT else None
     lo, hi = sorted((ai.grams_low, ai.grams_high))
     grams = min(max(ai.grams_estimate, lo), hi)
+    # An amount the person stated ("two balls") beats the model's guess: use the table's portion.
+    stated = stated_grams(said, food) if said and food else None
+    if stated:
+        grams, lo, hi = stated, stated * 0.88, stated * 1.12
+        if food and food.count_g:
+            ai = ai.model_copy(update={"count": max(1, round(stated / food.count_g))})
 
     kind = "grams"
     count: int | None = None
@@ -85,8 +92,8 @@ def build_item(ai: AnalysisItem, idx: int) -> dict[str, Any]:
     }
 
 
-def build_scan(analysis: MealAnalysis, provider: str, prompt_version: str) -> dict[str, Any]:
-    items = [build_item(it, i) for i, it in enumerate(analysis.items[:15])] if analysis.is_food else []
+def build_scan(analysis: MealAnalysis, provider: str, prompt_version: str, said: str | None = None) -> dict[str, Any]:
+    items = [build_item(it, i, said) for i, it in enumerate(analysis.items[:15])] if analysis.is_food else []
     known = [i for i in items if i["kcal"] is not None]
     return {
         "scan_id": uuid.uuid4().hex,

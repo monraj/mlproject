@@ -1,7 +1,7 @@
 import * as ImageManipulator from 'expo-image-manipulator';
 import type { Idea, ProductInfo, ScanResult } from '../api/client';
 import { food as foodById } from '../data/foods';
-import { CALORIE_FLOOR, OIL_FACTOR } from '../state/calc';
+import { CALORIE_FLOOR } from '../state/calc';
 import type { FlexPlan } from '../state/types';
 import { dayKey, daysBetween } from '../lib/dates';
 import { GemmaError, generateJson, generateText } from './gemma';
@@ -35,7 +35,7 @@ export async function scanPhoto(uri: string, meal: string, note?: string): Promi
 
 export async function parseText(text: string, lang: 'en' | 'tw' | 'pcm', _meal: string): Promise<ScanResult> {
   const analysis = await generateJson<MealAnalysis>({ system: scanSystem(), turns: [{ role: 'user', content: textPrompt(text, lang) }], schema: MEAL_SCHEMA });
-  return buildScan(analysis, PROVIDER);
+  return buildScan(analysis, PROVIDER, text);
 }
 
 function withFacts(system: string, question: string): string {
@@ -82,6 +82,24 @@ export async function coach(
   return { reply: ans.reply, flex_plan: plan };
 }
 
+// Same rules as the server (backend/app/api/routes.py).
+const IDEA_TARGET = 0.9;
+const IDEA_MIN = 0.7;
+const IDEA_SCALE = [0.6, 1.6] as const;
+
+/** Badges come from the numbers: "Best fit" is closest to the target, "Most protein" really has the most. */
+export function setBadges(ideas: (Idea & { greens: boolean })[], target: number): void {
+  if (!ideas.length) return;
+  ideas.forEach((i) => (i.badge = 'Good fit'));
+  const best = ideas.reduce((a, b) => (Math.abs(b.kcal - target) < Math.abs(a.kcal - target) ? b : a));
+  best.badge = 'Best fit';
+  if (ideas.length < 2) return;
+  const prot = ideas.reduce((a, b) => (b.protein > a.protein ? b : a));
+  if (prot !== best) prot.badge = 'Most protein';
+  const green = ideas.find((i) => i !== best && i.greens && i.badge === 'Good fit');
+  if (green) green.badge = 'Most greens';
+}
+
 export async function ideas(req: { kcal_left: number; protein_left: number; greens_today: number; meal: string; category: string }): Promise<{ ideas: Idea[]; tip: string }> {
   const parsed = await generateJson<{ ideas: { name: string; detail: string; badge: string; category: Idea['category']; items: { catalog_id: string; grams: number }[] }[]; tip: string }>({
     system: 'You plan realistic Ghanaian meals from a food catalogue.',
@@ -89,26 +107,32 @@ export async function ideas(req: { kcal_left: number; protein_left: number; gree
     schema: IDEAS_SCHEMA,
     maxTokens: 900,
   });
-  const out: Idea[] = [];
+  const target = req.kcal_left * IDEA_TARGET;
+  const out: (Idea & { greens: boolean })[] = [];
   parsed.ideas.slice(0, 4).forEach((idea, n) => {
     const portions = idea.items
       .map((it) => ({ f: foodById(it.catalog_id), g: Math.max(5, Math.min(it.grams, 2000)) }))
       .filter((p): p is { f: NonNullable<ReturnType<typeof foodById>>; g: number } => !!p.f && p.f.per100.kcal != null);
     const total = portions.reduce((s, p) => s + (p.f.per100.kcal ?? 0) * (p.g / 100), 0);
-    // Models often overshoot; shrink every portion so the meal fits what's left.
-    const scale = total ? Math.min(1, (req.kcal_left * 0.95) / total) : 1;
+    // Models miss the target both ways; scale portions toward what's left, within realistic limits.
+    const scale = total ? Math.min(IDEA_SCALE[1], Math.max(IDEA_SCALE[0], target / total)) : 1;
     let kcal = 0;
     let protein = 0;
+    let greens = false;
     const items = portions.map(({ f, g: g0 }) => {
       const g = Math.max(5, Math.round((g0 * scale) / 5) * 5);
-      const factor = f.oily ? OIL_FACTOR.normal : 1;
-      kcal += ((f.per100.kcal ?? 0) * g * factor) / 100;
+      kcal += ((f.per100.kcal ?? 0) * g) / 100;
       protein += ((f.per100.protein ?? 0) * g) / 100;
+      greens = greens || f.greens;
       return { food_id: f.id, name: f.name, grams: Math.round(g) };
     });
-    if (items.length) out.push({ id: `idea${n}`, name: idea.name, detail: idea.detail, badge: idea.badge, category: idea.category, kcal: Math.round(kcal), protein: Math.round(protein), items });
+    // Drop ideas that still don't fit: over what's left, or well short of it.
+    if (items.length && kcal >= IDEA_MIN * req.kcal_left && kcal <= req.kcal_left) {
+      out.push({ id: `idea${n}`, name: idea.name, detail: idea.detail, badge: idea.badge, category: idea.category, kcal: Math.round(kcal), protein: Math.round(protein), items, greens });
+    }
   });
-  return { ideas: out, tip: parsed.tip };
+  setBadges(out, target);
+  return { ideas: out.map(({ greens: _g, ...i }) => i), tip: parsed.tip };
 }
 
 export async function productLabel(uri: string): Promise<ProductInfo> {
