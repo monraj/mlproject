@@ -1,5 +1,5 @@
 import type { Day, Meal, Profile, Weight } from './types';
-import { dayKcal, macroTargets, trendLine, weeklyRate } from './calc';
+import { CALORIE_FLOOR, dayKcal, healthNotes, macroTargets, minGoalWeight, trendLine, weeklyRate } from './calc';
 import { WEEKDAYS, dayKey, keyDate, shiftKey, shortDate } from '../lib/dates';
 import { kcal } from '../lib/format';
 
@@ -87,10 +87,36 @@ export function coachContext(profile: Profile, days: Record<string, Day>, weight
   return [
     `Person: ${profile.sex}, ${profile.age} years, ${profile.heightCm} cm, goal ${profile.goalKg} kg, pace ${profile.paceKgWeek} kg a week.`,
     `Daily budget ${kcal(budgetFor(today))} kcal; protein target ${targets.protein} g.`,
+    ...healthNotes(profile.health).map((n) => `Health note: ${n}`),
     `Weight: ${t.length ? `trend ${t[t.length - 1].trend.toFixed(1)} kg` : `${profile.weightKg} kg at start`}${rate != null ? `, ${rate > 0 ? '+' : ''}${rate.toFixed(2)} kg a week` : ''}.`,
     'Last 7 days:',
     ...lines,
     `Upcoming days: ${upcoming}.`,
     plansNote,
   ].join('\n');
+}
+
+/**
+ * Gentle check for patterns linked to under-eating or unsafe loss. Never blocks anything and never
+ * mentions numbers; it suggests support instead (CLAUDE.md rules 5 and 9).
+ */
+export function wellbeingCheck(profile: Profile, days: Record<string, Day>, weights: Weight[], today = dayKey()): string | null {
+  const floor = CALORIE_FLOOR[profile.sex];
+  const recent = Array.from({ length: 7 }, (_, i) => days[shiftKey(today, -i - 1)]).filter((d): d is Day => !!d?.meals.length);
+  const veryLow = recent.filter((d) => dayKcal(d) < floor * 0.8).length;
+  const rate = weeklyRate(weights);
+  const t = trendLine(weights);
+  const now = t.length ? t[t.length - 1].trend : profile.weightKg;
+  const underweight = now < minGoalWeight(profile.heightCm);
+
+  if (underweight && rate != null && rate < 0) {
+    return 'Your weight is now below the healthy range for your height. Please talk to a doctor or someone you trust. You can set your goal to hold steady in Me → Goal and pace.';
+  }
+  if (veryLow >= 3) {
+    return 'Several recent days were very low. Eating too little can leave you tired and makes weight harder to manage, so your budget is there to be eaten. If food or weight is worrying you, please talk to a doctor or someone you trust.';
+  }
+  if (rate != null && rate < -0.015 * now) {
+    return 'You’re losing faster than is usually safe. Slower loss is easier to keep off. Try eating closer to your budget, and talk to a doctor if this continues.';
+  }
+  return null;
 }

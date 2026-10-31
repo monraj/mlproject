@@ -1,4 +1,4 @@
-import type { Day, DraftItem, MealItem, OilLevel, Profile, Sex, Weight } from './types';
+import type { Day, DraftItem, Health, MealItem, OilLevel, Profile, Sex, Weight } from './types';
 import { daysBetween, shiftKey } from '../lib/dates';
 
 export type KcalRange = { mid: number; low: number; high: number };
@@ -8,9 +8,9 @@ export type Macros = { protein: number; carbs: number; fat: number };
 export const OIL_FACTOR: Record<OilLevel, number> = { light: 0.75, normal: 1, very: 1.4 };
 export const KCAL_PER_KG = 7700;
 
-export function itemGrams(item: Pick<DraftItem, 'kind' | 'grams' | 'count' | 'countG'>): number {
-  if (item.kind === 'count' && item.countG) return (item.count ?? 1) * item.countG;
-  return item.grams;
+export function itemGrams(item: Pick<DraftItem, 'kind' | 'grams' | 'count' | 'countG' | 'portionShare'>): number {
+  const whole = item.kind === 'count' && item.countG ? (item.count ?? 1) * item.countG : item.grams;
+  return whole * (item.portionShare ?? 1);
 }
 
 function oilFactor(item: Pick<DraftItem, 'oily' | 'oil'>): number {
@@ -52,8 +52,9 @@ export function toMealItem(it: DraftItem): MealItem {
     foodId: it.foodId,
     aiFoodId: it.aiFoodId,
     grams,
-    aiGrams: it.aiGrams,
-    wasCorrected: it.foodId !== it.aiFoodId || grams !== it.aiGrams,
+    // The AI guessed the whole dish; sharing a bowl isn't a correction of that guess.
+    aiGrams: Math.round(it.aiGrams * (it.portionShare ?? 1)),
+    wasCorrected: it.foodId !== it.aiFoodId || Math.round(itemGrams({ ...it, portionShare: 1 })) !== it.aiGrams,
     kcal: Math.round(k.mid),
     protein: Math.round(m.protein * 10) / 10,
     carbs: Math.round(m.carbs * 10) / 10,
@@ -130,6 +131,34 @@ export function profileProblem(p: ProfileInput): string | null {
   return null;
 }
 
+/** Already under a healthy BMI: PlateWise only helps gain or hold steady, and suggests professional support. */
+export function underweightNow(p: Pick<ProfileInput, 'weightKg' | 'heightCm'>): boolean {
+  return p.weightKg < minGoalWeight(p.heightCm);
+}
+
+/** Pregnancy and breastfeeding get no calorie deficit (CLAUDE.md rule 5). */
+export function safePace(paceKgWeek: number, health?: Health): number {
+  return health?.pregnant ? 0 : paceKgWeek;
+}
+
+/** Plain-language notes for health conditions, shown in onboarding and passed to the coach. */
+export function healthNotes(health?: Health): string[] {
+  if (!health) return [];
+  const out: string[] = [];
+  if (health.pregnant) out.push('Weight loss isn’t recommended while pregnant or breastfeeding, so your budget holds your weight steady. Your midwife or doctor can advise on how much to eat.');
+  if (health.diabetes) out.push('With diabetes, changes to food or weight can affect your medication. Check your plan with your doctor or diabetes nurse.');
+  if (health.bloodPressure) out.push('With high blood pressure, salt and seasoning cubes matter as much as calories. Keep taking your medication and check changes with your doctor.');
+  return out;
+}
+
+/**
+ * Days logged in the last 7 (today included). A forgiving measure: one missed day lowers it by one
+ * instead of wiping out a streak, which tends to make people give up.
+ */
+export function weekLogged(days: Record<string, Day>, today: string): number {
+  return Array.from({ length: 7 }, (_, i) => days[shiftKey(today, -i)]).filter((d) => !!d?.meals.length).length;
+}
+
 // ---- Energy: mirror backend/app/energy/bmr.py ----
 
 export function bmr(p: ProfileInput): number {
@@ -153,7 +182,7 @@ export function profileTdee(p: Profile): number {
 }
 
 export function profileBudget(p: Profile): number {
-  return dailyBudget(p, profileTdee(p));
+  return dailyBudget({ ...p, paceKgWeek: safePace(p.paceKgWeek, p.health) }, profileTdee(p));
 }
 
 export function macroTargets(budget: number): Macros {

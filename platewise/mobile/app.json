@@ -13,6 +13,7 @@
     },
     "android": {
       "package": "app.platewise.mobile",
+      "allowBackup": false,
       "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

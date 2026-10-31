@@ -6,6 +6,9 @@ export type Source = 'photo' | 'voice' | 'text' | 'barcode' | 'search' | 'saved'
 
 export type Per100 = { kcal: number | null; protein: number | null; carbs: number | null; fat: number | null };
 
+/** Conditions that change what PlateWise suggests. Never used for anything else. */
+export type Health = { pregnant: boolean; diabetes: boolean; bloodPressure: boolean };
+
 export type Reminders = { on: boolean; breakfast: string; lunch: string; dinner: string; weighDay: number };
 
 export type Profile = {
@@ -22,6 +25,7 @@ export type Profile = {
   learnedTdee: number | null;
   hideNumbers: boolean;
   reminders: Reminders;
+  health?: Health;
 };
 
 export type Candidate = { foodId: string; name: string; detail: string };
@@ -48,6 +52,10 @@ export type DraftItem = {
   greens: boolean;
   candidates: Candidate[];
   bbox?: number[] | null;
+  /** Part of a shared bowl that was the person's (1 = all of it). Grams describe the whole dish. */
+  portionShare?: number;
+  /** Estimated by Gemma on the phone rather than the server. */
+  onDevice?: boolean;
 };
 
 export type MealItem = {

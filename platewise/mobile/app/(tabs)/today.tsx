@@ -13,14 +13,14 @@ import { Icon } from '../../src/components/Icon';
 import { useTheme } from '../../src/theme/ThemeProvider';
 import { useApp } from '../../src/state/AppState';
 import { approx, greeting, kcal, longDate, mealForHour } from '../../src/lib/format';
-import { todayInsight } from '../../src/state/insights';
-import { WEEKDAYS, keyDate, shiftKey } from '../../src/lib/dates';
+import { todayInsight, wellbeingCheck } from '../../src/state/insights';
+import { WEEKDAYS, keyDate } from '../../src/lib/dates';
 import type { Meal } from '../../src/state/types';
 import { duration, stagger } from '../../src/lib/motion';
 
 export default function Today() {
   const { c } = useTheme();
-  const { s, day, today, budget, eatenKcal, leftKcal, protein, proteinGoal, greens, daysLogged, dispatch } = useApp();
+  const { s, day, today, budget, eatenKcal, leftKcal, protein, proteinGoal, greens, weekLogged, dispatch } = useApp();
   const router = useRouter();
   const now = new Date();
   const progress = eatenKcal / budget;
@@ -31,7 +31,7 @@ export default function Today() {
   const nextMeal = mealForHour(now.getHours());
   const plan = s.plans[today];
   const change = s.budgetChange;
-  const lowDays = [1, 2, 3].map((i) => s.days[shiftKey(today, -i)]).every((d) => d && d.meals.length > 0 && d.meals.reduce((t, m) => t + m.kcal, 0) < 1000);
+  const wellbeing = s.profile ? wellbeingCheck(s.profile, s.days, s.weights, today) : null;
 
   const habit = (key: 'water' | 'greensExtra', delta: number) => {
     const cur = day[key];
@@ -64,10 +64,10 @@ export default function Today() {
           </T>
           <T v="title">{greeting(now)}{s.profile?.name ? `, ${s.profile.name}` : ''}</T>
         </View>
-        <View style={[styles.streak, { backgroundColor: c.surface }]} accessibilityLabel={`${daysLogged} days logged`}>
+        <View style={[styles.streak, { backgroundColor: c.surface }]} accessibilityLabel={`Logged ${weekLogged} of the last 7 days`}>
           <Icon name="flame" color={c.amber} size={16} />
           <T v="small" weight="bold">
-            {daysLogged} {daysLogged === 1 ? 'day' : 'days'}
+            {weekLogged}/7 this week
           </T>
         </View>
       </Rise>
@@ -173,10 +173,10 @@ export default function Today() {
         </Press>
       </Card>
 
-      {lowDays ? (
+      {wellbeing ? (
         <Card order={3} tone="amber">
           <T v="small" color={c.amberText}>
-            Your last few days were very low. Eating too little can leave you tired and makes weight harder to manage, so your budget is there to be eaten. If food or weight is worrying you, please talk to a doctor or someone you trust.
+            {wellbeing}
           </T>
         </Card>
       ) : null}

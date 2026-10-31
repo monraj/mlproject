@@ -13,8 +13,9 @@ import { Bar } from '../src/components/Bar';
 import { IconButton } from '../src/components/IconButton';
 import { useTheme } from '../src/theme/ThemeProvider';
 import { useApp } from '../src/state/AppState';
-import { CALORIE_FLOOR, clampPace, dailyBudget, formulaTdee, profileProblem, type ProfileInput } from '../src/state/calc';
-import type { Profile, Sex } from '../src/state/types';
+import { CALORIE_FLOOR, clampPace, dailyBudget, formulaTdee, healthNotes, profileProblem, safePace, underweightNow, type ProfileInput } from '../src/state/calc';
+import type { Health, Profile, Sex } from '../src/state/types';
+import { AI_CONSENT_TEXT, setAiConsent, usePrivacy } from '../src/api/privacy';
 import { dayKey } from '../src/lib/dates';
 import { kcal } from '../src/lib/format';
 import { font } from '../src/theme/tokens';
@@ -60,6 +61,12 @@ function Field({ label, value, onChange, suffix, numeric = true, placeholder }: 
   );
 }
 
+const HEALTH: { key: keyof Health; label: string }[] = [
+  { key: 'pregnant', label: 'Pregnant or breastfeeding' },
+  { key: 'diabetes', label: 'Diabetes' },
+  { key: 'bloodPressure', label: 'High blood pressure' },
+];
+
 export default function Onboarding() {
   const { c } = useTheme();
   const { s, dispatch } = useApp();
@@ -76,6 +83,7 @@ export default function Onboarding() {
   const [activity, setActivity] = useState(p?.activity ?? 1.375);
   const [pick, setPick] = useState<(typeof PACES)[number]['id']>(PACES.find((x) => x.kg === p?.paceKgWeek)?.id ?? 'steady');
   const [problem, setProblem] = useState<string | null>(null);
+  const [health, setHealth] = useState<Health>(p?.health ?? { pregnant: false, diabetes: false, bloodPressure: false });
 
   const input: ProfileInput = {
     sex,
@@ -84,11 +92,13 @@ export default function Onboarding() {
     weightKg: Number(weight.replace(',', '.')),
     goalKg: Number(goal.replace(',', '.')),
     activity,
-    paceKgWeek: PACES.find((x) => x.id === pick)?.kg ?? 0.5,
+    paceKgWeek: safePace(PACES.find((x) => x.id === pick)?.kg ?? 0.5, health),
   };
   const keepLearned = !!p?.learnedTdee && p.weightKg === input.weightKg && p.activity === activity;
   const tdee = keepLearned && p?.learnedTdee ? p.learnedTdee : formulaTdee(input);
-  const maintain = Math.abs(input.goalKg - input.weightKg) <= 0.1;
+  const maintain = Math.abs(input.goalKg - input.weightKg) <= 0.1 || health.pregnant;
+  const notes = healthNotes(health);
+  const privacy = usePrivacy();
   const budget = dailyBudget(input, tdee);
   const toGo = Math.abs(input.weightKg - input.goalKg);
   const paces = useMemo(() => PACES.map((x) => ({ ...x, budget: dailyBudget({ ...input, paceKgWeek: x.kg }, tdee), capped: clampPace(x.kg, input.weightKg) < x.kg })),
@@ -111,6 +121,7 @@ export default function Onboarding() {
       learnedTdee: keepLearned ? p?.learnedTdee ?? null : null,
       hideNumbers: p?.hideNumbers ?? false,
       reminders: p?.reminders ?? { on: false, breakfast: '07:30', lunch: '12:45', dinner: '19:00', weighDay: 1 },
+      health,
     };
     dispatch({ type: 'setProfile', profile });
     if (!s.weights.some((w) => w.date === dayKey())) dispatch({ type: 'addWeight', weight: { date: dayKey(), kg: input.weightKg } });
@@ -176,6 +187,29 @@ export default function Onboarding() {
               </Press>
             ))}
           </View>
+        </View>
+        <View style={{ gap: 8 }}>
+          <T v="small" weight="semibold" muted>
+            Does any of this apply to you? (optional)
+          </T>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+            {HEALTH.map((h) => (
+              <Press
+                key={h.key}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: health[h.key] }}
+                onPress={() => setHealth({ ...health, [h.key]: !health[h.key] })}
+                style={[styles.pillBtn, { backgroundColor: health[h.key] ? c.button : c.surface }]}
+              >
+                <T v="small" weight="bold" color={health[h.key] ? c.buttonText : c.ink}>
+                  {h.label}
+                </T>
+              </Press>
+            ))}
+          </View>
+          <T v="small" muted>
+            Stays on this phone. It changes your budget and the coach’s advice.
+          </T>
         </View>
         {problem ? (
           <Card tone="amber">
@@ -273,6 +307,21 @@ export default function Onboarding() {
         </View>
       ) : null}
 
+      {underweightNow(input) ? (
+        <Card tone="amber" order={2} style={{ gap: 4 }}>
+          <T v="small" weight="semibold" color={c.amberText}>
+            Your weight is below the healthy range for your height, so PlateWise will only help you gain or hold steady. A doctor or dietitian can help you plan this.
+          </T>
+        </Card>
+      ) : null}
+      {notes.map((n) => (
+        <Card key={n} tone="amber" order={2}>
+          <T v="small" weight="semibold" color={c.amberText}>
+            {n}
+          </T>
+        </Card>
+      ))}
+
       <Card tone="mint" order={5} style={{ gap: 4 }}>
         <T v="small" weight="semibold" color={c.mintDeep}>
           Your starting daily budget
@@ -290,6 +339,22 @@ export default function Onboarding() {
           You burn about {kcal(tdee)} kcal a day. We fine-tune this from your weigh-ins after two weeks.
         </T>
       </Card>
+
+      {!editing ? (
+        <Press
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: privacy.aiConsent }}
+          onPress={() => void setAiConsent(!privacy.aiConsent)}
+          style={[styles.option, { backgroundColor: c.surface, borderColor: privacy.aiConsent ? c.mintBorder : 'transparent' }]}
+        >
+          <View style={[styles.check, { borderColor: privacy.aiConsent ? c.mintBorder : c.faint, backgroundColor: privacy.aiConsent ? c.mintBorder : 'transparent' }]}>
+            {privacy.aiConsent ? <Icon name="check" color="#FFFFFF" size={14} /> : null}
+          </View>
+          <T v="small" style={{ flex: 1 }}>
+            {AI_CONSENT_TEXT} You can change this in Me → Privacy.
+          </T>
+        </Press>
+      ) : null}
 
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <Icon name="info" color={c.muted} size={18} />
@@ -312,4 +377,5 @@ const styles = StyleSheet.create({
   pill: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 },
   option: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 68, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 20, borderWidth: 2 },
   radio: { width: 22, height: 22, borderRadius: 11 },
+  check: { width: 22, height: 22, borderRadius: 6, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
 });

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useReducer, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { BudgetChange, ChatMsg, Day, DraftItem, FlexPlan, Meal, MealItem, MealType, PlanDay, Product, Profile, SavedMeal, Source, Weight } from './types';
-import { dayKcal, macroTargets, mealKcal, profileBudget, toMealItem } from './calc';
+import { dayKcal, macroTargets, mealKcal, profileBudget, toMealItem, weekLogged } from './calc';
 import { clock, mealForHour } from '../lib/format';
 import { dayKey } from '../lib/dates';
 
@@ -214,6 +214,7 @@ export type Ctx = {
   proteinGoal: number;
   greens: number;
   daysLogged: number;
+  weekLogged: number;
 };
 
 const AppContext = createContext<Ctx | null>(null);
@@ -268,6 +269,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       proteinGoal: macroTargets(budget).protein,
       greens: day.meals.reduce((n, m) => n + m.greens, 0) + day.greensExtra,
       daysLogged: Object.values(s.days).filter((d) => d.meals.length > 0).length,
+      weekLogged: weekLogged(s.days, dayKey()),
     };
   }, [s]);
 

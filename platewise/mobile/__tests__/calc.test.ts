@@ -1,4 +1,4 @@
-import { clampBudget, dailyBudget, formulaTdee, itemKcal, learnBurn, mealKcal, profileProblem, share, toMealItem, trendLine, weeklyRate } from '../src/state/calc';
+import { clampBudget, dailyBudget, formulaTdee, healthNotes, itemKcal, learnBurn, mealKcal, profileProblem, safePace, share, toMealItem, trendLine, underweightNow, weeklyRate } from '../src/state/calc';
 import { food } from '../src/data/foods';
 import type { Day, DraftItem } from '../src/state/types';
 import { dayKey, shiftKey } from '../src/lib/dates';
@@ -74,6 +74,20 @@ describe('safety rules (mirror backend/app/safety/rules.py)', () => {
     expect(profileProblem({ ...base, goalKg: 48 })).toMatch(/underweight/);
     expect(profileProblem(base)).toBeNull();
   });
+
+  it('never sets a deficit in pregnancy and flags health conditions', () => {
+    const none = { pregnant: false, diabetes: false, bloodPressure: false };
+    expect(safePace(0.5, { ...none, pregnant: true })).toBe(0);
+    expect(safePace(0.5, none)).toBe(0.5);
+    expect(safePace(0.5)).toBe(0.5);
+    expect(healthNotes(none)).toEqual([]);
+    expect(healthNotes({ ...none, diabetes: true, bloodPressure: true })).toHaveLength(2);
+  });
+
+  it('spots people who are already underweight', () => {
+    expect(underweightNow({ heightCm: 165, weightKg: 48 })).toBe(true);
+    expect(underweightNow({ heightCm: 165, weightKg: 84 })).toBe(false);
+  });
 });
 
 describe('weight trend and learned burn', () => {
@@ -94,5 +108,58 @@ describe('weight trend and learned burn', () => {
     expect(r && 'tdee' in r).toBe(true);
     if (r && 'tdee' in r) expect(r.tdee).toBeGreaterThan(1800);
     expect(learnBurn({}, weights.slice(-3))).toEqual({ need: expect.stringMatching(/weigh-ins/) });
+  });
+});
+
+describe('portions', () => {
+  it('builds quick portion chips from the food table', () => {
+    const { portionPresets } = require('../src/lib/portions');
+    expect(portionPresets({ portionG: 330, portionLabel: '1 ball' }).map((p: { label: string }) => p.label)).toEqual(['½ ball', '1 ball', '1½ balls', '2 balls']);
+    expect(portionPresets({ portionG: 120, portionLabel: '3 pieces' }).map((p: { label: string; grams: number }) => [p.label, p.grams])).toEqual([
+      ['1 piece', 40],
+      ['3 pieces', 120],
+      ['6 pieces', 240],
+    ]);
+  });
+
+  it('counts only your share of a shared bowl, without calling it a correction', () => {
+    const { itemGrams, toMealItem } = require('../src/state/calc');
+    const it = { id: 'x', name: 'Waakye', foodId: 'waakye', aiFoodId: 'waakye', aiGrams: 600, grams: 600, gramsLow: 500, gramsHigh: 700, per100: { kcal: 150, protein: 5, carbs: 25, fat: 3 }, uncertainty: 0.2, confidence: 'ok', kind: 'grams', oil: 'normal', oily: false, greens: false, candidates: [], portionShare: 0.5 };
+    expect(itemGrams(it)).toBe(300);
+    const m = toMealItem(it);
+    expect(m.grams).toBe(300);
+    expect(m.wasCorrected).toBe(false);
+  });
+});
+
+describe('weekly consistency', () => {
+  it('counts logged days in the last 7 without resetting on a miss', () => {
+    const { weekLogged } = require('../src/state/calc');
+    const today = '2026-10-28';
+    const d = { meals: [{}], water: 0, greensExtra: 0, steps: 0, skipped: [] };
+    const empty = { ...d, meals: [] };
+    expect(weekLogged({ [today]: d, [shiftKey(today, -1)]: empty, [shiftKey(today, -2)]: d, [shiftKey(today, -8)]: d }, today)).toBe(2);
+  });
+});
+
+describe('wellbeing check', () => {
+  const { wellbeingCheck } = require('../src/state/insights');
+  const today = '2026-10-28';
+  const profile = { sex: 'female', heightCm: 165, weightKg: 70, goalKg: 64 };
+  const day = (kcal: number) => ({ meals: [{ kcal }], water: 0, greensExtra: 0, steps: 0, skipped: [] });
+
+  it('stays quiet for normal logging', () => {
+    const days = Object.fromEntries([1, 2, 3, 4].map((i) => [shiftKey(today, -i), day(1500)]));
+    expect(wellbeingCheck(profile, days, [], today)).toBeNull();
+  });
+
+  it('gently flags several very low days', () => {
+    const days = Object.fromEntries([1, 2, 3].map((i) => [shiftKey(today, -i), day(600)]));
+    expect(wellbeingCheck(profile, days, [], today)).toMatch(/talk to a doctor/);
+  });
+
+  it('flags loss that is much faster than safe', () => {
+    const weights = Array.from({ length: 15 }, (_, i) => ({ date: shiftKey(today, i - 14), kg: 70 - i * 0.3 }));
+    expect(wellbeingCheck(profile, {}, weights, today)).toMatch(/faster than is usually safe|below the healthy range/);
   });
 });
