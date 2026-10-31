@@ -50,6 +50,17 @@ The start script fills this in for you. To change it later, edit `backend/.env`:
 With several, the server tries them in order and falls back if one fails. With none, it runs in
 **demo mode**: everything works, but scans and the coach return sample answers.
 
+## Start it with a double-click (Mac)
+
+In Finder, open the `platewise` folder and double-click:
+
+- **Start PlateWise Server.command**: starts the server and opens the console in your browser
+- **Start PlateWise (server + phone app).command**: also starts the app for Expo Go
+- **Stop PlateWise Server.command**
+
+The first time, it installs what it needs and asks for your Gemini key in a pop-up. Leave the Terminal
+window it opens running while you use PlateWise; closing it stops the server.
+
 ## Server console
 
 Open **`/admin`** on the server (for example `http://localhost:8000/admin`, or
