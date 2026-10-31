@@ -52,11 +52,10 @@ With several, the server tries them in order and falls back if one fails. With n
 
 ## Start it with a double-click (Mac)
 
-In Finder, open the `platewise` folder and double-click:
+In Finder, open the `platewise` folder and double-click **PlateWise.command**. A small menu appears:
 
-- **Start PlateWise Server.command**: starts the server and opens the console in your browser
-- **Start PlateWise (server + phone app).command**: also starts the app for Expo Go
-- **Stop PlateWise Server.command**
+- when the server is off: **Start server** (opens the console in your browser) or **Server + phone app**
+- when it's running: **Open console**, **Start phone app** or **Stop server**
 
 The first time, it installs what it needs and asks for your Gemini key in a pop-up. Leave the Terminal
 window it opens running while you use PlateWise; closing it stops the server.
