@@ -53,6 +53,8 @@ class FallbackProvider:
         self.providers = providers
         self.name = "+".join(p.name for p in providers)
         self.last_used = ""
+        # Per-provider success/failure counts since start, for the admin console.
+        self.calls: dict[str, dict[str, int]] = {p.name: {"ok": 0, "failed": 0} for p in providers}
 
     def generate_json(self, *, system: str, turns: list[Turn], schema: dict[str, Any], image: bytes | None = None) -> dict[str, Any]:
         errors: list[str] = []
@@ -60,12 +62,15 @@ class FallbackProvider:
             try:
                 out = p.generate_json(system=system, turns=turns, schema=schema, image=image)
                 self.last_used = p.name
+                self.calls[p.name]["ok"] += 1
                 return out
             except ProviderError as e:  # never log prompts or images (CLAUDE.md rule 6)
                 log.warning("provider %s failed: %s", p.name, type(e).__name__)
+                self.calls[p.name]["failed"] += 1
                 errors.append(f"{p.name}: {e}")
             except Exception as e:  # SDK network/HTTP errors
                 log.warning("provider %s errored: %s", p.name, type(e).__name__)
+                self.calls[p.name]["failed"] += 1
                 errors.append(f"{p.name}: {type(e).__name__}")
         raise ProviderError("; ".join(errors) or "no provider configured")
 

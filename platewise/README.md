@@ -50,6 +50,21 @@ The start script fills this in for you. To change it later, edit `backend/.env`:
 With several, the server tries them in order and falls back if one fails. With none, it runs in
 **demo mode**: everything works, but scans and the coach return sample answers.
 
+## Server console
+
+Open **`/admin`** on the server (for example `http://localhost:8000/admin`, or
+`https://YOUR-SERVER.onrender.com/admin`):
+
+- **Overview:** is the AI live, today's traffic and response times, a before-launch checklist
+- **Food table:** search and filter the 63 foods, edit values, add or delete foods, mark a food as
+  checked once its values come from a real source, download `foods.json`
+- **Try it:** describe a meal, scan a photo, ask the coach, get meal ideas or look up a barcode
+- **Activity:** requests per feature, errors, response times (never meal text or photos)
+- **Settings:** what the server runs with, and where to change it
+
+On your own computer it opens without a password. Anywhere else it needs `ADMIN_PASSWORD`
+(on Render: platewise-api → Environment → ADMIN_PASSWORD, created for you).
+
 ## What works
 
 | Feature | How |

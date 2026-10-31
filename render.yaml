@@ -22,5 +22,7 @@ services:
         value: gemini-flash-lite-latest
       - key: APP_ACCESS_CODE
         generateValue: true
+      - key: ADMIN_PASSWORD
+        generateValue: true
       - key: AI_REQUESTS_PER_HOUR
         value: "120"

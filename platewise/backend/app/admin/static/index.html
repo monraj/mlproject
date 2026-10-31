@@ -1,0 +1,645 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>PlateWise server console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+/* Fresh mint tokens (CLAUDE.md). Layout: sidebar nav on wide screens, scrolling tab bar on phones. */
+:root {
+  --bg: #FFFFFF; --surface: #F4F6F5; --raised: #FFFFFF; --line: #EAECF0;
+  --ink: #101828; --muted: #475467; --faint: #98A2B3;
+  --mint: #12B76A; --mint-border: #039855; --mint-text: #027A48; --mint-deep: #05603A; --mint-tint: #ECFDF3;
+  --sun: #FDB022; --amber: #F79009; --amber-text: #B54708; --amber-tint: #FFFAEB;
+  --red-text: #B42318; --red-tint: #FEF3F2;
+  --button: #101828; --button-text: #FFFFFF;
+  --font: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0C111D; --surface: #161B26; --raised: #1F242F; --line: #333741;
+    --ink: #F5F5F6; --muted: #94969C; --faint: #667085;
+    --mint: #32D583; --mint-border: #32D583; --mint-text: #6CE9A6; --mint-deep: #D1FADF; --mint-tint: #053321;
+    --amber-text: #FEC84B; --amber-tint: #4E1D09; --red-text: #FDA29B; --red-tint: #55160C;
+    --button: #F5F5F6; --button-text: #0C111D; color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font: 500 15px/1.5 var(--font); }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--mint-border); outline-offset: 2px; }
+h1, h2, h3 { margin: 0; letter-spacing: -0.02em; }
+h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.03em; }
+h2 { font-size: 18px; font-weight: 700; }
+p { margin: 0; }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+.num { font-variant-numeric: tabular-nums; }
+.mono { font-family: var(--mono); font-size: 13px; }
+
+.shell { display: grid; grid-template-columns: 232px minmax(0, 1fr); min-height: 100vh; }
+.side { border-right: 1px solid var(--line); padding: 20px 14px; display: flex; flex-direction: column; gap: 22px; position: sticky; top: 0; height: 100vh; }
+.brand { display: flex; align-items: center; gap: 10px; padding: 0 8px; }
+.brand-mark { width: 28px; height: 28px; border-radius: 50%; background: var(--mint); display: grid; place-items: center; }
+.brand-mark::after { content: ""; width: 14px; height: 14px; border-radius: 50%; background: var(--bg); }
+.brand b { font-weight: 800; font-size: 18px; letter-spacing: -0.03em; }
+.brand b span { color: var(--mint-border); }
+.brand small { display: block; color: var(--muted); font-size: 12px; margin-top: -2px; }
+nav { display: flex; flex-direction: column; gap: 2px; }
+nav a { display: flex; align-items: center; gap: 10px; min-height: 42px; padding: 0 12px; border-radius: 12px; color: var(--muted); text-decoration: none; font-weight: 600; }
+nav a:hover { background: var(--surface); color: var(--ink); }
+nav a[aria-current="page"] { background: var(--mint-tint); color: var(--mint-deep); font-weight: 700; }
+nav svg { width: 20px; height: 20px; flex-shrink: 0; }
+.side-foot { margin-top: auto; padding: 0 8px; display: grid; gap: 8px; }
+main { padding: 28px clamp(16px, 3vw, 40px) 60px; display: grid; gap: 22px; align-content: start; min-width: 0; max-width: 1180px; }
+.page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.page-head p { margin-top: 4px; }
+
+@media (max-width: 860px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .side { position: sticky; top: 0; z-index: 5; height: auto; flex-direction: row; align-items: center; padding: 10px max(12px, env(safe-area-inset-left)); gap: 12px; background: var(--bg); border-right: 0; border-bottom: 1px solid var(--line); overflow-x: auto; }
+  .brand small, .side-foot { display: none; }
+  nav { flex-direction: row; }
+  nav a { white-space: nowrap; min-height: 38px; }
+  nav a span.lbl { display: inline; }
+  main { padding-top: 18px; }
+}
+
+.card { background: var(--surface); border-radius: 20px; padding: 18px; display: grid; gap: 12px; min-width: 0; align-content: start; }
+.card.raised { background: var(--raised); border: 1px solid var(--line); }
+.grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+.grid2 { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+.stat-label { font-size: 13px; font-weight: 600; color: var(--muted); }
+.stat-value { font-size: 30px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
+.hero { background: var(--button); color: var(--button-text); border-radius: 22px; padding: 20px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.hero .stat-label { color: inherit; opacity: 0.7; }
+.pulse { width: 14px; height: 14px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 0 0 color-mix(in srgb, var(--mint) 60%, transparent); animation: pulse 2s infinite; flex-shrink: 0; }
+.pulse.warn { background: var(--sun); animation: none; }
+.pulse.off { background: #F04438; animation: none; }
+@keyframes pulse { 70% { box-shadow: 0 0 0 10px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+@media (prefers-reduced-motion: reduce) { .pulse { animation: none; } }
+
+.badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.badge.ok { background: var(--mint-tint); color: var(--mint-deep); }
+.badge.warn { background: var(--amber-tint); color: var(--amber-text); }
+.badge.bad { background: var(--red-tint); color: var(--red-text); }
+.badge.plain { background: var(--surface); color: var(--muted); border: 1px solid var(--line); }
+.bar { height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--mint); border-radius: 5px; transition: width .6s cubic-bezier(.2,.8,.2,1); }
+
+.btn { min-height: 44px; padding: 0 18px; border-radius: 22px; border: 0; background: var(--button); color: var(--button-text); font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn.secondary { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+.btn.ghost { background: transparent; color: var(--ink); }
+.btn.danger { background: transparent; color: var(--red-text); border: 1px solid var(--line); }
+.btn.sm { min-height: 36px; padding: 0 14px; font-size: 14px; border-radius: 18px; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { min-height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid var(--line); background: var(--bg); font-weight: 600; font-size: 14px; }
+.chip[aria-pressed="true"] { background: var(--button); color: var(--button-text); border-color: var(--button); }
+.chip .count { opacity: .65; margin-left: 4px; }
+
+label.field { display: grid; gap: 6px; font-size: 13px; font-weight: 600; color: var(--muted); }
+input[type=text], input[type=number], input[type=password], input[type=search], select, textarea {
+  width: 100%; min-height: 44px; padding: 10px 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font-weight: 500; }
+textarea { min-height: 96px; resize: vertical; }
+.check { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 14px; }
+.check input { width: 20px; height: 20px; accent-color: var(--mint-border); }
+.row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.row > .grow { flex: 1; min-width: 0; }
+.fields { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+
+.table-wrap { overflow-x: auto; border-radius: 16px; border: 1px solid var(--line); background: var(--raised); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+table.wide { min-width: 860px; }
+table.mid { min-width: 620px; }
+th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 700; background: var(--surface); position: sticky; top: 0; }
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr.clickable { cursor: pointer; }
+tbody tr.clickable:hover { background: var(--surface); }
+td .sub { display: block; color: var(--muted); font-size: 12.5px; }
+td.r, th.r { text-align: right; }
+
+.notice { border-radius: 16px; padding: 12px 14px; background: var(--amber-tint); color: var(--amber-text); font-size: 14px; display: flex; gap: 10px; align-items: flex-start; }
+.good { border-radius: 16px; padding: 12px 14px; background: var(--mint-tint); color: var(--mint-deep); font-size: 14px; }
+.list { display: grid; }
+.list > div { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+.list > div:first-child { border-top: 0; }
+.tick { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; font-weight: 800; font-size: 14px; }
+.tick.ok { background: var(--mint-tint); color: var(--mint-deep); }
+.tick.todo { background: var(--amber-tint); color: var(--amber-text); }
+
+/* drawer */
+.scrim { position: fixed; inset: 0; background: rgba(16,24,40,.45); z-index: 20; }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(520px, 100vw); background: var(--bg); z-index: 21; display: flex; flex-direction: column; box-shadow: -20px 0 60px rgba(0,0,0,.15); animation: slide .25s cubic-bezier(.2,.8,.2,1); }
+@keyframes slide { from { transform: translateX(40px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .drawer { animation: none; } }
+.drawer header { display: flex; align-items: center; gap: 12px; padding: 18px 20px; border-bottom: 1px solid var(--line); }
+.drawer .body { padding: 20px; overflow-y: auto; display: grid; gap: 18px; flex: 1; }
+.drawer footer { padding: 14px 20px calc(14px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); display: flex; gap: 10px; flex-wrap: wrap; }
+.group { display: grid; gap: 12px; }
+.group > h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 700; }
+.icon-btn { width: 40px; height: 40px; border-radius: 20px; border: 1px solid var(--line); background: var(--bg); display: grid; place-items: center; font-size: 18px; flex-shrink: 0; }
+
+.result { display: grid; gap: 14px; }
+.idea { border: 1px solid var(--line); border-radius: 18px; padding: 14px; display: grid; gap: 8px; background: var(--raised); }
+.bubble { background: var(--surface); border-radius: 18px 18px 18px 6px; padding: 12px 14px; white-space: pre-wrap; }
+pre.json { background: var(--surface); border-radius: 14px; padding: 14px; overflow: auto; max-height: 360px; margin: 0; font-family: var(--mono); font-size: 12.5px; }
+.preview { width: 100%; max-height: 260px; object-fit: cover; border-radius: 16px; }
+.spinner { width: 18px; height: 18px; border-radius: 50%; border: 3px solid currentColor; border-right-color: transparent; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--button); color: var(--button-text); padding: 10px 18px; border-radius: 999px; font-weight: 700; font-size: 14px; z-index: 40; max-width: calc(100vw - 32px); text-align: center; }
+
+.login { min-height: 100vh; display: grid; place-items: center; padding: 20px; }
+.login .card { width: min(400px, 100%); background: var(--raised); border: 1px solid var(--line); padding: 26px; gap: 16px; }
+</style>
+</head>
+<body>
+
+<div class="login" id="login" hidden>
+  <form class="card" id="loginForm">
+    <div class="brand" style="padding:0"><span class="brand-mark" aria-hidden="true"></span><b>plate<span>wise</span></b></div>
+    <div><h1 style="font-size:24px">Server console</h1><p class="muted small" id="loginWhy">Enter the admin password to continue.</p></div>
+    <label class="field">Admin password<input type="password" id="pw" autocomplete="current-password" required></label>
+    <p class="small" id="loginErr" style="color:var(--red-text)" hidden></p>
+    <button class="btn" type="submit">Open console</button>
+    <p class="muted small">The password is the <span class="mono">ADMIN_PASSWORD</span> setting on the server (in <span class="mono">backend/.env</span>, or Render → Environment).</p>
+  </form>
+</div>
+
+<div class="shell" id="app" hidden>
+  <aside class="side">
+    <div class="brand"><span class="brand-mark" aria-hidden="true"></span><div><b>plate<span>wise</span></b><small>Server console</small></div></div>
+    <nav aria-label="Console">
+      <a href="#overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 8 8h-8z"/></svg><span class="lbl">Overview</span></a>
+      <a href="#foods"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span class="lbl">Food table</span></a>
+      <a href="#try"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span class="lbl">Try it</span></a>
+      <a href="#activity"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19h16"/><path d="M5 15l4-4 4 3 6-7"/></svg><span class="lbl">Activity</span></a>
+      <a href="#settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg><span class="lbl">Settings</span></a>
+    </nav>
+    <div class="side-foot">
+      <span class="badge plain" id="sideStatus">Checking…</span>
+      <button class="btn ghost sm" id="logout" style="justify-content:flex-start;padding:0 8px">Sign out</button>
+    </div>
+  </aside>
+  <main id="view" aria-live="polite"></main>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(() => {
+  'use strict';
+  const $ = (s, el = document) => el.querySelector(s);
+  const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const fmt = (n) => (n == null || Number.isNaN(n) ? '–' : Math.round(n).toLocaleString());
+  const PW_KEY = 'platewise-admin-pw';
+  let password = '';
+  try { password = sessionStorage.getItem(PW_KEY) || ''; } catch (e) { /* storage blocked */ }
+
+  const state = { status: null, stats: null, foods: null, filter: 'all', q: '', editing: null, tryMode: 'text', auto: true };
+
+  let toastT;
+  function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => (t.hidden = true), 2600); }
+
+  class AuthError extends Error {}
+  async function api(path, opts = {}) {
+    const headers = new Headers(opts.headers || {});
+    if (password) headers.set('X-Admin-Password', password);
+    const res = await fetch(path, { ...opts, headers });
+    if (res.status === 401 || res.status === 403) {
+      if (path.startsWith('/admin/')) {
+        let msg = '';
+        try { msg = (await res.json()).detail; } catch (e) { /* ignore */ }
+        throw new AuthError(msg);
+      }
+    }
+    if (res.status === 204) return null;
+    let body = null;
+    try { body = await res.json(); } catch (e) { /* not json */ }
+    if (!res.ok) throw new Error((body && typeof body.detail === 'string' && body.detail) || `Request failed (${res.status})`);
+    return body;
+  }
+
+  function showLogin(msg) {
+    $('#app').hidden = true;
+    $('#login').hidden = false;
+    if (msg) { $('#loginWhy').textContent = msg; }
+    setTimeout(() => $('#pw').focus(), 50);
+  }
+
+  async function boot() {
+    try {
+      state.status = await api('/admin/api/status');
+    } catch (e) {
+      if (e instanceof AuthError) return showLogin(password ? 'That password didn’t work. Try again.' : e.message || undefined);
+      document.body.innerHTML = `<div class="login"><div class="card"><h2>Can’t load the console</h2><p class="muted">${esc(e.message)}</p></div></div>`;
+      return;
+    }
+    $('#login').hidden = true;
+    $('#app').hidden = false;
+    updateSide();
+    route();
+  }
+
+  $('#loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    password = $('#pw').value;
+    try { sessionStorage.setItem(PW_KEY, password); } catch (err) { /* ignore */ }
+    $('#loginErr').hidden = true;
+    try {
+      state.status = await api('/admin/api/status');
+      $('#login').hidden = true; $('#app').hidden = false; updateSide(); route();
+    } catch (err) {
+      $('#loginErr').textContent = err instanceof AuthError ? 'That password didn’t work.' : err.message;
+      $('#loginErr').hidden = false;
+    }
+  });
+  $('#logout').addEventListener('click', () => {
+    password = '';
+    try { sessionStorage.removeItem(PW_KEY); } catch (e) { /* ignore */ }
+    if (state.status && !state.status.admin_password_on) { toast('No password is set, so there’s nothing to sign out of.'); return; }
+    showLogin('Signed out.');
+  });
+
+  function updateSide() {
+    const s = state.status;
+    const el = $('#sideStatus');
+    if (!s) return;
+    el.className = 'badge ' + (s.demo ? 'warn' : 'ok');
+    el.textContent = s.demo ? 'Demo mode' : `Live · ${s.ai}`;
+  }
+
+  const pages = { overview: viewOverview, foods: viewFoods, try: viewTry, activity: viewActivity, settings: viewSettings };
+  function current() { const h = location.hash.replace('#', ''); return pages[h] ? h : 'overview'; }
+  async function route() {
+    const name = current();
+    document.querySelectorAll('nav a').forEach((a) => {
+      if (a.getAttribute('href') === '#' + name) a.setAttribute('aria-current', 'page');
+      else a.removeAttribute('aria-current');
+    });
+    try { await pages[name](); } catch (e) {
+      if (e instanceof AuthError) return showLogin('Please sign in again.');
+      $('#view').innerHTML = `<div class="notice">${esc(e.message)}</div>`;
+    }
+    window.scrollTo(0, 0);
+  }
+  window.addEventListener('hashchange', route);
+
+  // ---------- Overview ----------
+  function uptime(s) { if (s < 3600) return `${Math.round(s / 60)} min`; if (s < 86400) return `${Math.round(s / 3600)} h`; return `${Math.round(s / 86400)} days`; }
+
+  async function viewOverview() {
+    const [s, st] = await Promise.all([api('/admin/api/status'), api('/admin/api/stats')]);
+    state.status = s; state.stats = st; updateSide();
+    const checked = s.foods - s.foods_needing_review;
+    const pct = s.foods ? (checked / s.foods) * 100 : 0;
+    const calls = Object.entries(s.provider_calls);
+    const checklist = [
+      [!s.demo, 'An AI key is set', s.demo ? 'Add GEMINI_API_KEY (or OpenAI / Anthropic). Until then answers are samples.' : `Using ${s.ai}.`],
+      [s.access_code_on, 'The app needs an access code', s.access_code_on ? 'Strangers can’t use your AI quota.' : 'Set APP_ACCESS_CODE before putting the server online.'],
+      [s.admin_password_on, 'This console has a password', s.admin_password_on ? 'Only people with the password can open it.' : 'Set ADMIN_PASSWORD to open the console from other computers.'],
+      [s.foods_needing_review === 0, 'Every food value is checked', s.foods_needing_review ? `${s.foods_needing_review} foods still use draft values. Check them against USDA / FAO.` : 'All values have a source.'],
+    ];
+    $('#view').innerHTML = `
+      <div class="page-head"><div><h1>Overview</h1><p class="muted">How the PlateWise server is doing right now.</p></div>
+        <button class="btn secondary sm" id="refresh">Refresh</button></div>
+      <section class="hero">
+        <span class="pulse ${s.demo ? 'warn' : ''}" aria-hidden="true"></span>
+        <div style="flex:1;min-width:200px"><div class="stat-label">AI</div>
+          <div class="stat-value">${s.demo ? 'Demo mode' : esc(s.ai.split('+').map((x) => x[0].toUpperCase() + x.slice(1)).join(' → '))}</div>
+          <p class="small" style="opacity:.75">${s.demo ? 'No AI key on the server, so scans and the coach return sample answers.' : `Model ${esc(s.models[s.ai.split('+')[0]] || '')} · falls back automatically if busy`}</p></div>
+        <div><div class="stat-label">Up for</div><div class="stat-value num">${uptime(s.uptime_s)}</div></div>
+      </section>
+      <div class="grid">
+        <div class="card"><span class="stat-label">Requests in the last hour</span><span class="stat-value num">${fmt(st.last_hour)}</span><span class="small muted">${fmt(st.total)} in the last 24 hours</span></div>
+        <div class="card"><span class="stat-label">Average response</span><span class="stat-value num">${st.avg_ms_last_hour == null ? '–' : (st.avg_ms_last_hour / 1000).toFixed(1) + ' s'}</span><span class="small muted">last hour, all routes</span></div>
+        <div class="card"><span class="stat-label">Server errors in the last hour</span><span class="stat-value num" style="color:${st.errors_last_hour ? 'var(--red-text)' : 'inherit'}">${fmt(st.errors_last_hour)}</span><span class="small muted">${st.errors_last_hour ? 'See Activity for details' : 'All good'}</span></div>
+      </div>
+      <div class="grid2">
+        <section class="card raised">
+          <div class="row"><h2 class="grow">Food table</h2><a class="btn sm secondary" href="#foods">Review foods</a></div>
+          <p><b class="num" style="font-size:22px">${checked}</b> <span class="muted">of ${s.foods} foods checked against a source</span></p>
+          <div class="bar" role="img" aria-label="${checked} of ${s.foods} foods checked"><i style="width:${pct}%"></i></div>
+          <p class="small muted">Calories in the app are only as good as this table. Draft values must be replaced with USDA or FAO West Africa values before launch.</p>
+        </section>
+        <section class="card raised">
+          <h2>Before launch</h2>
+          <div class="list">${checklist.map(([ok, t, d]) => `<div><span class="tick ${ok ? 'ok' : 'todo'}" aria-hidden="true">${ok ? '✓' : '!'}</span><div><b>${esc(t)}</b><p class="small muted">${esc(d)}</p></div></div>`).join('')}</div>
+        </section>
+      </div>
+      <section class="card raised">
+        <h2>AI provider calls since start</h2>
+        <div class="table-wrap"><table><thead><tr><th>Provider</th><th class="r">Answered</th><th class="r">Failed</th><th>Health</th></tr></thead><tbody>
+        ${calls.map(([n, c]) => { const total = c.ok + c.failed; const rate = total ? c.failed / total : 0; return `<tr><td><b>${esc(n)}</b></td><td class="r num">${c.ok}</td><td class="r num">${c.failed}</td><td>${total === 0 ? '<span class="badge plain">No calls yet</span>' : rate > 0.2 ? '<span class="badge bad">Often failing</span>' : rate > 0 ? '<span class="badge warn">Some failures</span>' : '<span class="badge ok">Healthy</span>'}</td></tr>`; }).join('')}
+        </tbody></table></div>
+      </section>`;
+    $('#refresh').onclick = () => viewOverview().then(() => toast('Updated'));
+  }
+
+  // ---------- Food table ----------
+  const CATEGORIES = ['staple', 'soup', 'stew', 'sauce', 'side', 'protein', 'porridge', 'snack', 'fruit', 'drink', 'dairy', 'fast_food'];
+
+  async function loadFoods() { state.foods = (await api('/admin/api/foods')).foods; }
+
+  function filteredFoods() {
+    const q = state.q.trim().toLowerCase();
+    return state.foods.filter((f) => {
+      if (state.filter === 'review' && !f.needs_review) return false;
+      if (state.filter === 'checked' && f.needs_review) return false;
+      if (state.filter === 'oily' && !f.oily) return false;
+      if (state.filter === 'greens' && !f.greens) return false;
+      if (!q) return true;
+      return [f.name, f.id, f.category, ...(f.aliases || [])].join(' ').toLowerCase().includes(q);
+    });
+  }
+
+  function foodRows() {
+    const rows = filteredFoods();
+    if (!rows.length) return `<tr><td colspan="6" class="muted" style="padding:28px;text-align:center">No foods match. Try another search or filter.</td></tr>`;
+    return rows.map((f) => `<tr class="clickable" data-id="${esc(f.id)}" tabindex="0" aria-label="Edit ${esc(f.name)}">
+      <td><b>${esc(f.name)}</b><span class="sub">${esc(f.detail || f.category)}</span></td>
+      <td class="r num"><b>${f.kcal_per_100g == null ? '–' : fmt(f.kcal_per_100g)}</b></td>
+      <td class="r num">${[f.protein_g, f.carbs_g, f.fat_g].map((v) => (v == null ? '–' : v)).join(' · ')}</td>
+      <td>${esc(f.typical_portion_label)} <span class="sub">${fmt(f.typical_portion_g)} g</span></td>
+      <td>${f.oily ? '<span class="badge warn">Oily</span> ' : ''}${f.greens ? '<span class="badge ok">Greens</span>' : ''}</td>
+      <td>${f.needs_review ? '<span class="badge warn">Needs review</span>' : '<span class="badge ok">Checked</span>'}<span class="sub mono">${esc(f.source)}</span></td></tr>`).join('');
+  }
+
+  async function viewFoods() {
+    await loadFoods();
+    const n = (fn) => state.foods.filter(fn).length;
+    const filters = [['all', 'All', state.foods.length], ['review', 'Needs review', n((f) => f.needs_review)], ['checked', 'Checked', n((f) => !f.needs_review)], ['oily', 'Oily', n((f) => f.oily)], ['greens', 'Greens', n((f) => f.greens)]];
+    $('#view').innerHTML = `
+      <div class="page-head"><div><h1>Food table</h1><p class="muted">Every calorie in the app comes from here. The AI only names foods and estimates grams.</p></div>
+        <div class="row"><a class="btn secondary sm" href="/admin/api/foods.json" id="dl">Download foods.json</a><button class="btn sm" id="addFood">Add food</button></div></div>
+      <div class="notice"><span aria-hidden="true">ⓘ</span><span>Edits apply on this server straight away. On Render, saved files reset when the server redeploys, so <b>download foods.json and replace <span class="mono">backend/app/nutrition/foods.json</span></b> in the code to keep your changes. Then run <span class="mono">npm run sync-foods</span> in the app folder.</span></div>
+      <div class="row"><label class="grow" style="min-width:220px"><input type="search" id="foodQ" placeholder="Search by name, alias or category…" value="${esc(state.q)}" aria-label="Search foods"></label>
+        <div class="chips" role="group" aria-label="Filter">${filters.map(([id, l, c]) => `<button class="chip" data-filter="${id}" aria-pressed="${state.filter === id}">${l}<span class="count">${c}</span></button>`).join('')}</div></div>
+      <div class="table-wrap"><table class="wide"><thead><tr><th>Food</th><th class="r">kcal / 100 g</th><th class="r">P · C · F (g)</th><th>Typical portion</th><th>Flags</th><th>Status · source</th></tr></thead>
+      <tbody id="foodBody">${foodRows()}</tbody></table></div>`;
+    $('#foodQ').addEventListener('input', (e) => { state.q = e.target.value; $('#foodBody').innerHTML = foodRows(); });
+    document.querySelectorAll('[data-filter]').forEach((b) => b.addEventListener('click', () => { state.filter = b.dataset.filter; viewFoods(); }));
+    const open = (tr) => openEditor(state.foods.find((f) => f.id === tr.dataset.id));
+    $('#foodBody').addEventListener('click', (e) => { const tr = e.target.closest('tr[data-id]'); if (tr) open(tr); });
+    $('#foodBody').addEventListener('keydown', (e) => { const tr = e.target.closest('tr[data-id]'); if (tr && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); open(tr); } });
+    $('#addFood').onclick = () => openEditor(null);
+    $('#dl').onclick = async (e) => {
+      e.preventDefault();
+      const res = await fetch('/admin/api/foods.json', { headers: password ? { 'X-Admin-Password': password } : {} });
+      if (!res.ok) return toast('Download failed');
+      const url = URL.createObjectURL(await res.blob());
+      const a = Object.assign(document.createElement('a'), { href: url, download: 'foods.json' });
+      document.body.append(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    };
+  }
+
+  function openEditor(food) {
+    const isNew = !food;
+    const f = food ? { ...food } : { id: '', name: '', aliases: [], category: 'staple', detail: '', kcal_per_100g: null, protein_g: null, carbs_g: null, fat_g: null, typical_portion_g: 100, typical_portion_label: '1 portion', count_g: null, oily: false, greens: false, region: 'GH', source: 'draft:to-source', needs_review: true };
+    const num = (v) => (v == null ? '' : v);
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `<div class="scrim" data-close></div>
+      <form class="drawer" role="dialog" aria-modal="true" aria-labelledby="edTitle" novalidate>
+        <header><h2 id="edTitle" style="flex:1">${isNew ? 'Add a food' : esc(f.name)}</h2><button type="button" class="icon-btn" data-close aria-label="Close">✕</button></header>
+        <div class="body">
+          <div class="group"><h3>Basics</h3>
+            <label class="field">Name<input type="text" name="name" value="${esc(f.name)}" required></label>
+            <div class="fields">
+              <label class="field">ID${isNew ? '' : ' (used by the app)'}<input type="text" name="id" value="${esc(f.id)}" ${isNew ? '' : 'readonly'} pattern="[a-z0-9_]{2,40}" placeholder="e.g. abolo"></label>
+              <label class="field">Category<select name="category">${CATEGORIES.map((c) => `<option ${c === f.category ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
+            </div>
+            <label class="field">Short description<input type="text" name="detail" value="${esc(f.detail)}" placeholder="Shown when someone swaps a food"></label>
+            <label class="field">Other names (comma separated)<input type="text" name="aliases" value="${esc((f.aliases || []).join(', '))}" placeholder="local spellings, Twi names…"></label>
+          </div>
+          <div class="group"><h3>Per 100 g</h3>
+            <div class="fields">
+              <label class="field">Energy (kcal)<input type="number" name="kcal_per_100g" min="0" max="950" step="0.1" value="${num(f.kcal_per_100g)}"></label>
+              <label class="field">Protein (g)<input type="number" name="protein_g" min="0" max="100" step="0.1" value="${num(f.protein_g)}"></label>
+              <label class="field">Carbs (g)<input type="number" name="carbs_g" min="0" max="100" step="0.1" value="${num(f.carbs_g)}"></label>
+              <label class="field">Fat (g)<input type="number" name="fat_g" min="0" max="100" step="0.1" value="${num(f.fat_g)}"></label>
+            </div>
+            <p class="small" id="sanity"></p>
+          </div>
+          <div class="group"><h3>Portion</h3>
+            <div class="fields">
+              <label class="field">Typical portion (g)<input type="number" name="typical_portion_g" min="1" step="1" value="${num(f.typical_portion_g)}" required></label>
+              <label class="field">Described as<input type="text" name="typical_portion_label" value="${esc(f.typical_portion_label)}" placeholder="1 ball, 1 ladle…" required></label>
+              <label class="field">Grams per piece<input type="number" name="count_g" min="1" step="1" value="${num(f.count_g)}" placeholder="for countable foods"></label>
+            </div>
+            <p class="small muted" id="portionPreview"></p>
+            <div class="row"><label class="check"><input type="checkbox" name="oily" ${f.oily ? 'checked' : ''}> Oily (ask “How oily was it?”)</label>
+              <label class="check"><input type="checkbox" name="greens" ${f.greens ? 'checked' : ''}> Counts as greens</label></div>
+          </div>
+          <div class="group"><h3>Source</h3>
+            <label class="field">Where the values come from<input type="text" name="source" value="${esc(f.source)}" class="mono" placeholder="usda:173424 · fao_wafct2019:01_032 · recipe:waakye"></label>
+            <label class="check"><input type="checkbox" name="checked" ${f.needs_review ? '' : 'checked'}> I checked these values against that source</label>
+            <p class="small muted">A food can only be marked as checked once it has a real source, not a <span class="mono">draft:</span> one.</p>
+          </div>
+          <p class="small" id="edErr" style="color:var(--red-text)" hidden></p>
+        </div>
+        <footer><button class="btn" type="submit">${isNew ? 'Add food' : 'Save changes'}</button><button type="button" class="btn ghost" data-close>Cancel</button>
+          ${isNew ? '' : '<button type="button" class="btn danger" id="del" style="margin-left:auto">Delete</button>'}</footer>
+      </form>`;
+    document.body.append(wrap);
+    const form = $('form', wrap);
+    const close = () => { wrap.remove(); document.removeEventListener('keydown', onKey); };
+    const onKey = (e) => { if (e.key === 'Escape') close(); };
+    document.addEventListener('keydown', onKey);
+    wrap.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', close));
+    setTimeout(() => form.elements[isNew ? 'name' : 'kcal_per_100g'].focus(), 50);
+
+    const val = (n) => { const v = form.elements[n].value.trim(); return v === '' ? null : Number(v); };
+    const live = () => {
+      const kcal = val('kcal_per_100g'), p = val('protein_g') || 0, c = val('carbs_g') || 0, fat = val('fat_g') || 0;
+      const est = 4 * p + 4 * c + 9 * fat;
+      const s = $('#sanity', wrap);
+      if (kcal == null) { s.textContent = 'No energy value yet: this food counts as 0 kcal and can’t be marked as checked.'; s.style.color = 'var(--amber-text)'; }
+      else if (est && Math.abs(est - kcal) / kcal > 0.2) { s.textContent = `Check: protein, carbs and fat add up to about ${fmt(est)} kcal (4/4/9 rule), which is ${est > kcal ? 'more' : 'less'} than ${fmt(kcal)}. Fibre, water and rounding explain small gaps.`; s.style.color = 'var(--amber-text)'; }
+      else { s.textContent = est ? `Macros add up to about ${fmt(est)} kcal. Looks consistent.` : ''; s.style.color = 'var(--mint-text)'; }
+      const g = val('typical_portion_g');
+      $('#portionPreview', wrap).textContent = kcal != null && g ? `${form.elements.typical_portion_label.value || 'A portion'} (${fmt(g)} g) ≈ ${fmt((kcal * g) / 100)} kcal in the app.` : '';
+    };
+    form.addEventListener('input', live); live();
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const err = $('#edErr', wrap); err.hidden = true;
+      const body = {
+        id: form.elements.id.value.trim(), name: form.elements.name.value.trim(), category: form.elements.category.value,
+        detail: form.elements.detail.value.trim(), aliases: form.elements.aliases.value.split(',').map((x) => x.trim()).filter(Boolean),
+        kcal_per_100g: val('kcal_per_100g'), protein_g: val('protein_g'), carbs_g: val('carbs_g'), fat_g: val('fat_g'),
+        typical_portion_g: val('typical_portion_g'), typical_portion_label: form.elements.typical_portion_label.value.trim(), count_g: val('count_g'),
+        oily: form.elements.oily.checked, greens: form.elements.greens.checked, region: f.region || 'GH',
+        source: form.elements.source.value.trim(), needs_review: !form.elements.checked.checked,
+      };
+      try {
+        await api(isNew ? '/admin/api/foods' : `/admin/api/foods/${encodeURIComponent(f.id)}`, { method: isNew ? 'POST' : 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        close(); toast(isNew ? `Added ${body.name}` : `Saved ${body.name}`); viewFoods();
+      } catch (ex) {
+        err.textContent = ex.message.includes('pattern') ? 'The ID can only use lowercase letters, numbers and underscores.' : ex.message;
+        err.hidden = false;
+      }
+    });
+    const del = $('#del', wrap);
+    if (del) del.addEventListener('click', async () => {
+      if (del.dataset.armed !== '1') { del.dataset.armed = '1'; del.textContent = 'Tap again to delete'; return; }
+      try { await api(`/admin/api/foods/${encodeURIComponent(f.id)}`, { method: 'DELETE' }); close(); toast(`Deleted ${f.name}`); viewFoods(); } catch (ex) { toast(ex.message); }
+    });
+  }
+
+  // ---------- Try it ----------
+  const MODES = [['text', 'Describe a meal'], ['photo', 'Photo'], ['coach', 'Coach'], ['ideas', 'Meal ideas'], ['barcode', 'Barcode']];
+
+  function viewTry() {
+    const m = state.tryMode;
+    const forms = {
+      text: `<label class="field">What did they eat?<textarea id="tText" placeholder="I chop two balls kenkey with fried fish and small shito">I chop two balls kenkey with fried fish and small shito</textarea></label>
+        <label class="field" style="max-width:220px">Language<select id="tLang"><option value="en">English</option><option value="tw">Twi</option><option value="pcm" selected>Pidgin</option></select></label>`,
+      photo: `<label class="field">Meal photo<input type="file" id="tPhoto" accept="image/jpeg,image/png,image/webp"></label><img id="tPrev" class="preview" alt="" hidden>`,
+      coach: `<label class="field">Message<textarea id="tMsg">I have a wedding on Saturday. How do I stay on track?</textarea></label>
+        <div class="fields"><label class="field">Sex<select id="tSex"><option value="female">Female (1,200 floor)</option><option value="male">Male (1,500 floor)</option></select></label>
+        <label class="field">Daily budget<input type="number" id="tBudget" value="1850"></label></div>
+        <label class="check"><input type="checkbox" id="tHide"> Hide-numbers mode</label>`,
+      ideas: `<div class="fields"><label class="field">kcal left<input type="number" id="iK" value="700"></label><label class="field">Protein left (g)<input type="number" id="iP" value="40"></label>
+        <label class="field">Greens so far<input type="number" id="iG" value="0"></label><label class="field">Meal<select id="iM"><option>Breakfast</option><option>Lunch</option><option selected>Dinner</option></select></label>
+        <label class="field">Where<select id="iC"><option value="all">Any</option><option value="home">Home-cooked</option><option value="chop">Chop bar</option><option value="quick">Quick</option></select></label></div>`,
+      barcode: `<label class="field" style="max-width:320px">Barcode number<input type="text" id="bCode" inputmode="numeric" value="5449000000996"></label>
+        <p class="small muted">Looks the product up in Open Food Facts.</p>`,
+    };
+    $('#view').innerHTML = `
+      <div class="page-head"><div><h1>Try it</h1><p class="muted">Send real requests to this server, exactly as the app does.</p></div></div>
+      ${state.status && state.status.demo ? '<div class="notice"><span aria-hidden="true">ⓘ</span><span>Demo mode: answers are samples until an AI key is set.</span></div>' : ''}
+      <div class="chips" role="tablist" aria-label="Feature">${MODES.map(([id, l]) => `<button class="chip" role="tab" data-mode="${id}" aria-selected="${m === id}" aria-pressed="${m === id}">${l}</button>`).join('')}</div>
+      <section class="card raised"><form id="tryForm" class="group">${forms[m]}<div class="row"><button class="btn" type="submit" id="run">Run</button><span class="small muted" id="runInfo"></span></div></form></section>
+      <section id="out" class="result"></section>`;
+    document.querySelectorAll('[data-mode]').forEach((b) => b.addEventListener('click', () => { state.tryMode = b.dataset.mode; viewTry(); }));
+    const photo = $('#tPhoto');
+    if (photo) photo.addEventListener('change', () => { const f = photo.files[0]; const img = $('#tPrev'); if (f) { img.src = URL.createObjectURL(f); img.hidden = false; } });
+    $('#tryForm').addEventListener('submit', runTry);
+  }
+
+  function scanResult(r) {
+    if (!r.is_food) return `<div class="notice">No food found${r.note ? `: ${esc(r.note)}` : '.'}</div>`;
+    const t = r.totals;
+    return `<div class="grid">
+        <div class="card"><span class="stat-label">This meal</span><span class="stat-value num">≈ ${fmt(t.kcal)} kcal</span><span class="small muted">likely ${fmt(t.kcal_low)}–${fmt(t.kcal_high)}</span></div>
+        <div class="card"><span class="stat-label">Protein · carbs · fat</span><span class="stat-value num" style="font-size:24px">${fmt(t.protein)} · ${fmt(t.carbs)} · ${fmt(t.fat)} g</span>${t.unmatched ? `<span class="badge warn">${t.unmatched} not matched</span>` : ''}</div>
+      </div>
+      ${r.note ? `<p class="muted small">Model note: ${esc(r.note)}</p>` : ''}
+      <div class="table-wrap"><table class="wide"><thead><tr><th>Model saw</th><th>Matched food</th><th class="r">Grams</th><th class="r">kcal</th><th>Confidence</th><th>Other matches</th></tr></thead><tbody>
+      ${r.items.map((i) => `<tr><td>${esc(i.ai_name)}<span class="sub">${esc(i.cooking_method)}${i.count ? ` · ${i.count} piece${i.count > 1 ? 's' : ''}` : ''}</span></td>
+        <td>${i.food_id ? `<b>${esc(i.name)}</b><span class="sub mono">${esc(i.food_id)}</span>` : '<span class="badge warn">No match</span>'}</td>
+        <td class="r num">${fmt(i.grams)}<span class="sub">${fmt(i.grams_low)}–${fmt(i.grams_high)}</span></td>
+        <td class="r num">${i.kcal == null ? '–' : `<b>${fmt(i.kcal)}</b><span class="sub">${fmt(i.kcal_low)}–${fmt(i.kcal_high)}</span>`}</td>
+        <td>${i.confidence === 'low' ? '<span class="badge warn">Check this</span>' : '<span class="badge ok">Looks right</span>'}</td>
+        <td class="small muted">${i.candidates.slice(i.food_id ? 1 : 0, 3).map((c) => `${esc(c.name)} (${Math.round(c.score * 100)}%)`).join(', ') || '–'}</td></tr>`).join('')}
+      </tbody></table></div>`;
+  }
+
+  async function runTry(e) {
+    e.preventDefault();
+    const m = state.tryMode, out = $('#out'), btn = $('#run');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner" aria-hidden="true"></span> Running…';
+    $('#runInfo').textContent = '';
+    const started = performance.now();
+    try {
+      let r, html;
+      const json = (path, body) => api(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      if (m === 'text') { r = await json('/parse', { text: $('#tText').value, lang: $('#tLang').value }); html = scanResult(r); }
+      else if (m === 'photo') {
+        const f = $('#tPhoto').files[0]; if (!f) throw new Error('Choose a photo first.');
+        const fd = new FormData(); fd.append('image', f); fd.append('meal', 'Lunch');
+        r = await api('/scans', { method: 'POST', body: fd }); html = scanResult(r);
+      } else if (m === 'coach') {
+        const days = Array.from({ length: 10 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() + i); return `${d.toLocaleDateString('en-GB', { weekday: 'long' })} ${d.toISOString().slice(0, 10)}`; }).join(', ');
+        r = await json('/coach', { messages: [{ role: 'user', content: $('#tMsg').value }], sex: $('#tSex').value, hide_numbers: $('#tHide').checked,
+          context: `Daily budget ${$('#tBudget').value} kcal. Upcoming days: ${days}.` });
+        const p = r.flex_plan;
+        html = `<div class="bubble">${esc(r.reply)}</div>${p ? `<section class="card raised"><h2>${esc(p.reason)}</h2><div class="table-wrap"><table><thead><tr><th>Day</th><th class="r">Budget</th></tr></thead><tbody>${p.days.map((d) => `<tr><td>${esc(new Date(d.date + 'T12:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' }))}</td><td class="r num"><b>${fmt(d.kcal)}</b> kcal</td></tr>`).join('')}</tbody></table></div><p class="small muted">The app shows this with a Save button; nothing changes until the person taps it.</p></section>` : ''}`;
+      } else if (m === 'ideas') {
+        const left = Number($('#iK').value);
+        r = await json('/ideas', { kcal_left: left, protein_left: Number($('#iP').value), greens_today: Number($('#iG').value), meal: $('#iM').value, category: $('#iC').value });
+        html = `<div class="grid2">${r.ideas.map((i) => `<div class="idea"><div class="row"><b class="grow">${esc(i.name)}</b><span class="badge ok">${esc(i.badge)}</span></div><p class="small muted">${esc(i.detail)}</p>
+          <div class="bar"><i style="width:${Math.min(100, (i.kcal / left) * 100)}%"></i></div><p class="small"><b class="num">${fmt(i.kcal)} kcal</b> of ${fmt(left)} · ${fmt(i.protein)} g protein</p>
+          <p class="small muted">${i.items.map((x) => `${esc(x.name)} ${fmt(x.grams)} g`).join(' · ')}</p></div>`).join('')}</div>${r.tip ? `<div class="good">${esc(r.tip)}</div>` : ''}`;
+      } else {
+        r = await api(`/products/${encodeURIComponent($('#bCode').value.trim())}`);
+        html = `<section class="card raised"><h2>${esc(r.name)}</h2><p class="small muted mono">${esc(r.source)}</p>
+          <div class="fields">${['kcal', 'protein', 'carbs', 'fat'].map((k) => `<div><span class="stat-label">${k === 'kcal' ? 'Energy' : k[0].toUpperCase() + k.slice(1)} / 100 g</span><div class="stat-value num" style="font-size:22px">${r.per100[k] == null ? '–' : r.per100[k]}${k === 'kcal' ? '' : ' g'}</div></div>`).join('')}</div>
+          <p class="small">Serving: ${esc(r.serving_label)}${r.serving_g ? ` (${fmt(r.serving_g)} g)` : ''}</p></section>`;
+      }
+      out.innerHTML = html + `<details><summary class="small muted" style="cursor:pointer">Raw response</summary><pre class="json">${esc(JSON.stringify(r, null, 2))}</pre></details>`;
+      $('#runInfo').textContent = `${((performance.now() - started) / 1000).toFixed(1)} s${r && r.provider ? ` · ${r.provider}` : ''}`;
+    } catch (ex) {
+      if (ex instanceof AuthError) return showLogin('Please sign in again.');
+      out.innerHTML = `<div class="notice"><span aria-hidden="true">!</span><span>${esc(ex.message)}</span></div>`;
+    } finally {
+      btn.disabled = false; btn.textContent = 'Run';
+    }
+  }
+
+  // ---------- Activity ----------
+  let actTimer = null;
+  function ago(t) { const s = Math.max(0, Date.now() / 1000 - t); if (s < 60) return `${Math.round(s)} s ago`; if (s < 3600) return `${Math.round(s / 60)} min ago`; return `${Math.round(s / 3600)} h ago`; }
+  function statusBadge(c) { return c < 300 ? `<span class="badge ok">${c}</span>` : c === 401 || c === 429 ? `<span class="badge plain">${c}</span>` : c < 500 ? `<span class="badge warn">${c}</span>` : `<span class="badge bad">${c}</span>`; }
+  const ROUTE_NAMES = { 'POST /scans': 'Photo scan', 'POST /parse': 'Describe / voice', 'POST /coach': 'Coach', 'POST /ideas': 'Meal ideas', 'POST /products/label': 'Label photo', 'GET /products/{barcode}': 'Barcode lookup', 'GET /health': 'Health check', 'GET /foods': 'Food list', 'GET /foods/search': 'Food search' };
+
+  async function viewActivity() {
+    clearInterval(actTimer);
+    const st = await api('/admin/api/stats');
+    $('#view').innerHTML = `
+      <div class="page-head"><div><h1>Activity</h1><p class="muted">Requests in the last 24 hours. Only routes and timings are kept: never meal text or photos.</p></div>
+        <label class="check"><input type="checkbox" id="auto" ${state.auto ? 'checked' : ''}> Refresh every 10 s</label></div>
+      <section class="card raised"><h2>By feature</h2>
+        <div class="table-wrap"><table class="mid"><thead><tr><th>Feature</th><th class="r">Requests</th><th class="r">Errors</th><th class="r">Refused</th><th class="r">Average</th><th class="r">Slowest 5%</th></tr></thead><tbody>
+        ${st.routes.length ? st.routes.map((r) => `<tr><td><b>${esc(ROUTE_NAMES[r.route] || r.route)}</b><span class="sub mono">${esc(r.route)}</span></td><td class="r num">${r.count}</td><td class="r num" style="color:${r.errors ? 'var(--red-text)' : 'inherit'}">${r.errors}</td><td class="r num">${r.refused}</td><td class="r num">${(r.avg_ms / 1000).toFixed(2)} s</td><td class="r num">${(r.p95_ms / 1000).toFixed(2)} s</td></tr>`).join('') : '<tr><td colspan="6" class="muted" style="padding:28px;text-align:center">No requests yet. Open the app or use Try it.</td></tr>'}
+        </tbody></table></div>
+        <p class="small muted">“Refused” means a missing access code (401) or too many requests (429).</p></section>
+      <section class="card raised"><h2>Latest requests</h2>
+        <div class="table-wrap"><table><thead><tr><th>When</th><th>Feature</th><th>Result</th><th class="r">Time</th></tr></thead><tbody>
+        ${st.recent.length ? st.recent.map((e) => `<tr><td class="small muted">${ago(e.t)}</td><td>${esc(ROUTE_NAMES[`${e.method} ${e.route}`] || `${e.method} ${e.route}`)}</td><td>${statusBadge(e.status)}</td><td class="r num">${(e.ms / 1000).toFixed(2)} s</td></tr>`).join('') : '<tr><td colspan="4" class="muted" style="padding:28px;text-align:center">Nothing yet.</td></tr>'}
+        </tbody></table></div></section>`;
+    $('#auto').addEventListener('change', (ev) => { state.auto = ev.target.checked; viewActivity(); });
+    if (state.auto) actTimer = setInterval(() => { if (current() === 'activity' && !document.hidden) viewActivity().catch(() => undefined); else clearInterval(actTimer); }, 10000);
+  }
+
+  // ---------- Settings ----------
+  async function viewSettings() {
+    const s = await api('/admin/api/status');
+    state.status = s; updateSide();
+    const yes = (b, on = 'On', off = 'Off') => (b ? `<span class="badge ok">${on}</span>` : `<span class="badge warn">${off}</span>`);
+    const rows = [
+      ['AI providers in order', `<span class="mono">${esc(s.ai)}</span>`, 'VISION_PROVIDER'],
+      ['Gemini key', yes(s.keys.gemini, 'Set', 'Not set'), 'GEMINI_API_KEY'],
+      ['Gemini model', `<span class="mono">${esc(s.models.gemini)}</span> → fallback <span class="mono">${esc(s.models.gemini_fallback || 'none')}</span>`, 'GEMINI_MODEL, GEMINI_FALLBACK_MODEL'],
+      ['OpenAI key', yes(s.keys.openai, 'Set', 'Not set'), 'OPENAI_API_KEY'],
+      ['Anthropic key', yes(s.keys.anthropic, 'Set', 'Not set'), 'ANTHROPIC_API_KEY'],
+      ['App access code', yes(s.access_code_on), 'APP_ACCESS_CODE'],
+      ['Console password', yes(s.admin_password_on), 'ADMIN_PASSWORD'],
+      ['AI requests per device per hour', s.ai_requests_per_hour ? fmt(s.ai_requests_per_hour) : 'No limit', 'AI_REQUESTS_PER_HOUR'],
+      ['AI timeout', `${fmt(s.request_timeout_s)} s`, 'REQUEST_TIMEOUT_S'],
+      ['Allowed web origins', `<span class="mono">${esc(s.cors_origins)}</span>`, 'CORS_ORIGINS'],
+      ['Prompt version', `<span class="mono">${esc(s.prompt_version)}</span>`, ''],
+    ];
+    $('#view').innerHTML = `
+      <div class="page-head"><div><h1>Settings</h1><p class="muted">What this server is running with. Keys are never shown.</p></div></div>
+      <div class="table-wrap"><table><thead><tr><th>Setting</th><th>Value</th><th>Change it with</th></tr></thead><tbody>
+      ${rows.map(([a, b, c]) => `<tr><td><b>${a}</b></td><td>${b}</td><td class="mono small muted">${c}</td></tr>`).join('')}</tbody></table></div>
+      <div class="grid2">
+        <section class="card raised"><h2>On your computer</h2><p class="small muted">Edit <span class="mono">platewise/backend/.env</span>, then stop the server (Ctrl+C) and start it again.</p></section>
+        <section class="card raised"><h2>On Render</h2><p class="small muted">Open the <b>platewise-api</b> service → <b>Environment</b>, change the value and save. Render restarts the server for you.</p></section>
+      </div>`;
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>

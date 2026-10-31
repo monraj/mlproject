@@ -4,6 +4,7 @@ import json
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
+from typing import Any
 
 FOODS_PATH = Path(__file__).with_name("foods.json")
 
@@ -71,6 +72,19 @@ def load_foods() -> dict[str, Food]:
             needs_review=bool(r.get("needs_review", True)),
         )
     return foods
+
+
+def read_raw() -> dict[str, Any]:
+    data: dict[str, Any] = json.loads(FOODS_PATH.read_text())
+    return data
+
+
+def save_raw(data: dict[str, Any]) -> None:
+    """Write the table and make the running server use it straight away."""
+    tmp = FOODS_PATH.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(data, indent=1, ensure_ascii=False))
+    tmp.replace(FOODS_PATH)
+    load_foods.cache_clear()
 
 
 def get_food(food_id: str | None) -> Food | None:

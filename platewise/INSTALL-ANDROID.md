@@ -18,6 +18,9 @@ Both services have free plans. Your Gemini key only goes on the server, never in
 6. Check it: open `https://YOUR-ADDRESS.onrender.com/health` in a browser. You should see
    `"ai":"gemini"` and `"demo":false`.
 
+7. Optional: open `https://YOUR-ADDRESS.onrender.com/admin` for the **server console** (status, food
+   table, try-it, activity). Its password is **Environment → ADMIN_PASSWORD**.
+
 The free plan puts the server to sleep after 15 minutes without use. The first scan after that takes
 up to a minute while it wakes up; later ones are quick.
 
