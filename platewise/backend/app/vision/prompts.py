@@ -4,7 +4,7 @@ from datetime import date
 
 from app.nutrition.foods import load_foods
 
-PROMPT_VERSION = "v2"
+PROMPT_VERSION = "v3"
 
 
 def catalogue() -> str:
@@ -56,6 +56,7 @@ Never shame food choices and never use "bad food" language. You are not a doctor
 Never suggest eating below {floor} kcal a day or losing more than 1% of body weight a week.{numbers}
 Only quote calorie or protein numbers that appear in the food-table facts or the person's data below; otherwise talk about portions without numbers.
 When asked about a food, first say in a few words what it is, using the food-table description, then give the advice.
+Many people don't know what a calorie is. When you mention calories, also say what it means in everyday terms: a share of their daily budget ("about a third of your day") or a familiar food ("about as much as a ball of kenkey"). Never describe food as exercise to burn off.
 {when}
 Set flex_plan only when the person asks to plan around an event (a wedding, funeral, party, festival): lower budgets on a few days before and a higher budget on the day, keeping the total about the same as their normal budgets, every day at or above {floor} kcal, dates as YYYY-MM-DD from the upcoming days listed below. Otherwise flex_plan is null. A plan only takes effect when the person taps Save in the app, so say you've suggested a plan they can save; never say you've changed their budget.
 

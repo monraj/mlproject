@@ -24,7 +24,9 @@ def food_facts(question: str, limit: int = 4) -> list[str]:
         kcal = round((f.kcal_per_100g or 0) * f.typical_portion_g / 100) if f.kcal_per_100g is not None else None
         protein = round((f.protein_g or 0) * f.typical_portion_g / 100) if f.protein_g is not None else None
         numbers = f", about {kcal} kcal" + (f" and {protein} g protein" if protein is not None else "") if kcal is not None else ""
-        out.append(f"{f.name} ({f.detail}): a usual portion is {f.typical_portion_label}, about {f.typical_portion_g:g} g{numbers}.")
+        sure = {"proxy": " These figures come from a similar West African dish, so treat them as a guide.",
+                "estimate": " No published figures exist for this dish yet; these are PlateWise estimates."}.get(f.confidence, "")
+        out.append(f"{f.name} ({f.detail}): a usual portion is {f.typical_portion_label}, about {f.typical_portion_g:g} g{numbers}.{sure}")
         if len(out) >= limit:
             break
     return out

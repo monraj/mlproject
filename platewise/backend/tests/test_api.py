@@ -30,7 +30,9 @@ def test_scan_counts_from_table_with_ranges(client):
     assert body["is_food"] and len(body["items"]) == 4
     egg = next(i for i in body["items"] if i["food_id"] == "egg")
     assert egg["kind"] == "count" and egg["count"] == 1
-    assert egg["kcal"] == round(155 * 50 / 100)
+    from app.nutrition.foods import get_food
+
+    assert egg["kcal"] == round(get_food("egg").kcal_per_100g * 50 / 100)
     for i in body["items"]:
         assert i["kcal_low"] <= i["kcal"] <= i["kcal_high"]
         assert i["ai_grams"] == i["grams"] and i["ai_food_id"] == i["food_id"]

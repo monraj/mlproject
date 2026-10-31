@@ -26,6 +26,8 @@ export type Profile = {
   hideNumbers: boolean;
   reminders: Reminders;
   health?: Health;
+  /** Opt-in: also describe meals as minutes of brisk walking. */
+  showWalking?: boolean;
 };
 
 export type Candidate = { foodId: string; name: string; detail: string };

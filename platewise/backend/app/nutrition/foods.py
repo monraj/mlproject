@@ -27,6 +27,7 @@ class Food:
     greens: bool
     source: str
     needs_review: bool
+    confidence: str = "estimate"
 
     def public(self) -> dict[str, object]:
         return {
@@ -43,6 +44,7 @@ class Food:
             "greens": self.greens,
             "source": self.source,
             "needs_review": self.needs_review,
+            "confidence": self.confidence,
         }
 
 
@@ -70,6 +72,7 @@ def load_foods() -> dict[str, Food]:
             greens=bool(r.get("greens")),
             source=r["source"],
             needs_review=bool(r.get("needs_review", True)),
+            confidence=r.get("confidence", "estimate"),
         )
     return foods
 

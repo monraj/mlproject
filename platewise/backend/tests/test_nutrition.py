@@ -1,14 +1,22 @@
 import pytest
 
 from app.nutrition.calc import nutrients, oil_from_visible
-from app.nutrition.foods import get_food, load_foods
+from app.nutrition.foods import get_food
 from app.nutrition.matcher import AUTO_ACCEPT, match
 
 
 def test_every_food_has_a_source_and_review_flag():
-    for f in load_foods().values():
-        assert f.source
-        assert f.needs_review is True  # draft values until checked against USDA/FAO
+    import json
+
+    from app.nutrition.foods import FOODS_PATH
+
+    for r in json.loads(FOODS_PATH.read_text())["foods"]:
+        assert r["source"], r["id"]
+        assert r["confidence"] in ("primary", "calculated", "proxy", "estimate"), r["id"]
+        # Stand-ins and estimates are flagged for review; sourced table values are not (CLAUDE.md rule 2).
+        assert r["needs_review"] is (r["confidence"] in ("proxy", "estimate")), r["id"]
+        if r["confidence"] != "estimate":
+            assert ":" in r["source"] or "label" in r["source"].lower() or r["source"].startswith("KNUST"), r["id"]
 
 
 def test_calories_come_from_the_table():

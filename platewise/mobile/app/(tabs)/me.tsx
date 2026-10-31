@@ -169,6 +169,23 @@ export default function Me() {
             accessibilityLabel="Hide numbers"
           />
         </View>
+        <View style={styles.switchRow}>
+          <View style={{ flex: 1, gap: 2 }}>
+            <T v="body" weight="semibold">
+              Show walking time
+            </T>
+            <T v="small" muted>
+              Also describe meals as minutes of brisk walking. Off by default.
+            </T>
+          </View>
+          <Switch
+            value={!!p.showWalking}
+            onValueChange={(v) => dispatch({ type: 'patchProfile', patch: { showWalking: v } })}
+            trackColor={{ true: c.mintBorder, false: c.line }}
+            thumbColor="#FFFFFF"
+            accessibilityLabel="Show walking time"
+          />
+        </View>
       </Card>
 
       <Card order={3} style={{ gap: 12 }}>

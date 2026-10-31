@@ -76,9 +76,10 @@ def test_edit_food_updates_server_immediately(client, food_file):
 
 
 def test_cannot_mark_checked_with_draft_source(client, food_file):
-    row = next(r for r in client.get("/admin/api/foods").json()["foods"] if r["id"] == "egg")
+    # banku has no published value yet, so its source is an estimate
+    row = next(r for r in client.get("/admin/api/foods").json()["foods"] if r["id"] == "banku")
     row["needs_review"] = False
-    assert client.put("/admin/api/foods/egg", json=row).status_code == 422
+    assert client.put("/admin/api/foods/banku", json=row).status_code == 422
 
 
 def test_add_and_delete_food(client, food_file):

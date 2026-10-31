@@ -29,6 +29,8 @@ import type { DraftItem } from '../../src/state/types';
 import { approx, range } from '../../src/lib/format';
 import { SHARES, portionPresets } from '../../src/lib/portions';
 import { pickQuestion } from '../../src/lib/clarify';
+import { relate } from '../../src/lib/relate';
+import { wellbeingCheck } from '../../src/state/insights';
 import { food as foodById } from '../../src/data/foods';
 import { duration, stagger } from '../../src/lib/motion';
 
@@ -158,6 +160,9 @@ export default function Review() {
   const [fav, setFav] = useState(false);
   const total = mealKcal(s.draft);
   const dayShare = share(total.mid, budget);
+  // Walking time is opt-in and never shown when eating looks too low (see lib/relate.ts).
+  const walkingOk = !!s.profile?.showWalking && !(s.profile && wellbeingCheck(s.profile, s.days, s.weights));
+  const everyday = relate(total.mid, budget, { weightKg: s.profile?.weightKg, showWalking: walkingOk, hideNumbers: !!s.profile?.hideNumbers });
   const hide = !!s.profile?.hideNumbers;
   const unmatched = s.draft.filter((i) => i.per100?.kcal == null);
   const back = { voice: '/voice', text: '/type', barcode: '/barcode' }[s.draftSource as string] ?? '/scan/camera';
@@ -212,9 +217,16 @@ export default function Review() {
             This meal
           </T>
           {hide ? (
-            <T v="title" size={24} color={c.heroText}>
-              {s.draft.length} {s.draft.length === 1 ? 'food' : 'foods'}
-            </T>
+            <>
+              <T v="title" size={24} color={c.heroText}>
+                {s.draft.length} {s.draft.length === 1 ? 'food' : 'foods'}
+              </T>
+              {everyday.map((line) => (
+                <T key={line} v="small" color={c.heroMuted}>
+                  {line[0].toUpperCase() + line.slice(1)}
+                </T>
+              ))}
+            </>
           ) : (
             <>
               <Animated.View key={Math.round(total.mid / 10)} entering={FadeIn.duration(duration.fast)}>
@@ -225,6 +237,11 @@ export default function Review() {
               <T v="small" color={c.heroMuted}>
                 Likely {range(total.low, total.high)} · {Math.round(dayShare * 100)}% of today
               </T>
+              {everyday.map((line) => (
+                <T key={line} v="small" color={c.heroMuted}>
+                  {line[0].toUpperCase() + line.slice(1)}
+                </T>
+              ))}
             </>
           )}
         </View>

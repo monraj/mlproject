@@ -19,7 +19,8 @@ export function foodFacts(question: string, max = 4): string[] {
     const kcal = per(f.per100.kcal);
     const protein = per(f.per100.protein);
     const numbers = kcal != null ? `, about ${kcal} kcal${protein != null ? ` and ${protein} g protein` : ''}` : '';
-    out.push(`${f.name} (${f.detail}): a usual portion is ${f.portionLabel}, about ${f.portionG} g${numbers}.`);
+    const sure = { proxy: ' These figures come from a similar West African dish, so treat them as a guide.', estimate: ' No published figures exist for this dish yet; these are PlateWise estimates.' }[f.confidence as string] ?? '';
+    out.push(`${f.name} (${f.detail}): a usual portion is ${f.portionLabel}, about ${f.portionG} g${numbers}.${sure}`);
     if (out.length >= max) break;
   }
   return out;

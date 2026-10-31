@@ -16,6 +16,8 @@ export type Food = {
   countG: number | null;
   oily: boolean;
   greens: boolean;
+  /** How sure the values are: primary/calculated (sourced), proxy (similar dish), estimate (unsourced). */
+  confidence: 'primary' | 'calculated' | 'proxy' | 'estimate';
 };
 
 type RawFood = (typeof raw.foods)[number];
@@ -32,6 +34,7 @@ export const FOODS: Food[] = raw.foods.map((f: RawFood) => ({
   countG: f.count_g ?? null,
   oily: f.oily,
   greens: f.greens,
+  confidence: ((f as { confidence?: string }).confidence ?? 'estimate') as Food['confidence'],
 }));
 
 const BY_ID = new Map(FOODS.map((f) => [f.id, f]));
@@ -75,6 +78,7 @@ export function productFoods(products: Record<string, import('../state/types').P
     countG: null,
     oily: false,
     greens: false,
+    confidence: 'primary' as const, // from the product's own label
   }));
 }
 

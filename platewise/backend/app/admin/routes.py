@@ -121,7 +121,7 @@ def update_food(food_id: str, food: FoodIn) -> dict[str, Any]:
         raise HTTPException(404, "No food with that id.")
     if food.id != food_id and any(r["id"] == food.id for r in rows):
         raise HTTPException(409, "Another food already uses that id.")
-    if not food.needs_review and re.match(r"^draft:", food.source):
+    if not food.needs_review and re.match(r"^(draft|estimate):", food.source):
         raise HTTPException(422, "Before marking a food as checked, replace the draft source with where the values come from, e.g. usda:173424 or fao_wafct2019:01_032.")
     rows[i] = _row(food)
     save_raw(data)

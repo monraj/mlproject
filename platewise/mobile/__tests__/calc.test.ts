@@ -14,13 +14,13 @@ function item(id: string, patch: Partial<DraftItem> = {}): DraftItem {
 describe('calorie maths', () => {
   it('computes kcal from the food table and grams, with a range', () => {
     const k = itemKcal(item('egg', { grams: 100 }));
-    expect(k.mid).toBeCloseTo(155);
+    expect(k.mid).toBeCloseTo(food('egg')!.per100.kcal!); // 100 g = the table's per-100 g value
     expect(k.low).toBeLessThan(k.mid);
     expect(k.high).toBeGreaterThan(k.mid);
   });
 
   it('uses count × grams per piece for countable foods', () => {
-    expect(itemKcal(item('egg', { kind: 'count', count: 2 })).mid).toBeCloseTo(155);
+    expect(itemKcal(item('egg', { kind: 'count', count: 2 })).mid).toBeCloseTo((2 * food('egg')!.countG! * food('egg')!.per100.kcal!) / 100);
   });
 
   it('scales only oily dishes by the oil level', () => {

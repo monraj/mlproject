@@ -3,7 +3,7 @@ from app.nutrition.facts import food_facts, strip_unverified_numbers
 
 def test_facts_name_the_dish_with_portion_figures() -> None:
     facts = food_facts("Is red-red a good lunch?")
-    assert facts[0].startswith("Red-red (Beans in palm oil): a usual portion is 1 bowl, about 250 g, about 450 kcal")
+    assert facts[0].startswith("Red-red (Beans in palm oil): a usual portion is 1 bowl, about 250 g, about 442 kcal")
 
 
 def test_no_facts_without_a_food() -> None:
