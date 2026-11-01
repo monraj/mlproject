@@ -14,6 +14,14 @@ from app.vision.provider import ProviderError, Turn, parse_json
 QUOTA_COOLDOWN_S = 15 * 60
 
 
+def _without_enums(schema: Any) -> Any:
+    if isinstance(schema, dict):
+        return {k: _without_enums(v) for k, v in schema.items() if k != "enum"}
+    if isinstance(schema, list):
+        return [_without_enums(v) for v in schema]
+    return schema
+
+
 class GeminiProvider:
     name = "gemini"
 
@@ -69,6 +77,10 @@ class GeminiProvider:
         thinking = None
         if model == self.model:
             thinking = types.ThinkingConfig(thinking_level=types.ThinkingLevel.LOW if image is not None else types.ThinkingLevel.MINIMAL)
+        else:
+            # The lite models reject a schema with the whole food table as an enum (400). Without it
+            # they still answer in the same shape; the matcher ignores any id not in the table.
+            schema = _without_enums(schema)
         return types.GenerateContentConfig(system_instruction=system, response_mime_type="application/json", response_json_schema=schema, thinking_config=thinking)
 
     def stream_json(self, *, system: str, turns: list[Turn], schema: dict[str, Any], image: bytes | None = None) -> Iterator[str]:

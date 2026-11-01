@@ -11,6 +11,8 @@ export function inviteMessage(from: string, url = INVITE_URL): string {
     `Download the Android app from Google Drive (it isn't on the Play Store yet):`,
     url,
     '',
-    'On the Drive page, tap Download, then open the file. If your phone asks, allow installing apps from Drive or your browser.',
+    url.includes('/folders/')
+      ? 'On the Drive page, tap PlateWise.apk, tap Download, then open the file. If your phone asks, allow installing apps from Drive or your browser.'
+      : 'On the Drive page, tap Download, then open the file. If your phone asks, allow installing apps from Drive or your browser.',
   ].join('\n');
 }
