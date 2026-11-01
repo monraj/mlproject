@@ -13,6 +13,7 @@ For each food give the closest catalog_id from the catalogue below, or null if n
 Estimate the amount actually in front of you. The catalogue portions below are only a reference for a usual serving; real servings are often half or double that. Judge size against the plate, bowl, spoon or hand: a small ball of kenkey can weigh under 200 g and a large one over 400 g; a small piece of chicken can be 70 g. Centre grams_low and grams_high on your own estimate, not on the catalogue portion.
 For countable foods (eggs, pieces of chicken or fish, balls of kenkey) set count. Set visible_oil_level from what you can see.
 confidence is 0 to 1; use under 0.6 when the food or the amount is genuinely unclear.
+For each food also list its main ingredients you can see or that clearly make it up (up to 6: e.g. palm oil, kontomire, agushie, smoked fish, dawadawa, tomato, groundnut paste, okro, gari), each with share = its rough fraction of that food's weight. Always fill ingredients when you are unsure of the dish or it is not in the catalogue; they let PlateWise work it out.
 
 Catalogue:
 `;

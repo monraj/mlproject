@@ -1,6 +1,6 @@
 {
  "version": 2,
- "note": "Values per 100 g as eaten, from the sources named on each row (mostly the FAO/INFOODS West African Food Composition Table 2019). confidence: primary = analysed, calculated = derived by the table's yield factors, proxy = a West African or USDA stand-in, estimate = not in any published table (needs_review). WAFCT 2019 is licensed for non-commercial use; commercial use needs FAO's permission (copyright@fao.org).",
+ "note": "Values per 100 g as eaten, from the sources named on each row (mostly the FAO/INFOODS West African Food Composition Table 2019). confidence: primary = analysed, calculated = derived by the table's yield factors, proxy = a West African or USDA stand-in, estimate = not in any published table (needs_review). WAFCT 2019 is licensed for non-commercial use; commercial use needs FAO's permission (copyright@fao.org). Recipes: rows with source recipe:<id> are worked out from WAFCT ingredient rows; the ratios and cooked weights are PlateWise defaults written on the row, so they need review.",
  "foods": [
   {
    "id": "waakye",
@@ -26,7 +26,15 @@
    "needs_review": true,
    "confidence": "proxy",
    "source_note": "Stand-in: Waakye",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "Hausa / Zongo",
+    "All"
+   ],
+   "ingredients": [
+    "rice",
+    "beans"
+   ]
   },
   {
    "id": "rice_beans",
@@ -50,7 +58,11 @@
    "needs_review": true,
    "confidence": "proxy",
    "source_note": "Stand-in: Waakye",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "jollof",
@@ -75,7 +87,16 @@
    "needs_review": true,
    "confidence": "proxy",
    "source_note": "Stand-in: Jollof spaghetti",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "ingredients": [
+    "rice",
+    "tomato",
+    "onion",
+    "vegetable_oil"
+   ],
+   "people": [
+    "All"
+   ]
   },
   {
    "id": "rice",
@@ -99,7 +120,11 @@
    "source": "WAFCT2019:01_069",
    "needs_review": false,
    "confidence": "calculated",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "fried_rice",
@@ -121,54 +146,110 @@
    "needs_review": true,
    "confidence": "proxy",
    "source_note": "Stand-in: Fried rice",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "ingredients": [
+    "rice",
+    "vegetable_oil",
+    "carrot",
+    "egg"
+   ],
+   "people": [
+    "All"
+   ]
   },
   {
    "id": "omo_tuo",
    "name": "Omo tuo (rice balls)",
    "aliases": [
-    "rice balls",
-    "omotuo"
+    "omotuo",
+    "rice balls"
    ],
    "category": "staple",
-   "detail": "Mashed rice balls",
-   "kcal_per_100g": 130,
-   "protein_g": 2.5,
-   "carbs_g": 29,
-   "fat_g": 0.3,
+   "detail": "Soft-cooked rice, shaped into balls",
+   "kcal_per_100g": 118.0,
+   "protein_g": 2.3,
+   "carbs_g": 26.4,
+   "fat_g": 0.2,
    "typical_portion_g": 250,
    "typical_portion_label": "2 balls",
    "count_g": null,
    "oily": false,
    "greens": false,
    "region": "GH",
-   "source": "estimate:not-in-published-tables",
+   "source": "recipe:omo_tuo",
    "needs_review": true,
-   "confidence": "estimate",
-   "portion_source": "PlateWise default"
+   "confidence": "calculated",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "people": [
+    "Akan",
+    "Mole-Dagbani",
+    "Hausa / Zongo"
+   ],
+   "ingredients": [
+    "rice"
+   ],
+   "recipe": {
+    "parts": [
+     {
+      "wafct": "01_069",
+      "name": "Rice, white, polished, boiled",
+      "g": 100
+     }
+    ],
+    "cooked_g": 100,
+    "note": "boiled white rice (WAFCT 01_069), mashed"
+   }
   },
   {
    "id": "banku",
    "name": "Banku",
    "aliases": [
-    "akple"
+    "akple",
+    "banku"
    ],
    "category": "staple",
-   "detail": "Fermented corn and cassava",
-   "kcal_per_100g": 115,
-   "protein_g": 2,
-   "carbs_g": 25,
-   "fat_g": 0.8,
+   "detail": "Fermented corn and cassava dough",
+   "kcal_per_100g": 127.5,
+   "protein_g": 2.8,
+   "carbs_g": 24.8,
+   "fat_g": 1.1,
    "typical_portion_g": 350,
    "typical_portion_label": "1 ball",
    "count_g": null,
    "oily": false,
    "greens": false,
    "region": "GH",
-   "source": "estimate:not-in-published-tables",
+   "source": "recipe:banku",
    "needs_review": true,
-   "confidence": "estimate",
-   "portion_source": "PlateWise default"
+   "confidence": "calculated",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "people": [
+    "Ga-Adangbe",
+    "Ewe",
+    "Akan"
+   ],
+   "ingredients": [
+    "maize_meal",
+    "cassava_flour"
+   ],
+   "recipe": {
+    "parts": [
+     {
+      "wafct": "01_057",
+      "name": "Maize, white, meal, whole grains",
+      "g": 75
+     },
+     {
+      "wafct": "02_004",
+      "name": "Cassava, flour, from white cassava",
+      "g": 25
+     }
+    ],
+    "cooked_g": 270,
+    "note": "dry flours 3:1 corn:cassava, cooked to the firmness of WAFCT's stiff maize porridge (01_105)"
+   }
   },
   {
    "id": "kenkey",
@@ -194,7 +275,12 @@
    "source": "WAFCT2019:01_099",
    "needs_review": false,
    "confidence": "primary",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "Ga-Adangbe",
+    "Akan"
+   ],
+   "ingredients": []
   },
   {
    "id": "fufu",
@@ -219,7 +305,11 @@
    "needs_review": true,
    "confidence": "proxy",
    "source_note": "Stand-in: Foutou, cassava + unripe plantain",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "Akan"
+   ],
+   "ingredients": []
   },
   {
    "id": "tuo_zaafi",
@@ -243,20 +333,26 @@
    "source": "WAFCT2019:01_146",
    "needs_review": false,
    "confidence": "calculated",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "Mole-Dagbani"
+   ],
+   "ingredients": []
   },
   {
    "id": "kokonte",
    "name": "Kokonte",
    "aliases": [
+    "face the wall",
+    "kokonte",
     "konkonte",
-    "face the wall"
+    "lapiwa"
    ],
    "category": "staple",
-   "detail": "Dried cassava dough",
-   "kcal_per_100g": 120,
-   "protein_g": 1,
-   "carbs_g": 29,
+   "detail": "Cassava flour stiff porridge",
+   "kcal_per_100g": 126.2,
+   "protein_g": 0.6,
+   "carbs_g": 29.6,
    "fat_g": 0.3,
    "typical_portion_g": 300,
    "typical_portion_label": "1 ball",
@@ -264,10 +360,29 @@
    "oily": false,
    "greens": false,
    "region": "GH",
-   "source": "estimate:not-in-published-tables",
+   "source": "recipe:kokonte",
    "needs_review": true,
-   "confidence": "estimate",
-   "portion_source": "PlateWise default"
+   "confidence": "calculated",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "people": [
+    "Akan",
+    "Mole-Dagbani"
+   ],
+   "ingredients": [
+    "cassava_flour"
+   ],
+   "recipe": {
+    "parts": [
+     {
+      "wafct": "02_004",
+      "name": "Cassava, flour, from white cassava",
+      "g": 100
+     }
+    ],
+    "cooked_g": 270,
+    "note": "cassava flour cooked to the firmness of WAFCT's stiff maize porridge (01_105)"
+   }
   },
   {
    "id": "yam",
@@ -291,7 +406,11 @@
    "source": "WAFCT2019:02_020",
    "needs_review": false,
    "confidence": "calculated",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "ampesi",
@@ -315,7 +434,11 @@
    "source": "WAFCT2019:02_064",
    "needs_review": false,
    "confidence": "calculated",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "Akan"
+   ],
+   "ingredients": []
   },
   {
    "id": "kelewele",
@@ -339,7 +462,16 @@
    "needs_review": true,
    "confidence": "proxy",
    "source_note": "Stand-in: Kelewele",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "Ga-Adangbe",
+    "Akan"
+   ],
+   "ingredients": [
+    "fried_plantain",
+    "ginger",
+    "chilli"
+   ]
   },
   {
    "id": "fried_plantain",
@@ -363,7 +495,11 @@
    "source": "WAFCT2019:02_084",
    "needs_review": false,
    "confidence": "calculated",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "red_red",
@@ -389,7 +525,16 @@
    "needs_review": true,
    "confidence": "proxy",
    "source_note": "Stand-in: Red-red",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "Akan",
+    "All"
+   ],
+   "ingredients": [
+    "beans",
+    "palm_oil",
+    "fried_plantain"
+   ]
   },
   {
    "id": "gari",
@@ -412,7 +557,11 @@
    "source": "WAFCT2019:02_039",
    "needs_review": false,
    "confidence": "primary",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "talia",
@@ -436,7 +585,11 @@
    "source": "WAFCT2019:01_053",
    "needs_review": false,
    "confidence": "calculated",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "indomie",
@@ -460,7 +613,11 @@
    "source": "WAFCT2019:01_103",
    "needs_review": false,
    "confidence": "calculated",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "bread",
@@ -485,7 +642,11 @@
    "source": "WAFCT2019:01_046",
    "needs_review": false,
    "confidence": "primary",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "light_soup",
@@ -509,7 +670,16 @@
    "source": "Appiah2020:Table2:LS1",
    "needs_review": false,
    "confidence": "primary",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "Akan",
+    "All"
+   ],
+   "ingredients": [
+    "tomato",
+    "onion",
+    "chilli"
+   ]
   },
   {
    "id": "groundnut_soup",
@@ -533,7 +703,15 @@
    "source": "Appiah2020:Table2:GS1",
    "needs_review": false,
    "confidence": "primary",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": [
+    "groundnut_paste",
+    "tomato",
+    "onion"
+   ]
   },
   {
    "id": "palmnut_soup",
@@ -557,7 +735,16 @@
    "source": "Appiah2020:Table2:PS1",
    "needs_review": false,
    "confidence": "primary",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "Akan",
+    "All"
+   ],
+   "ingredients": [
+    "palm_oil",
+    "tomato",
+    "onion"
+   ]
   },
   {
    "id": "okro",
@@ -582,7 +769,17 @@
    "needs_review": true,
    "confidence": "proxy",
    "source_note": "Stand-in: Okro soup, fresh, palm oil",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "Ewe",
+    "Ga-Adangbe",
+    "All"
+   ],
+   "ingredients": [
+    "okra_fruit",
+    "palm_oil",
+    "crab"
+   ]
   },
   {
    "id": "kontomire",
@@ -607,7 +804,16 @@
    "needs_review": true,
    "confidence": "proxy",
    "source_note": "Stand-in: Kontomire stew (palm oil)",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "Akan"
+   ],
+   "ingredients": [
+    "kontomire_leaves",
+    "palm_oil",
+    "agushie_seeds",
+    "egg"
+   ]
   },
   {
    "id": "garden_egg",
@@ -632,7 +838,16 @@
    "needs_review": true,
    "confidence": "proxy",
    "source_note": "Stand-in: Garden egg stew",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "ingredients": [
+    "garden_egg_fruit",
+    "palm_oil",
+    "tomato",
+    "onion"
+   ],
+   "people": [
+    "All"
+   ]
   },
   {
    "id": "pepper_stew",
@@ -658,80 +873,212 @@
    "needs_review": true,
    "confidence": "proxy",
    "source_note": "Stand-in: Red/tomato stew, meat (also jollof gravy)",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "ingredients": [
+    "tomato",
+    "onion",
+    "vegetable_oil"
+   ],
+   "people": [
+    "All"
+   ]
   },
   {
    "id": "shito",
    "name": "Shito",
    "aliases": [
     "black pepper sauce",
+    "hot pepper sauce",
+    "shito",
     "shitor"
    ],
    "category": "sauce",
-   "detail": "Oil-based black pepper sauce",
-   "kcal_per_100g": 550,
-   "protein_g": 10,
-   "carbs_g": 10,
-   "fat_g": 52,
+   "detail": "Black pepper sauce of oil, dried fish and shrimp",
+   "kcal_per_100g": 560.9,
+   "protein_g": 19.6,
+   "carbs_g": 10.8,
+   "fat_g": 47.6,
    "typical_portion_g": 15,
    "typical_portion_label": "1 tbsp",
    "count_g": null,
    "oily": true,
    "greens": false,
    "region": "GH",
-   "source": "estimate:not-in-published-tables",
+   "source": "recipe:shito",
    "needs_review": true,
-   "confidence": "estimate",
-   "portion_source": "PlateWise default"
+   "confidence": "calculated",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "people": [
+    "Ga-Adangbe",
+    "All"
+   ],
+   "ingredients": [
+    "dried_chilli",
+    "dried_fish",
+    "vegetable_oil",
+    "onion"
+   ],
+   "recipe": {
+    "parts": [
+     {
+      "wafct": "11_010",
+      "name": "Vegetable oil, unfortified",
+      "g": 200
+     },
+     {
+      "wafct": "09_057",
+      "name": "Shrimp (crayfish), whole, dried",
+      "g": 60
+     },
+     {
+      "wafct": "09_053",
+      "name": "Fish, whole, dried",
+      "g": 60
+     },
+     {
+      "wafct": "13_006",
+      "name": "Chilli pepper, dried",
+      "g": 50
+     },
+     {
+      "wafct": "04_018",
+      "name": "Onion, fresh, raw",
+      "g": 200
+     },
+     {
+      "wafct": "04_082",
+      "name": "Ginger, root, raw",
+      "g": 40
+     },
+     {
+      "wafct": "04_015",
+      "name": "Garlic, flesh, raw",
+      "g": 30
+     },
+     {
+      "wafct": "04_066",
+      "name": "Tomato, paste, concentrated, without salt",
+      "g": 70
+     }
+    ],
+    "cooked_g": 454,
+    "note": "90% of the water in the onion, ginger, garlic and tomato paste fries off"
+   }
   },
   {
    "id": "fresh_pepper",
    "name": "Fresh pepper",
    "aliases": [
+    "blended pepper",
+    "fresh pepper",
     "ground pepper",
+    "kpakpo shito sauce",
     "pepper sauce",
     "raw pepper"
    ],
    "category": "sauce",
-   "detail": "Tomato, onion, pepper",
-   "kcal_per_100g": 35,
-   "protein_g": 1.5,
-   "carbs_g": 7,
-   "fat_g": 0.4,
+   "detail": "Raw ground tomato, pepper and onion",
+   "kcal_per_100g": 30.0,
+   "protein_g": 1.2,
+   "carbs_g": 5.0,
+   "fat_g": 0.2,
    "typical_portion_g": 50,
    "typical_portion_label": "1 small dish",
    "count_g": null,
    "oily": false,
    "greens": false,
    "region": "GH",
-   "source": "estimate:not-in-published-tables",
+   "source": "recipe:fresh_pepper",
    "needs_review": true,
-   "confidence": "estimate",
-   "portion_source": "PlateWise default"
+   "confidence": "calculated",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "people": [
+    "All"
+   ],
+   "ingredients": [
+    "tomato",
+    "chilli",
+    "onion"
+   ],
+   "recipe": {
+    "parts": [
+     {
+      "wafct": "04_021",
+      "name": "Tomato, red, ripe, raw",
+      "g": 60
+     },
+     {
+      "wafct": "04_046",
+      "name": "Pepper, chilli, fresh, raw",
+      "g": 20
+     },
+     {
+      "wafct": "04_018",
+      "name": "Onion, fresh, raw",
+      "g": 20
+     }
+    ],
+    "cooked_g": 100,
+    "note": "raw, nothing cooks off"
+   }
   },
   {
    "id": "vegetables",
    "name": "Mixed vegetables",
    "aliases": [
+    "boiled vegetables",
+    "mixed vegetables",
     "veg",
-    "vegetables"
+    "vegetables",
+    "veggies"
    ],
    "category": "side",
-   "detail": "Steamed or raw vegetables",
-   "kcal_per_100g": 35,
-   "protein_g": 2,
-   "carbs_g": 7,
-   "fat_g": 0.3,
+   "detail": "Cabbage, carrot and green beans, boiled",
+   "kcal_per_100g": 35.6,
+   "protein_g": 1.6,
+   "carbs_g": 5.1,
+   "fat_g": 0.2,
    "typical_portion_g": 100,
    "typical_portion_label": "1 cup",
    "count_g": null,
    "oily": false,
    "greens": true,
    "region": "GH",
-   "source": "estimate:not-in-published-tables",
+   "source": "recipe:vegetables",
    "needs_review": true,
-   "confidence": "estimate",
-   "portion_source": "PlateWise default"
+   "confidence": "calculated",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "people": [
+    "All"
+   ],
+   "ingredients": [
+    "cabbage",
+    "carrot"
+   ],
+   "recipe": {
+    "parts": [
+     {
+      "wafct": "04_089",
+      "name": "Cabbage, white, boiled",
+      "g": 34
+     },
+     {
+      "wafct": "04_007",
+      "name": "Carrot, boiled",
+      "g": 33
+     },
+     {
+      "wafct": "04_026",
+      "name": "Bean, green, boiled",
+      "g": 33
+     }
+    ],
+    "cooked_g": 100,
+    "note": "the cooked values of each vegetable, equal parts"
+   }
   },
   {
    "id": "salad",
@@ -755,7 +1102,17 @@
    "source": "estimate:not-in-published-tables",
    "needs_review": true,
    "confidence": "estimate",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "ingredients": [
+    "lettuce",
+    "cabbage",
+    "tomato",
+    "cucumber",
+    "carrot"
+   ],
+   "people": [
+    "All"
+   ]
   },
   {
    "id": "hausa_koko",
@@ -779,7 +1136,13 @@
    "source": "WAFCT2019:01_102",
    "needs_review": false,
    "confidence": "primary",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "Hausa / Zongo",
+    "Mole-Dagbani",
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "koose",
@@ -805,7 +1168,12 @@
    "needs_review": true,
    "confidence": "proxy",
    "source_note": "Stand-in: Koose",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "Hausa / Zongo",
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "bofrot",
@@ -830,7 +1198,11 @@
    "needs_review": true,
    "confidence": "proxy",
    "source_note": "Stand-in: Bofrot / puff-puff",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "rice_water",
@@ -854,7 +1226,11 @@
    "needs_review": true,
    "confidence": "proxy",
    "source_note": "Stand-in: Rice water (rice porridge, milk, sugar)",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "oats",
@@ -878,7 +1254,11 @@
    "source": "WAFCT2019:01_133",
    "needs_review": false,
    "confidence": "calculated",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "tilapia",
@@ -902,7 +1282,11 @@
    "source": "WAFCT2019:09_043",
    "needs_review": false,
    "confidence": "calculated",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "fried_fish",
@@ -925,7 +1309,11 @@
    "source": "estimate:not-in-published-tables",
    "needs_review": true,
    "confidence": "estimate",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "chicken",
@@ -949,7 +1337,11 @@
    "source": "WAFCT2019:07_032",
    "needs_review": false,
    "confidence": "calculated",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "fried_chicken",
@@ -971,7 +1363,11 @@
    "needs_review": true,
    "confidence": "proxy",
    "source_note": "Stand-in: Fried chicken",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "goat",
@@ -994,7 +1390,11 @@
    "source": "WAFCT2019:07_112",
    "needs_review": false,
    "confidence": "calculated",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "beef",
@@ -1018,7 +1418,11 @@
    "source": "WAFCT2019:07_086",
    "needs_review": false,
    "confidence": "calculated",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "wele",
@@ -1043,7 +1447,11 @@
    "source": "estimate:not-in-published-tables",
    "needs_review": true,
    "confidence": "estimate",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "chichinga",
@@ -1068,7 +1476,12 @@
    "source": "estimate:not-in-published-tables",
    "needs_review": true,
    "confidence": "estimate",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "Hausa / Zongo",
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "egg",
@@ -1092,7 +1505,11 @@
    "source": "WAFCT2019:08_002",
    "needs_review": false,
    "confidence": "calculated",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "fried_egg",
@@ -1116,7 +1533,11 @@
    "source": "WAFCT2019:08_003",
    "needs_review": false,
    "confidence": "primary",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "beans",
@@ -1140,7 +1561,11 @@
    "source": "WAFCT2019:03_007",
    "needs_review": false,
    "confidence": "calculated",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "avocado",
@@ -1164,7 +1589,11 @@
    "source": "WAFCT2019:05_002",
    "needs_review": false,
    "confidence": "primary",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "groundnuts",
@@ -1188,7 +1617,11 @@
    "needs_review": true,
    "confidence": "proxy",
    "source_note": "Stand-in: Groundnuts, dry-roasted",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "banana",
@@ -1209,7 +1642,11 @@
    "source": "WAFCT2019:05_028",
    "needs_review": false,
    "confidence": "primary",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "orange",
@@ -1230,7 +1667,11 @@
    "source": "WAFCT2019:05_016",
    "needs_review": false,
    "confidence": "primary",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "pineapple",
@@ -1251,7 +1692,11 @@
    "source": "WAFCT2019:05_018",
    "needs_review": false,
    "confidence": "primary",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "pawpaw",
@@ -1274,7 +1719,11 @@
    "source": "WAFCT2019:05_017",
    "needs_review": false,
    "confidence": "primary",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "mango",
@@ -1295,7 +1744,11 @@
    "source": "WAFCT2019:05_015",
    "needs_review": false,
    "confidence": "primary",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "milo",
@@ -1320,30 +1773,61 @@
    "needs_review": true,
    "confidence": "proxy",
    "source_note": "Stand-in: Milo with whole milk, no sugar",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "tea",
    "name": "Tea with milk and sugar",
    "aliases": [
-    "lipton"
+    "lipton",
+    "tea"
    ],
    "category": "drink",
-   "detail": "Sweet milky tea",
-   "kcal_per_100g": 40,
-   "protein_g": 1,
-   "carbs_g": 7,
-   "fat_g": 1,
+   "detail": "Tea with evaporated milk and 2 tsp sugar",
+   "kcal_per_100g": 30.0,
+   "protein_g": 0.9,
+   "carbs_g": 4.8,
+   "fat_g": 0.9,
    "typical_portion_g": 250,
    "typical_portion_label": "1 mug",
    "count_g": null,
    "oily": false,
    "greens": false,
    "region": "GH",
-   "source": "estimate:not-in-published-tables",
+   "source": "recipe:tea",
    "needs_review": true,
-   "confidence": "estimate",
-   "portion_source": "PlateWise default"
+   "confidence": "calculated",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "people": [
+    "All"
+   ],
+   "ingredients": [],
+   "recipe": {
+    "parts": [
+     {
+      "wafct": "12_008",
+      "name": "Tea, infusion",
+      "g": 250
+     },
+     {
+      "wafct": "10_016",
+      "name": "Milk, cow, canned, evaporated",
+      "g": 30
+     },
+     {
+      "wafct": "13_002",
+      "name": "Sugar, white",
+      "g": 10
+     }
+    ],
+    "cooked_g": 290,
+    "note": "nothing evaporates"
+   }
   },
   {
    "id": "malt",
@@ -1368,7 +1852,11 @@
    "needs_review": true,
    "confidence": "proxy",
    "source_note": "Stand-in: Malta Guinness (per 100 ml)",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "soda",
@@ -1394,7 +1882,11 @@
    "source": "WAFCT2019:12_024",
    "needs_review": false,
    "confidence": "primary",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "sobolo",
@@ -1406,20 +1898,25 @@
    ],
    "category": "drink",
    "detail": "Hibiscus drink",
-   "kcal_per_100g": 45,
-   "protein_g": 0,
-   "carbs_g": 11,
-   "fat_g": 0,
+   "kcal_per_100g": 48.0,
+   "protein_g": 0.1,
+   "carbs_g": 11.5,
+   "fat_g": 0.1,
    "typical_portion_g": 300,
    "typical_portion_label": "1 cup",
    "count_g": null,
    "oily": false,
    "greens": false,
    "region": "GH",
-   "source": "estimate:not-in-published-tables",
+   "source": "WAFCT2019:12_012",
    "needs_review": true,
-   "confidence": "estimate",
-   "portion_source": "PlateWise default"
+   "confidence": "proxy",
+   "portion_source": "PlateWise default",
+   "source_note": "Stand-in: Juice, canned or bottled, sweetened (e.g. apple)",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "yogurt",
@@ -1444,7 +1941,11 @@
    "needs_review": true,
    "confidence": "proxy",
    "source_note": "Stand-in: Yoghurt, sweetened (FanYogo proxy)",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "pizza",
@@ -1465,7 +1966,11 @@
    "source": "estimate:not-in-published-tables",
    "needs_review": true,
    "confidence": "estimate",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "burger",
@@ -1488,7 +1993,11 @@
    "source": "estimate:not-in-published-tables",
    "needs_review": true,
    "confidence": "estimate",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "fries",
@@ -1499,20 +2008,24 @@
    ],
    "category": "fast_food",
    "detail": "Fried potato",
-   "kcal_per_100g": 312,
-   "protein_g": 3.4,
-   "carbs_g": 41,
-   "fat_g": 15,
+   "kcal_per_100g": 241.0,
+   "protein_g": 2.6,
+   "carbs_g": 30.3,
+   "fat_g": 11.5,
    "typical_portion_g": 120,
    "typical_portion_label": "1 portion",
    "count_g": null,
    "oily": true,
    "greens": false,
    "region": "GH",
-   "source": "estimate:not-in-published-tables",
-   "needs_review": true,
-   "confidence": "estimate",
-   "portion_source": "PlateWise default"
+   "source": "WAFCT2019:02_081",
+   "needs_review": false,
+   "confidence": "calculated",
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "eba",
@@ -1536,7 +2049,11 @@
    "confidence": "proxy",
    "needs_review": true,
    "source_note": "Stand-in: Eba",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "akple",
@@ -1560,7 +2077,11 @@
    "confidence": "proxy",
    "needs_review": true,
    "source_note": "Stand-in: Akple",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "Ewe"
+   ],
+   "ingredients": []
   },
   {
    "id": "oblayo",
@@ -1586,7 +2107,11 @@
    "confidence": "proxy",
    "needs_review": true,
    "source_note": "Stand-in: Oblayo (maize porridge)",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "Ga-Adangbe"
+   ],
+   "ingredients": []
   },
   {
    "id": "cocoyam",
@@ -1610,7 +2135,11 @@
    "source": "WAFCT2019:02_006",
    "confidence": "calculated",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "cassava",
@@ -1634,7 +2163,11 @@
    "source": "WAFCT2019:02_003",
    "confidence": "calculated",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "water_yam",
@@ -1657,7 +2190,11 @@
    "source": "WAFCT2019:02_018",
    "confidence": "calculated",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "roasted_plantain",
@@ -1683,7 +2220,11 @@
    "confidence": "proxy",
    "needs_review": true,
    "source_note": "Stand-in: Roasted plantain (kofi brokeman)",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "plantain_chips",
@@ -1707,7 +2248,11 @@
    "confidence": "proxy",
    "needs_review": true,
    "source_note": "Stand-in: Plantain chips",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "fried_yam",
@@ -1731,7 +2276,11 @@
    "source": "WAFCT2019:02_082",
    "confidence": "calculated",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "light_soup_fish",
@@ -1755,7 +2304,16 @@
    "confidence": "proxy",
    "needs_review": true,
    "source_note": "Stand-in: Light soup with fish",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "ingredients": [
+    "tomato",
+    "onion",
+    "chilli",
+    "tilapia"
+   ],
+   "people": [
+    "All"
+   ]
   },
   {
    "id": "groundnut_soup_chicken",
@@ -1778,7 +2336,15 @@
    "source": "Appiah2020:Table2:GS2",
    "confidence": "primary",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "ingredients": [
+    "groundnut_paste",
+    "chicken",
+    "tomato"
+   ],
+   "people": [
+    "All"
+   ]
   },
   {
    "id": "palmnut_soup_fish",
@@ -1801,7 +2367,14 @@
    "source": "Appiah2020:Table2:PS2",
    "confidence": "primary",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "ingredients": [
+    "palm_oil",
+    "smoked_herring"
+   ],
+   "people": [
+    "All"
+   ]
   },
   {
    "id": "okro_dry",
@@ -1825,7 +2398,14 @@
    "confidence": "proxy",
    "needs_review": true,
    "source_note": "Stand-in: Dry okro soup with beef, palm oil",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "ingredients": [
+    "dried_okra",
+    "beef"
+   ],
+   "people": [
+    "All"
+   ]
   },
   {
    "id": "ayoyo",
@@ -1851,7 +2431,16 @@
    "confidence": "proxy",
    "needs_review": true,
    "source_note": "Stand-in: Ayoyo (jute leaf) soup, fish, palm oil",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "Mole-Dagbani",
+    "Ewe"
+   ],
+   "ingredients": [
+    "ayoyo_leaves",
+    "dawadawa",
+    "dried_fish"
+   ]
   },
   {
    "id": "palava_sauce",
@@ -1875,7 +2464,17 @@
    "confidence": "proxy",
    "needs_review": true,
    "source_note": "Stand-in: Palava sauce",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "Akan",
+    "All"
+   ],
+   "ingredients": [
+    "kontomire_leaves",
+    "agushie_seeds",
+    "palm_oil",
+    "smoked_herring"
+   ]
   },
   {
    "id": "agushie",
@@ -1900,7 +2499,15 @@
    "confidence": "proxy",
    "needs_review": true,
    "source_note": "Stand-in: Egusi (agushie) stew",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "ingredients": [
+    "agushie_seeds",
+    "tomato",
+    "palm_oil"
+   ],
+   "people": [
+    "All"
+   ]
   },
   {
    "id": "fante_fante",
@@ -1925,7 +2532,15 @@
    "confidence": "proxy",
    "needs_review": true,
    "source_note": "Stand-in: Fante fante (fish in palm oil)",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "Akan"
+   ],
+   "ingredients": [
+    "palm_oil",
+    "tomato",
+    "dried_fish"
+   ]
   },
   {
    "id": "beans_stew",
@@ -1949,7 +2564,15 @@
    "confidence": "proxy",
    "needs_review": true,
    "source_note": "Stand-in: Beans stew",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "ingredients": [
+    "beans",
+    "palm_oil",
+    "tomato"
+   ],
+   "people": [
+    "All"
+   ]
   },
   {
    "id": "mackerel",
@@ -1973,7 +2596,11 @@
    "source": "WAFCT2019:09_025",
    "confidence": "calculated",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "kpanla",
@@ -1996,7 +2623,11 @@
    "source": "WAFCT2019:09_071",
    "confidence": "calculated",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "redfish",
@@ -2020,7 +2651,11 @@
    "confidence": "proxy",
    "needs_review": true,
    "source_note": "Stand-in: Redfish",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "smoked_anchovy",
@@ -2044,7 +2679,11 @@
    "source": "PLOSONE2020:Table2",
    "confidence": "calculated",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "Ewe"
+   ],
+   "ingredients": []
   },
   {
    "id": "smoked_herring",
@@ -2069,7 +2708,11 @@
    "source": "PLOSONE2020:Table2",
    "confidence": "calculated",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "salted_tilapia",
@@ -2093,7 +2736,11 @@
    "source": "PLOSONE2020:Table2",
    "confidence": "calculated",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "dried_shrimp",
@@ -2117,7 +2764,11 @@
    "source": "WAFCT2019:09_057",
    "confidence": "primary",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "crab",
@@ -2140,7 +2791,11 @@
    "source": "WAFCT2019:09_098",
    "confidence": "calculated",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "snail",
@@ -2164,7 +2819,11 @@
    "source": "WAFCT2019:07_084",
    "confidence": "primary",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "guinea_fowl",
@@ -2187,7 +2846,11 @@
    "source": "WAFCT2019:07_117",
    "confidence": "calculated",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "Mole-Dagbani"
+   ],
+   "ingredients": []
   },
   {
    "id": "tripe",
@@ -2211,7 +2874,11 @@
    "source": "WAFCT2019:07_022",
    "confidence": "calculated",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "corned_beef",
@@ -2234,7 +2901,11 @@
    "source": "WAFCT2019:07_025",
    "confidence": "primary",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "omelette",
@@ -2258,7 +2929,15 @@
    "source": "WAFCT2019:08_004",
    "confidence": "primary",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "ingredients": [
+    "egg",
+    "onion",
+    "tomato"
+   ],
+   "people": [
+    "All"
+   ]
   },
   {
    "id": "soya_beans",
@@ -2281,7 +2960,11 @@
    "source": "WAFCT2019:03_040",
    "confidence": "calculated",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "bambara_beans",
@@ -2305,7 +2988,12 @@
    "source": "WAFCT2019:03_019",
    "confidence": "calculated",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "Mole-Dagbani",
+    "Akan"
+   ],
+   "ingredients": []
   },
   {
    "id": "chin_chin",
@@ -2329,7 +3017,11 @@
    "confidence": "proxy",
    "needs_review": true,
    "source_note": "Stand-in: Chin chin",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "meat_pie",
@@ -2353,7 +3045,11 @@
    "confidence": "proxy",
    "needs_review": true,
    "source_note": "Stand-in: Meat pie",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "boiled_corn",
@@ -2377,7 +3073,11 @@
    "source": "WAFCT2019:04_108",
    "confidence": "calculated",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "roasted_corn",
@@ -2402,7 +3102,11 @@
    "confidence": "proxy",
    "needs_review": true,
    "source_note": "Stand-in: Roasted corn",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "tiger_nuts",
@@ -2426,7 +3130,12 @@
    "source": "WAFCT2019:02_024",
    "confidence": "primary",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "Akan",
+    "Mole-Dagbani"
+   ],
+   "ingredients": []
   },
   {
    "id": "coconut",
@@ -2449,7 +3158,11 @@
    "source": "WAFCT2019:06_002",
    "confidence": "primary",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "watermelon",
@@ -2472,7 +3185,11 @@
    "source": "WAFCT2019:05_022",
    "confidence": "primary",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "palm_wine",
@@ -2496,7 +3213,13 @@
    "source": "WAFCT2019:12_006",
    "confidence": "primary",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "Akan",
+    "Ewe",
+    "Nzema / Ahanta"
+   ],
+   "ingredients": []
   },
   {
    "id": "pito",
@@ -2519,7 +3242,11 @@
    "source": "WAFCT2019:12_003",
    "confidence": "primary",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "Mole-Dagbani"
+   ],
+   "ingredients": []
   },
   {
    "id": "brukina",
@@ -2542,7 +3269,12 @@
    "source": "KNUST-brukina",
    "confidence": "calculated",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "Hausa / Zongo",
+    "Mole-Dagbani"
+   ],
+   "ingredients": []
   },
   {
    "id": "fula",
@@ -2567,7 +3299,12 @@
    "confidence": "proxy",
    "needs_review": true,
    "source_note": "Stand-in: Fula / zoomkom",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "Hausa / Zongo",
+    "Mole-Dagbani"
+   ],
+   "ingredients": []
   },
   {
    "id": "beer",
@@ -2593,7 +3330,11 @@
    "confidence": "proxy",
    "needs_review": true,
    "source_note": "Stand-in: Club / Star lager (4.6% abv)",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "stout",
@@ -2616,7 +3357,11 @@
    "source": "WAFCT2019:12_020",
    "confidence": "primary",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "coconut_water",
@@ -2639,7 +3384,11 @@
    "source": "WAFCT2019:12_023",
    "confidence": "primary",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "orange_juice",
@@ -2662,7 +3411,11 @@
    "source": "WAFCT2019:12_011",
    "confidence": "primary",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "evaporated_milk",
@@ -2686,7 +3439,11 @@
    "source": "WAFCT2019:10_016",
    "confidence": "primary",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "fanice",
@@ -2711,7 +3468,11 @@
    "confidence": "proxy",
    "needs_review": true,
    "source_note": "Stand-in: FanIce pouch, vanilla (per 100 ml)",
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
   },
   {
    "id": "sugar",
@@ -2734,13 +3495,4599 @@
    "source": "WAFCT2019:13_002",
    "confidence": "primary",
    "needs_review": false,
-   "portion_source": "PlateWise default"
+   "portion_source": "PlateWise default",
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "palm_oil",
+   "name": "Palm oil (red)",
+   "aliases": [
+    "zomi",
+    "red oil",
+    "palm oil"
+   ],
+   "category": "ingredient",
+   "detail": "Palm oil, red",
+   "kcal_per_100g": 898.0,
+   "protein_g": 0.0,
+   "carbs_g": 0.0,
+   "fat_g": 99.8,
+   "typical_portion_g": 14,
+   "typical_portion_label": "1 tbsp",
+   "count_g": null,
+   "oily": true,
+   "greens": false,
+   "source": "WAFCT2019:11_004",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "vegetable_oil",
+   "name": "Vegetable oil",
+   "aliases": [
+    "cooking oil",
+    "frytol",
+    "oil"
+   ],
+   "category": "ingredient",
+   "detail": "Vegetable oil, unfortified",
+   "kcal_per_100g": 900.0,
+   "protein_g": 0.0,
+   "carbs_g": 0.0,
+   "fat_g": 100.0,
+   "typical_portion_g": 14,
+   "typical_portion_label": "1 tbsp",
+   "count_g": null,
+   "oily": true,
+   "greens": false,
+   "source": "WAFCT2019:11_010",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "groundnut_oil",
+   "name": "Groundnut oil",
+   "aliases": [
+    "peanut oil",
+    "nkate ngo"
+   ],
+   "category": "ingredient",
+   "detail": "Groundnut oil, unfortified",
+   "kcal_per_100g": 900.0,
+   "protein_g": 0.0,
+   "carbs_g": 0.0,
+   "fat_g": 100.0,
+   "typical_portion_g": 14,
+   "typical_portion_label": "1 tbsp",
+   "count_g": null,
+   "oily": true,
+   "greens": false,
+   "source": "WAFCT2019:11_003",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "coconut_oil",
+   "name": "Coconut oil",
+   "aliases": [
+    "kube ngo"
+   ],
+   "category": "ingredient",
+   "detail": "Coconut oil, unfortified",
+   "kcal_per_100g": 900.0,
+   "protein_g": 0.0,
+   "carbs_g": 0.0,
+   "fat_g": 100.0,
+   "typical_portion_g": 14,
+   "typical_portion_label": "1 tbsp",
+   "count_g": null,
+   "oily": true,
+   "greens": false,
+   "source": "WAFCT2019:11_002",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "palm_kernel_oil",
+   "name": "Palm kernel oil",
+   "aliases": [
+    "adwe ngo"
+   ],
+   "category": "ingredient",
+   "detail": "Palm kernel oil, unfortified",
+   "kcal_per_100g": 900.0,
+   "protein_g": 0.0,
+   "carbs_g": 0.0,
+   "fat_g": 100.0,
+   "typical_portion_g": 14,
+   "typical_portion_label": "1 tbsp",
+   "count_g": null,
+   "oily": true,
+   "greens": false,
+   "source": "WAFCT2019:11_012",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "shea_butter",
+   "name": "Shea butter",
+   "aliases": [
+    "nkuto",
+    "kpaam"
+   ],
+   "category": "ingredient",
+   "detail": "Shea butter, white",
+   "kcal_per_100g": 900.0,
+   "protein_g": 0.0,
+   "carbs_g": 0.0,
+   "fat_g": 100.0,
+   "typical_portion_g": 14,
+   "typical_portion_label": "1 tbsp",
+   "count_g": null,
+   "oily": true,
+   "greens": false,
+   "source": "WAFCT2019:11_008",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "butter",
+   "name": "Butter",
+   "aliases": [
+    "blue band",
+    "margarine"
+   ],
+   "category": "ingredient",
+   "detail": "Butter, from cow’s milk, salted",
+   "kcal_per_100g": 739.0,
+   "protein_g": 1.0,
+   "carbs_g": 0.2,
+   "fat_g": 81.5,
+   "typical_portion_g": 5,
+   "typical_portion_label": "1 tsp",
+   "count_g": null,
+   "oily": true,
+   "greens": false,
+   "source": "WAFCT2019:11_011",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "groundnut_paste",
+   "name": "Groundnut paste",
+   "aliases": [
+    "nkate kwan paste",
+    "groundnut butter",
+    "peanut butter",
+    "nkatie paste"
+   ],
+   "category": "ingredient",
+   "detail": "Groundnut paste, from groundnuts only",
+   "kcal_per_100g": 605.0,
+   "protein_g": 23.9,
+   "carbs_g": 11.0,
+   "fat_g": 49.9,
+   "typical_portion_g": 16,
+   "typical_portion_label": "1 tbsp",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:06_026",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "agushie_seeds",
+   "name": "Agushie (melon seeds)",
+   "aliases": [
+    "egusi seeds",
+    "akatoa",
+    "ground agushie"
+   ],
+   "category": "ingredient",
+   "detail": "Melon seed (citrullus spp.), kernel only, dried, raw",
+   "kcal_per_100g": 565.0,
+   "protein_g": 19.5,
+   "carbs_g": 19.0,
+   "fat_g": 44.4,
+   "typical_portion_g": 10,
+   "typical_portion_label": "1 tbsp",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:06_035",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "sesame",
+   "name": "Sesame seeds",
+   "aliases": [
+    "benniseed",
+    "sesame"
+   ],
+   "category": "ingredient",
+   "detail": "Sesame seed, whole, dried, raw",
+   "kcal_per_100g": 601.0,
+   "protein_g": 16.6,
+   "carbs_g": 4.9,
+   "fat_g": 54.1,
+   "typical_portion_g": 9,
+   "typical_portion_label": "1 tbsp",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:06_015",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "coconut_milk",
+   "name": "Coconut milk",
+   "aliases": [
+    "kube nsuo"
+   ],
+   "category": "ingredient",
+   "detail": "Coconut milk, fresh or canned",
+   "kcal_per_100g": 201.0,
+   "protein_g": 0.1,
+   "carbs_g": 3.9,
+   "fat_g": 20.3,
+   "typical_portion_g": 120,
+   "typical_portion_label": "1/2 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:06_006",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "dawadawa",
+   "name": "Dawadawa (fermented locust beans)",
+   "aliases": [
+    "dawadawa",
+    "iru",
+    "soumbala",
+    "kpalgu"
+   ],
+   "category": "ingredient",
+   "detail": "African locust bean, fermented (soumbala)",
+   "kcal_per_100g": 375.0,
+   "protein_g": 33.1,
+   "carbs_g": 18.4,
+   "fat_g": 15.6,
+   "typical_portion_g": 10,
+   "typical_portion_label": "1 tbsp",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:03_042",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "dried_fish",
+   "name": "Dried fish",
+   "aliases": [
+    "momoni",
+    "dried fish",
+    "stockfish"
+   ],
+   "category": "ingredient",
+   "detail": "Fish, whole, dried",
+   "kcal_per_100g": 316.0,
+   "protein_g": 60.4,
+   "carbs_g": 0.0,
+   "fat_g": 8.2,
+   "typical_portion_g": 30,
+   "typical_portion_label": "1 piece",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:09_053",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "tomato",
+   "name": "Tomatoes",
+   "aliases": [
+    "ntoos",
+    "fresh tomatoes",
+    "tomato"
+   ],
+   "category": "ingredient",
+   "detail": "Tomato, red, ripe, raw",
+   "kcal_per_100g": 22.0,
+   "protein_g": 1.1,
+   "carbs_g": 3.4,
+   "fat_g": 0.2,
+   "typical_portion_g": 90,
+   "typical_portion_label": "1 tomato",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:04_021",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "tomato_paste",
+   "name": "Tomato paste",
+   "aliases": [
+    "tin tomatoes",
+    "gino",
+    "tomato puree"
+   ],
+   "category": "ingredient",
+   "detail": "Tomato, paste, concentrated, without salt",
+   "kcal_per_100g": 80.0,
+   "protein_g": 3.2,
+   "carbs_g": 13.6,
+   "fat_g": 0.5,
+   "typical_portion_g": 16,
+   "typical_portion_label": "1 tbsp",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:04_066",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "onion",
+   "name": "Onion",
+   "aliases": [
+    "gyeene",
+    "onions"
+   ],
+   "category": "ingredient",
+   "detail": "Onion, fresh, raw",
+   "kcal_per_100g": 37.0,
+   "protein_g": 1.1,
+   "carbs_g": 7.1,
+   "fat_g": 0.1,
+   "typical_portion_g": 110,
+   "typical_portion_label": "1 onion",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:04_018",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "chilli",
+   "name": "Chilli pepper (kpakpo shito)",
+   "aliases": [
+    "kpakpo shito",
+    "hot pepper",
+    "scotch bonnet",
+    "mako",
+    "chilli"
+   ],
+   "category": "ingredient",
+   "detail": "Pepper, chilli, fresh, raw",
+   "kcal_per_100g": 47.0,
+   "protein_g": 1.8,
+   "carbs_g": 7.5,
+   "fat_g": 0.3,
+   "typical_portion_g": 10,
+   "typical_portion_label": "2 peppers",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:04_046",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "dried_chilli",
+   "name": "Dried chilli powder",
+   "aliases": [
+    "ground pepper",
+    "pepper powder"
+   ],
+   "category": "ingredient",
+   "detail": "Chilli pepper, dried",
+   "kcal_per_100g": 347.0,
+   "protein_g": 15.0,
+   "carbs_g": 21.2,
+   "fat_g": 15.5,
+   "typical_portion_g": 3,
+   "typical_portion_label": "1 tsp",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:13_006",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "green_pepper",
+   "name": "Green pepper (sweet)",
+   "aliases": [
+    "bell pepper",
+    "green pepper"
+   ],
+   "category": "ingredient",
+   "detail": "Pepper, sweet, green, fresh, raw",
+   "kcal_per_100g": 34.0,
+   "protein_g": 0.9,
+   "carbs_g": 5.6,
+   "fat_g": 0.4,
+   "typical_portion_g": 60,
+   "typical_portion_label": "1/2 pepper",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:04_049",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "ginger",
+   "name": "Ginger",
+   "aliases": [
+    "akakaduro",
+    "ginger"
+   ],
+   "category": "ingredient",
+   "detail": "Ginger, root, raw",
+   "kcal_per_100g": 63.0,
+   "protein_g": 2.2,
+   "carbs_g": 9.0,
+   "fat_g": 0.9,
+   "typical_portion_g": 10,
+   "typical_portion_label": "1 thumb",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:04_082",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "garlic",
+   "name": "Garlic",
+   "aliases": [
+    "galik"
+   ],
+   "category": "ingredient",
+   "detail": "Garlic, flesh, raw",
+   "kcal_per_100g": 126.0,
+   "protein_g": 6.5,
+   "carbs_g": 21.6,
+   "fat_g": 0.3,
+   "typical_portion_g": 6,
+   "typical_portion_label": "2 cloves",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:04_015",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "kontomire_leaves",
+   "name": "Kontomire (cocoyam leaves), boiled",
+   "aliases": [
+    "kontomire leaves",
+    "nkontommire",
+    "cocoyam leaves",
+    "abomu leaves"
+   ],
+   "category": "ingredient",
+   "detail": "Cocoyam, leaves, fresh, boiled",
+   "kcal_per_100g": 41.0,
+   "protein_g": 3.7,
+   "carbs_g": 2.5,
+   "fat_g": 0.7,
+   "typical_portion_g": 100,
+   "typical_portion_label": "1 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": true,
+   "source": "WAFCT2019:04_097",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "cassava_leaves",
+   "name": "Cassava leaves, boiled",
+   "aliases": [
+    "bankye nhaban"
+   ],
+   "category": "ingredient",
+   "detail": "Cassava, leaves, fresh, boiled",
+   "kcal_per_100g": 99.0,
+   "protein_g": 8.0,
+   "carbs_g": 9.7,
+   "fat_g": 1.2,
+   "typical_portion_g": 100,
+   "typical_portion_label": "1 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": true,
+   "source": "WAFCT2019:04_092",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "ayoyo_leaves",
+   "name": "Ayoyo (jute leaves), boiled",
+   "aliases": [
+    "ayoyo leaves",
+    "ademe leaves",
+    "jute leaves",
+    "salaat"
+   ],
+   "category": "ingredient",
+   "detail": "Jute mallow (bush-okra), leaves, fresh, boiled",
+   "kcal_per_100g": 53.0,
+   "protein_g": 4.6,
+   "carbs_g": 3.4,
+   "fat_g": 0.4,
+   "typical_portion_g": 100,
+   "typical_portion_label": "1 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": true,
+   "source": "WAFCT2019:04_107",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "bra_leaves",
+   "name": "Bra (roselle leaves), boiled",
+   "aliases": [
+    "bra",
+    "sorrel leaves",
+    "bito",
+    "roselle leaves"
+   ],
+   "category": "ingredient",
+   "detail": "Hibiscus, leaves, fresh, boiled",
+   "kcal_per_100g": 42.0,
+   "protein_g": 2.9,
+   "carbs_g": 4.8,
+   "fat_g": 0.3,
+   "typical_portion_g": 100,
+   "typical_portion_label": "1 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": true,
+   "source": "WAFCT2019:04_117",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "baobab_leaves",
+   "name": "Baobab leaves (kuka), boiled",
+   "aliases": [
+    "kuka leaves",
+    "baobab leaves"
+   ],
+   "category": "ingredient",
+   "detail": "Baobab, leaves, fresh, boiled",
+   "kcal_per_100g": 66.0,
+   "protein_g": 4.2,
+   "carbs_g": 5.7,
+   "fat_g": 0.4,
+   "typical_portion_g": 100,
+   "typical_portion_label": "1 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": true,
+   "source": "WAFCT2019:04_087",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "baobab_leaf_powder",
+   "name": "Baobab leaf powder",
+   "aliases": [
+    "kuka powder",
+    "dried baobab leaves"
+   ],
+   "category": "ingredient",
+   "detail": "Baobab, leaves, dried",
+   "kcal_per_100g": 241.0,
+   "protein_g": 13.7,
+   "carbs_g": 19.8,
+   "fat_g": 2.3,
+   "typical_portion_g": 6,
+   "typical_portion_label": "1 tbsp",
+   "count_g": null,
+   "oily": false,
+   "greens": true,
+   "source": "WAFCT2019:04_002",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "aleefu",
+   "name": "Aleefu (amaranth leaves), boiled",
+   "aliases": [
+    "aleefu",
+    "amaranth",
+    "efan"
+   ],
+   "category": "ingredient",
+   "detail": "Amaranth, leaves, fresh, boiled",
+   "kcal_per_100g": 42.0,
+   "protein_g": 4.4,
+   "carbs_g": 3.2,
+   "fat_g": 0.5,
+   "typical_portion_g": 100,
+   "typical_portion_label": "1 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": true,
+   "source": "WAFCT2019:04_086",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "gboma",
+   "name": "Gboma (garden egg leaves), boiled",
+   "aliases": [
+    "gboma",
+    "gboma leaves",
+    "garden egg leaves"
+   ],
+   "category": "ingredient",
+   "detail": "Eggplant, leaves, fresh, boiled",
+   "kcal_per_100g": 51.0,
+   "protein_g": 4.7,
+   "carbs_g": 3.9,
+   "fat_g": 0.9,
+   "typical_portion_g": 100,
+   "typical_portion_label": "1 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": true,
+   "source": "WAFCT2019:04_105",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "bitter_leaf",
+   "name": "Bitter leaf (awonwono), boiled",
+   "aliases": [
+    "awonwono",
+    "bitter leaf",
+    "vernonia"
+   ],
+   "category": "ingredient",
+   "detail": "Vernonia, leaves, bitter, fresh, boiled",
+   "kcal_per_100g": 69.0,
+   "protein_g": 5.3,
+   "carbs_g": 7.1,
+   "fat_g": 1.0,
+   "typical_portion_g": 100,
+   "typical_portion_label": "1 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": true,
+   "source": "WAFCT2019:04_126",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "moringa",
+   "name": "Moringa leaves, boiled",
+   "aliases": [
+    "zogale",
+    "moringa",
+    "drumstick leaves"
+   ],
+   "category": "ingredient",
+   "detail": "Moringa (drumstick), leaves, fresh, boiled",
+   "kcal_per_100g": 86.0,
+   "protein_g": 8.9,
+   "carbs_g": 4.8,
+   "fat_g": 1.5,
+   "typical_portion_g": 50,
+   "typical_portion_label": "1/2 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": true,
+   "source": "WAFCT2019:04_101",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "spinach_leaves",
+   "name": "Spinach, boiled",
+   "aliases": [
+    "spinach"
+   ],
+   "category": "ingredient",
+   "detail": "Spinach, leaves, fresh, boiled",
+   "kcal_per_100g": 28.0,
+   "protein_g": 3.4,
+   "carbs_g": 0.9,
+   "fat_g": 0.5,
+   "typical_portion_g": 100,
+   "typical_portion_label": "1 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": true,
+   "source": "WAFCT2019:04_118",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "garden_egg_fruit",
+   "name": "Garden eggs, boiled",
+   "aliases": [
+    "nyaadowa",
+    "garden eggs",
+    "eggplant"
+   ],
+   "category": "ingredient",
+   "detail": "Native eggplant, fruit, boiled",
+   "kcal_per_100g": 40.0,
+   "protein_g": 1.7,
+   "carbs_g": 4.8,
+   "fat_g": 0.5,
+   "typical_portion_g": 120,
+   "typical_portion_label": "2 garden eggs",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:04_104",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "okra_fruit",
+   "name": "Okro, boiled",
+   "aliases": [
+    "nkruma",
+    "okra",
+    "okro fingers"
+   ],
+   "category": "ingredient",
+   "detail": "Okra, fruit, fresh, boiled",
+   "kcal_per_100g": 34.0,
+   "protein_g": 1.7,
+   "carbs_g": 4.2,
+   "fat_g": 0.2,
+   "typical_portion_g": 60,
+   "typical_portion_label": "5 fingers",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:04_111",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "dried_okra",
+   "name": "Dried okro powder",
+   "aliases": [
+    "dried okro",
+    "okra powder",
+    "kpalaga"
+   ],
+   "category": "ingredient",
+   "detail": "Okra, fruit, dried",
+   "kcal_per_100g": 245.0,
+   "protein_g": 12.8,
+   "carbs_g": 21.8,
+   "fat_g": 1.7,
+   "typical_portion_g": 8,
+   "typical_portion_label": "1 tbsp",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:04_077",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "pumpkin",
+   "name": "Pumpkin, boiled",
+   "aliases": [
+    "squash",
+    "pumpkin"
+   ],
+   "category": "ingredient",
+   "detail": "Pumpkin, squash, light orange flesh, boiled",
+   "kcal_per_100g": 30.0,
+   "protein_g": 0.9,
+   "carbs_g": 5.3,
+   "fat_g": 0.1,
+   "typical_portion_g": 150,
+   "typical_portion_label": "1 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:04_115",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "cabbage",
+   "name": "Cabbage",
+   "aliases": [
+    "cabbage"
+   ],
+   "category": "ingredient",
+   "detail": "Cabbage, white, raw",
+   "kcal_per_100g": 26.0,
+   "protein_g": 1.6,
+   "carbs_g": 3.6,
+   "fat_g": 0.1,
+   "typical_portion_g": 70,
+   "typical_portion_label": "1 cup, shredded",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:04_005",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "carrot",
+   "name": "Carrot",
+   "aliases": [
+    "carrots"
+   ],
+   "category": "ingredient",
+   "detail": "Carrot, raw",
+   "kcal_per_100g": 34.0,
+   "protein_g": 0.9,
+   "carbs_g": 5.5,
+   "fat_g": 0.2,
+   "typical_portion_g": 60,
+   "typical_portion_label": "1 carrot",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:04_006",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "cucumber",
+   "name": "Cucumber",
+   "aliases": [
+    "cucumber"
+   ],
+   "category": "ingredient",
+   "detail": "Cucumber, unpeeled, raw",
+   "kcal_per_100g": 12.0,
+   "protein_g": 0.7,
+   "carbs_g": 0.9,
+   "fat_g": 0.1,
+   "typical_portion_g": 100,
+   "typical_portion_label": "1/2 cucumber",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:04_032",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "lettuce",
+   "name": "Lettuce",
+   "aliases": [
+    "lettuce"
+   ],
+   "category": "ingredient",
+   "detail": "Lettuce, raw",
+   "kcal_per_100g": 17.0,
+   "protein_g": 1.0,
+   "carbs_g": 1.7,
+   "fat_g": 0.3,
+   "typical_portion_g": 40,
+   "typical_portion_label": "1 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:04_040",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "maize_meal",
+   "name": "Corn flour (maize meal)",
+   "aliases": [
+    "corn flour",
+    "maize flour",
+    "esam",
+    "corn dough flour"
+   ],
+   "category": "ingredient",
+   "detail": "Maize, white, meal, whole grains",
+   "kcal_per_100g": 346.0,
+   "protein_g": 9.7,
+   "carbs_g": 62.6,
+   "fat_g": 3.8,
+   "typical_portion_g": 120,
+   "typical_portion_label": "1 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:01_057",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "millet_flour",
+   "name": "Millet flour",
+   "aliases": [
+    "millet flour",
+    "zia"
+   ],
+   "category": "ingredient",
+   "detail": "Pearl millet, flour (bran removed)",
+   "kcal_per_100g": 367.0,
+   "protein_g": 7.3,
+   "carbs_g": 75.0,
+   "fat_g": 3.2,
+   "typical_portion_g": 120,
+   "typical_portion_label": "1 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:01_063",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "sorghum_flour",
+   "name": "Sorghum flour (guinea corn)",
+   "aliases": [
+    "guinea corn flour",
+    "kazaa"
+   ],
+   "category": "ingredient",
+   "detail": "Sorghum, flour, degermed",
+   "kcal_per_100g": 351.0,
+   "protein_g": 10.4,
+   "carbs_g": 71.2,
+   "fat_g": 1.7,
+   "typical_portion_g": 120,
+   "typical_portion_label": "1 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:01_072",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "cassava_flour",
+   "name": "Cassava flour (kokonte flour)",
+   "aliases": [
+    "kokonte flour",
+    "cassava flour",
+    "lafun"
+   ],
+   "category": "ingredient",
+   "detail": "Cassava, flour, from white cassava",
+   "kcal_per_100g": 341.0,
+   "protein_g": 1.6,
+   "carbs_g": 79.9,
+   "fat_g": 0.7,
+   "typical_portion_g": 120,
+   "typical_portion_label": "1 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:02_004",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "wheat_flour",
+   "name": "Wheat flour",
+   "aliases": [
+    "flour",
+    "all purpose flour"
+   ],
+   "category": "ingredient",
+   "detail": "Wheat flour, white, fortified with iron, zinc, folic acid and vitamins A, B1, B2, B3, B12 (Ghana, Sierra Leone)",
+   "kcal_per_100g": 352.0,
+   "protein_g": 10.4,
+   "carbs_g": 72.2,
+   "fat_g": 1.8,
+   "typical_portion_g": 125,
+   "typical_portion_label": "1 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:01_087",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "milk_powder",
+   "name": "Milk powder",
+   "aliases": [
+    "powdered milk",
+    "nido",
+    "cowbell"
+   ],
+   "category": "ingredient",
+   "detail": "Milk, cow, powder, whole, unfortified",
+   "kcal_per_100g": 493.0,
+   "protein_g": 25.8,
+   "carbs_g": 37.3,
+   "fat_g": 26.8,
+   "typical_portion_g": 15,
+   "typical_portion_label": "2 tbsp",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:10_002",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "condensed_milk",
+   "name": "Condensed milk (sweetened)",
+   "aliases": [
+    "sweetened condensed milk",
+    "condensed milk"
+   ],
+   "category": "ingredient",
+   "detail": "Milk, cow, canned, condensed, sweetened",
+   "kcal_per_100g": 329.0,
+   "protein_g": 7.5,
+   "carbs_g": 55.6,
+   "fat_g": 8.5,
+   "typical_portion_g": 20,
+   "typical_portion_label": "1 tbsp",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:10_015",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "fresh_milk",
+   "name": "Fresh milk",
+   "aliases": [
+    "milk",
+    "uht milk"
+   ],
+   "category": "ingredient",
+   "detail": "Milk, cow, whole, pasteurized or UHT, 3.5% fat",
+   "kcal_per_100g": 64.0,
+   "protein_g": 3.3,
+   "carbs_g": 5.1,
+   "fat_g": 3.4,
+   "typical_portion_g": 250,
+   "typical_portion_label": "1 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:10_001",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "honey",
+   "name": "Honey",
+   "aliases": [
+    "ewo",
+    "honey"
+   ],
+   "category": "ingredient",
+   "detail": "Honey",
+   "kcal_per_100g": 326.0,
+   "protein_g": 0.4,
+   "carbs_g": 81.0,
+   "fat_g": 0.0,
+   "typical_portion_g": 21,
+   "typical_portion_label": "1 tbsp",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:13_001",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "seasoning_cube",
+   "name": "Seasoning cube",
+   "aliases": [
+    "maggi",
+    "royco",
+    "onga",
+    "cube"
+   ],
+   "category": "ingredient",
+   "detail": "Cube, beef, dry",
+   "kcal_per_100g": 190.0,
+   "protein_g": 15.5,
+   "carbs_g": 15.5,
+   "fat_g": 7.4,
+   "typical_portion_g": 4,
+   "typical_portion_label": "1 cube",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:13_008",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "yam_fufu",
+   "name": "Yam fufu",
+   "aliases": [
+    "fufu yam",
+    "pounded yam",
+    "bayere fufu"
+   ],
+   "category": "staple",
+   "detail": "Pounded yam",
+   "kcal_per_100g": 97.0,
+   "protein_g": 1.8,
+   "carbs_g": 19.6,
+   "fat_g": 0.3,
+   "typical_portion_g": 300,
+   "typical_portion_label": "1 ball",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:02_097",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "Akan",
+    "Mole-Dagbani"
+   ],
+   "ingredients": [
+    "yam"
+   ],
+   "source_note": "Stand-in: Kou saagbo (Burkina Faso)"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "yam_cassava_fufu",
+   "name": "Yam and cassava fufu",
+   "aliases": [
+    "fufu with yam"
+   ],
+   "category": "staple",
+   "detail": "Pounded yam and cassava",
+   "kcal_per_100g": 102.0,
+   "protein_g": 1.5,
+   "carbs_g": 21.5,
+   "fat_g": 0.3,
+   "typical_portion_g": 300,
+   "typical_portion_label": "1 ball",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:02_092",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "Akan"
+   ],
+   "ingredients": [
+    "yam",
+    "cassava"
+   ],
+   "source_note": "Stand-in: Banakou né kou saagbo (Burkina Faso)"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "oto",
+   "name": "Oto (mashed yam with palm oil)",
+   "aliases": [
+    "yam oto",
+    "yam eto",
+    "bayere eto"
+   ],
+   "category": "staple",
+   "detail": "Mashed yam with palm oil, served with eggs",
+   "kcal_per_100g": 185.0,
+   "protein_g": 2.0,
+   "carbs_g": 21.8,
+   "fat_g": 9.0,
+   "typical_portion_g": 250,
+   "typical_portion_label": "1 plate",
+   "count_g": null,
+   "oily": true,
+   "greens": false,
+   "source": "WAFCT2019:02_087",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "Akan"
+   ],
+   "ingredients": [
+    "yam",
+    "palm_oil",
+    "egg"
+   ],
+   "source_note": "Stand-in: Kou né téhi kaam fufu (Burkina Faso)"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "plantain_eto",
+   "name": "Plantain eto",
+   "aliases": [
+    "ɛtɔ",
+    "eto",
+    "mashed plantain",
+    "apem eto"
+   ],
+   "category": "staple",
+   "detail": "Mashed unripe plantain with palm oil",
+   "kcal_per_100g": 185.0,
+   "protein_g": 1.5,
+   "carbs_g": 25.2,
+   "fat_g": 7.5,
+   "typical_portion_g": 250,
+   "typical_portion_label": "1 plate",
+   "count_g": null,
+   "oily": true,
+   "greens": false,
+   "source": "WAFCT2019:02_096",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "Akan"
+   ],
+   "ingredients": [
+    "ampesi",
+    "palm_oil",
+    "onion"
+   ],
+   "source_note": "Stand-in: Fufu of unripe plantain with red palm oil (Burkina Faso)"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "ripe_plantain_eto",
+   "name": "Ripe plantain eto",
+   "aliases": [
+    "ripe eto",
+    "boodie eto"
+   ],
+   "category": "staple",
+   "detail": "Mashed ripe plantain with palm oil",
+   "kcal_per_100g": 181.0,
+   "protein_g": 1.2,
+   "carbs_g": 28.7,
+   "fat_g": 6.4,
+   "typical_portion_g": 250,
+   "typical_portion_label": "1 plate",
+   "count_g": null,
+   "oily": true,
+   "greens": false,
+   "source": "WAFCT2019:02_088",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "Akan"
+   ],
+   "ingredients": [
+    "ampesi",
+    "palm_oil"
+   ],
+   "source_note": "Stand-in: Fufu of ripe plantain with red palm oil (Burkina Faso)"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "mpotompoto",
+   "name": "Mpotompoto (yam pottage)",
+   "aliases": [
+    "yam pottage",
+    "asaasewa",
+    "yam porridge"
+   ],
+   "category": "staple",
+   "detail": "Yam cooked down with tomato, onion and palm oil",
+   "kcal_per_100g": 149.0,
+   "protein_g": 1.8,
+   "carbs_g": 16.5,
+   "fat_g": 7.6,
+   "typical_portion_g": 350,
+   "typical_portion_label": "1 bowl",
+   "count_g": null,
+   "oily": true,
+   "greens": false,
+   "source": "WAFCT2019:02_086",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "Akan",
+    "Ga-Adangbe"
+   ],
+   "ingredients": [
+    "yam",
+    "palm_oil",
+    "tomato",
+    "onion"
+   ],
+   "source_note": "Stand-in: Cou nin zindo (Burkina Faso)"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "sweet_potato",
+   "name": "Sweet potato, boiled",
+   "aliases": [
+    "santom",
+    "abrode santom",
+    "white sweet potato"
+   ],
+   "category": "staple",
+   "detail": "Pale sweet potato, boiled",
+   "kcal_per_100g": 96.0,
+   "protein_g": 1.5,
+   "carbs_g": 20.5,
+   "fat_g": 0.2,
+   "typical_portion_g": 200,
+   "typical_portion_label": "2 pieces",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:02_023",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "orange_sweet_potato",
+   "name": "Orange sweet potato, boiled",
+   "aliases": [
+    "osp",
+    "orange flesh sweet potato"
+   ],
+   "category": "staple",
+   "detail": "Orange-fleshed sweet potato, boiled",
+   "kcal_per_100g": 91.0,
+   "protein_g": 1.0,
+   "carbs_g": 19.8,
+   "fat_g": 0.2,
+   "typical_portion_g": 200,
+   "typical_portion_label": "2 pieces",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:02_072",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "fried_sweet_potato",
+   "name": "Fried sweet potato",
+   "aliases": [
+    "sweet potato chips"
+   ],
+   "category": "side",
+   "detail": "Deep fried sweet potato",
+   "kcal_per_100g": 324.0,
+   "protein_g": 3.1,
+   "carbs_g": 52.6,
+   "fat_g": 9.9,
+   "typical_portion_g": 150,
+   "typical_portion_label": "1 portion",
+   "count_g": null,
+   "oily": true,
+   "greens": false,
+   "source": "WAFCT2019:02_083",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": [
+    "sweet_potato",
+    "vegetable_oil"
+   ]
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "irish_potato",
+   "name": "Irish potato, boiled",
+   "aliases": [
+    "potato",
+    "irish potatoes"
+   ],
+   "category": "staple",
+   "detail": "Boiled potato",
+   "kcal_per_100g": 79.0,
+   "protein_g": 1.5,
+   "carbs_g": 17.4,
+   "fat_g": 0.1,
+   "typical_portion_g": 200,
+   "typical_portion_label": "2 potatoes",
+   "count_g": 100,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:02_010",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "taro",
+   "name": "Taro, boiled",
+   "aliases": [
+    "colocasia",
+    "brobe"
+   ],
+   "category": "staple",
+   "detail": "Boiled taro",
+   "kcal_per_100g": 125.0,
+   "protein_g": 2.6,
+   "carbs_g": 24.9,
+   "fat_g": 0.8,
+   "typical_portion_g": 200,
+   "typical_portion_label": "2 pieces",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:02_016",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "Akan",
+    "Ewe"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "brown_rice",
+   "name": "Brown rice",
+   "aliases": [
+    "brown rice"
+   ],
+   "category": "staple",
+   "detail": "Brown rice, boiled",
+   "kcal_per_100g": 138.0,
+   "protein_g": 3.1,
+   "carbs_g": 29.1,
+   "fat_g": 0.6,
+   "typical_portion_g": 200,
+   "typical_portion_label": "1 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:01_035",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "local_rice",
+   "name": "Local rice (red / unpolished)",
+   "aliases": [
+    "local rice",
+    "red rice",
+    "aveyime rice",
+    "hohoe rice",
+    "tamale rice"
+   ],
+   "category": "staple",
+   "detail": "Ghana-grown red rice, boiled",
+   "kcal_per_100g": 141.0,
+   "protein_g": 3.0,
+   "carbs_g": 29.4,
+   "fat_g": 0.9,
+   "typical_portion_g": 200,
+   "typical_portion_label": "1 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:01_066",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "Ewe",
+    "Mole-Dagbani"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "rice_fish_veg",
+   "name": "Rice with fish and vegetables",
+   "aliases": [
+    "one pot rice",
+    "rice with fish"
+   ],
+   "category": "staple",
+   "detail": "One-pot rice with fish and vegetables",
+   "kcal_per_100g": 157.0,
+   "protein_g": 3.9,
+   "carbs_g": 22.0,
+   "fat_g": 5.6,
+   "typical_portion_g": 350,
+   "typical_portion_label": "1 plate",
+   "count_g": null,
+   "oily": true,
+   "greens": false,
+   "source": "WAFCT2019:01_158",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "All"
+   ],
+   "ingredients": [
+    "rice",
+    "dried_fish",
+    "tomato",
+    "onion",
+    "vegetable_oil"
+   ],
+   "source_note": "Stand-in: Moui naagdme (Burkina Faso)"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "jollof_spaghetti",
+   "name": "Jollof spaghetti",
+   "aliases": [
+    "spaghetti jollof",
+    "talia jollof"
+   ],
+   "category": "staple",
+   "detail": "Spaghetti cooked in tomato stew",
+   "kcal_per_100g": 210.0,
+   "protein_g": 4.3,
+   "carbs_g": 23.8,
+   "fat_g": 10.4,
+   "typical_portion_g": 300,
+   "typical_portion_label": "1 plate",
+   "count_g": null,
+   "oily": true,
+   "greens": false,
+   "source": "WAFCT2019:01_157",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "All"
+   ],
+   "ingredients": [
+    "talia",
+    "tomato",
+    "onion",
+    "vegetable_oil"
+   ],
+   "source_note": "Stand-in: Jollof spaghetti (Burkina Faso)"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "jollof_macaroni",
+   "name": "Jollof macaroni",
+   "aliases": [
+    "macaroni jollof"
+   ],
+   "category": "staple",
+   "detail": "Macaroni in tomato sauce with meat",
+   "kcal_per_100g": 201.0,
+   "protein_g": 5.1,
+   "carbs_g": 20.5,
+   "fat_g": 10.6,
+   "typical_portion_g": 300,
+   "typical_portion_label": "1 plate",
+   "count_g": null,
+   "oily": true,
+   "greens": false,
+   "source": "WAFCT2019:01_156",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "All"
+   ],
+   "ingredients": [
+    "tomato",
+    "onion",
+    "vegetable_oil",
+    "goat"
+   ],
+   "source_note": "Stand-in: Jollof macaroni (Burkina Faso)"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "tz_millet",
+   "name": "Millet TZ",
+   "aliases": [
+    "millet tuo",
+    "zia saab",
+    "tuo millet",
+    "sao"
+   ],
+   "category": "staple",
+   "detail": "Stiff porridge of whole millet",
+   "kcal_per_100g": 93.0,
+   "protein_g": 1.8,
+   "carbs_g": 16.7,
+   "fat_g": 1.5,
+   "typical_portion_g": 400,
+   "typical_portion_label": "1 bowl",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:01_153",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "Mole-Dagbani"
+   ],
+   "ingredients": [
+    "millet_flour"
+   ]
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "fonio",
+   "name": "Fonio (acha)",
+   "aliases": [
+    "acha",
+    "fini",
+    "fonio"
+   ],
+   "category": "staple",
+   "detail": "Fonio grains, boiled",
+   "kcal_per_100g": 148.0,
+   "protein_g": 3.0,
+   "carbs_g": 32.0,
+   "fat_g": 0.7,
+   "typical_portion_g": 200,
+   "typical_portion_label": "1 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:01_051",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "Mole-Dagbani"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "maasa",
+   "name": "Maasa (rice cakes)",
+   "aliases": [
+    "masa",
+    "waina",
+    "rice cakes"
+   ],
+   "category": "snack",
+   "detail": "Fermented rice cakes, fried",
+   "kcal_per_100g": 303.0,
+   "protein_g": 3.2,
+   "carbs_g": 54.8,
+   "fat_g": 7.6,
+   "typical_portion_g": 120,
+   "typical_portion_label": "4 pieces",
+   "count_g": 30,
+   "oily": true,
+   "greens": false,
+   "source": "WAFCT2019:01_163",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "Hausa / Zongo",
+    "Mole-Dagbani"
+   ],
+   "ingredients": [
+    "rice",
+    "vegetable_oil"
+   ]
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "tubaani",
+   "name": "Tubaani (steamed bean cake)",
+   "aliases": [
+    "tubani",
+    "moi moi",
+    "moin moin",
+    "bean cake"
+   ],
+   "category": "staple",
+   "detail": "Steamed bean flour cake with potash",
+   "kcal_per_100g": 146.0,
+   "protein_g": 10.1,
+   "carbs_g": 22.2,
+   "fat_g": 0.6,
+   "typical_portion_g": 200,
+   "typical_portion_label": "2 pieces",
+   "count_g": 100,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:03_152",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "Mole-Dagbani",
+    "Hausa / Zongo"
+   ],
+   "ingredients": [
+    "beans"
+   ],
+   "source_note": "Stand-in: Gonré-1 (Burkina Faso)"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "fura_nono",
+   "name": "Fura da nono",
+   "aliases": [
+    "fura de nono",
+    "fura and nono",
+    "zoomkom with milk"
+   ],
+   "category": "porridge",
+   "detail": "Millet balls in fermented milk with sugar",
+   "kcal_per_100g": 108.0,
+   "protein_g": 2.6,
+   "carbs_g": 19.4,
+   "fat_g": 2.0,
+   "typical_portion_g": 400,
+   "typical_portion_label": "1 calabash",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:01_176",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "Hausa / Zongo",
+    "Fulani",
+    "Mole-Dagbani"
+   ],
+   "ingredients": [
+    "millet_flour",
+    "fresh_milk",
+    "sugar"
+   ],
+   "source_note": "Stand-in: Fura saamdin (Burkina Faso)"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "millet_porridge_milk",
+   "name": "Millet porridge with milk and sugar",
+   "aliases": [
+    "koko with milk",
+    "millet koko with milk"
+   ],
+   "category": "porridge",
+   "detail": "Millet porridge with milk and sugar",
+   "kcal_per_100g": 129.0,
+   "protein_g": 3.4,
+   "carbs_g": 21.4,
+   "fat_g": 3.0,
+   "typical_portion_g": 300,
+   "typical_portion_label": "1 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:01_174",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "Mole-Dagbani",
+    "Hausa / Zongo"
+   ],
+   "ingredients": [
+    "millet_flour",
+    "fresh_milk",
+    "sugar"
+   ],
+   "source_note": "Stand-in: Gappal (Burkina Faso)"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "tom_brown",
+   "name": "Tom brown",
+   "aliases": [
+    "tombrown",
+    "roasted corn porridge",
+    "weanimix"
+   ],
+   "category": "porridge",
+   "detail": "Roasted maize porridge, unsweetened",
+   "kcal_per_100g": 48.0,
+   "protein_g": 1.3,
+   "carbs_g": 8.9,
+   "fat_g": 0.5,
+   "typical_portion_g": 300,
+   "typical_portion_label": "1 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:01_122",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "All"
+   ],
+   "ingredients": [
+    "maize_meal"
+   ],
+   "source_note": "Stand-in: Porridge, soft, from wholegrain yellow maize meal"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "corn_kernels",
+   "name": "Fresh corn kernels, boiled",
+   "aliases": [
+    "boiled maize kernels",
+    "corn kernels"
+   ],
+   "category": "side",
+   "detail": "Fresh maize kernels, boiled",
+   "kcal_per_100g": 189.0,
+   "protein_g": 6.0,
+   "carbs_g": 24.8,
+   "fat_g": 3.6,
+   "typical_portion_g": 150,
+   "typical_portion_label": "1 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:04_108",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "kuka_soup",
+   "name": "Kuka soup (baobab leaf soup)",
+   "aliases": [
+    "kuka soup",
+    "baobab leaf soup",
+    "toa soup"
+   ],
+   "category": "soup",
+   "detail": "Baobab leaf soup with fish and dawadawa",
+   "kcal_per_100g": 60.0,
+   "protein_g": 3.1,
+   "carbs_g": 1.9,
+   "fat_g": 4.1,
+   "typical_portion_g": 300,
+   "typical_portion_label": "1 bowl",
+   "count_g": null,
+   "oily": true,
+   "greens": true,
+   "source": "WAFCT2019:14_022",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "Mole-Dagbani",
+    "Hausa / Zongo"
+   ],
+   "ingredients": [
+    "baobab_leaves",
+    "dawadawa",
+    "dried_fish",
+    "tomato",
+    "onion"
+   ],
+   "source_note": "Stand-in: Toeg maas zéédo (Burkina Faso)"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "dried_kuka_soup",
+   "name": "Dried kuka soup",
+   "aliases": [
+    "kuka powder soup",
+    "dried baobab soup"
+   ],
+   "category": "soup",
+   "detail": "Dried baobab leaf soup with fish and dawadawa",
+   "kcal_per_100g": 44.0,
+   "protein_g": 2.8,
+   "carbs_g": 1.7,
+   "fat_g": 2.5,
+   "typical_portion_g": 300,
+   "typical_portion_label": "1 bowl",
+   "count_g": null,
+   "oily": false,
+   "greens": true,
+   "source": "WAFCT2019:14_020",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "Mole-Dagbani",
+    "Hausa / Zongo"
+   ],
+   "ingredients": [
+    "baobab_leaf_powder",
+    "dawadawa",
+    "dried_fish"
+   ],
+   "source_note": "Stand-in: Toeg koing zéédo (Burkina Faso)"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "bra_soup",
+   "name": "Bra soup (roselle leaf soup)",
+   "aliases": [
+    "bra soup",
+    "sorrel leaf soup",
+    "bito soup"
+   ],
+   "category": "soup",
+   "detail": "Roselle leaf soup with fish, dawadawa and tomato",
+   "kcal_per_100g": 104.0,
+   "protein_g": 3.5,
+   "carbs_g": 3.6,
+   "fat_g": 7.9,
+   "typical_portion_g": 300,
+   "typical_portion_label": "1 bowl",
+   "count_g": null,
+   "oily": false,
+   "greens": true,
+   "source": "WAFCT2019:14_014",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "Mole-Dagbani"
+   ],
+   "ingredients": [
+    "bra_leaves",
+    "dawadawa",
+    "dried_fish",
+    "tomato"
+   ],
+   "source_note": "Stand-in: Bite zindo (Burkina Faso)"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "groundnut_dawadawa_soup",
+   "name": "Northern groundnut soup",
+   "aliases": [
+    "groundnut soup with dawadawa",
+    "zim soup",
+    "nkatie soup with dawadawa"
+   ],
+   "category": "soup",
+   "detail": "Groundnut soup with fish and dawadawa",
+   "kcal_per_100g": 135.0,
+   "protein_g": 5.7,
+   "carbs_g": 3.3,
+   "fat_g": 10.4,
+   "typical_portion_g": 300,
+   "typical_portion_label": "1 bowl",
+   "count_g": null,
+   "oily": true,
+   "greens": false,
+   "source": "WAFCT2019:14_006",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "Mole-Dagbani"
+   ],
+   "ingredients": [
+    "groundnut_paste",
+    "dawadawa",
+    "dried_fish",
+    "tomato",
+    "onion"
+   ],
+   "source_note": "Stand-in: Siikam zéédo (Burkina Faso)"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "bean_leaf_soup",
+   "name": "Bean leaf soup",
+   "aliases": [
+    "cowpea leaf soup",
+    "beans leaves soup"
+   ],
+   "category": "soup",
+   "detail": "Bean leaf soup with fish, groundnut paste and dawadawa",
+   "kcal_per_100g": 156.0,
+   "protein_g": 7.5,
+   "carbs_g": 2.9,
+   "fat_g": 12.2,
+   "typical_portion_g": 300,
+   "typical_portion_label": "1 bowl",
+   "count_g": null,
+   "oily": true,
+   "greens": true,
+   "source": "WAFCT2019:14_029",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "Mole-Dagbani"
+   ],
+   "ingredients": [
+    "groundnut_paste",
+    "dawadawa",
+    "dried_fish"
+   ],
+   "source_note": "Stand-in: Bengedo (Burkina Faso)"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "ayoyo_lamb_soup",
+   "name": "Ayoyo soup with meat",
+   "aliases": [
+    "ayoyo with meat",
+    "ademe with meat"
+   ],
+   "category": "soup",
+   "detail": "Jute leaf soup with meat and dawadawa",
+   "kcal_per_100g": 85.0,
+   "protein_g": 3.4,
+   "carbs_g": 1.6,
+   "fat_g": 7.0,
+   "typical_portion_g": 300,
+   "typical_portion_label": "1 bowl",
+   "count_g": null,
+   "oily": false,
+   "greens": true,
+   "source": "WAFCT2019:14_015",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "Mole-Dagbani",
+    "Ewe"
+   ],
+   "ingredients": [
+    "ayoyo_leaves",
+    "dawadawa",
+    "goat"
+   ],
+   "source_note": "Stand-in: Blouvank koèég zéédo (Burkina Faso)"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "okro_lamb_soup",
+   "name": "Dry okro soup with meat",
+   "aliases": [
+    "kpalaga soup",
+    "dried okro soup"
+   ],
+   "category": "soup",
+   "detail": "Dried okro soup with meat and dawadawa",
+   "kcal_per_100g": 145.0,
+   "protein_g": 4.7,
+   "carbs_g": 2.2,
+   "fat_g": 12.4,
+   "typical_portion_g": 300,
+   "typical_portion_label": "1 bowl",
+   "count_g": null,
+   "oily": false,
+   "greens": true,
+   "source": "WAFCT2019:14_017",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "Mole-Dagbani",
+    "Hausa / Zongo"
+   ],
+   "ingredients": [
+    "dried_okra",
+    "dawadawa",
+    "goat"
+   ],
+   "source_note": "Stand-in: Maân koèg zéindo-2 (Burkina Faso)"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "fresh_okro_soup_fish",
+   "name": "Okro soup with fish and palm oil",
+   "aliases": [
+    "fetri detsi",
+    "okro soup fish",
+    "okro with palm oil"
+   ],
+   "category": "soup",
+   "detail": "Fresh okro soup with fish, palm oil and dawadawa",
+   "kcal_per_100g": 74.0,
+   "protein_g": 3.4,
+   "carbs_g": 2.6,
+   "fat_g": 5.2,
+   "typical_portion_g": 300,
+   "typical_portion_label": "1 bowl",
+   "count_g": null,
+   "oily": true,
+   "greens": true,
+   "source": "WAFCT2019:14_019",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "Ewe",
+    "Ga-Adangbe",
+    "Mole-Dagbani"
+   ],
+   "ingredients": [
+    "okra_fruit",
+    "palm_oil",
+    "dried_fish",
+    "dawadawa"
+   ],
+   "source_note": "Stand-in: Maân mâass zéindo (Burkina Faso)"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "cassava_leaf_stew",
+   "name": "Cassava leaf stew",
+   "aliases": [
+    "bankye nhaban abomu",
+    "cassava leaves soup"
+   ],
+   "category": "stew",
+   "detail": "Cassava leaf stew with fish and palm oil",
+   "kcal_per_100g": 264.0,
+   "protein_g": 6.4,
+   "carbs_g": 4.6,
+   "fat_g": 23.7,
+   "typical_portion_g": 200,
+   "typical_portion_label": "1 ladle",
+   "count_g": null,
+   "oily": true,
+   "greens": true,
+   "source": "WAFCT2019:14_025",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "Nzema / Ahanta",
+    "Akan"
+   ],
+   "ingredients": [
+    "cassava_leaves",
+    "palm_oil",
+    "dried_fish"
+   ],
+   "source_note": "Stand-in: Banakou vand zéédo (Burkina Faso)"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "spinach_stew",
+   "name": "Spinach stew",
+   "aliases": [
+    "spinach sauce",
+    "aleefu stew"
+   ],
+   "category": "stew",
+   "detail": "Spinach stew with fish",
+   "kcal_per_100g": 168.0,
+   "protein_g": 6.7,
+   "carbs_g": 3.5,
+   "fat_g": 13.6,
+   "typical_portion_g": 200,
+   "typical_portion_label": "1 ladle",
+   "count_g": null,
+   "oily": true,
+   "greens": true,
+   "source": "WAFCT2019:14_004",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "All"
+   ],
+   "ingredients": [
+    "spinach_leaves",
+    "dried_fish",
+    "tomato",
+    "onion",
+    "vegetable_oil"
+   ],
+   "source_note": "Stand-in: Epinard zéédo (Burkina Faso)"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "garden_egg_sauce",
+   "name": "Garden egg sauce with fish",
+   "aliases": [
+    "nyaadowa froye",
+    "garden egg stew with fish"
+   ],
+   "category": "stew",
+   "detail": "Garden egg sauce with fish",
+   "kcal_per_100g": 161.0,
+   "protein_g": 4.1,
+   "carbs_g": 4.8,
+   "fat_g": 13.3,
+   "typical_portion_g": 200,
+   "typical_portion_label": "1 ladle",
+   "count_g": null,
+   "oily": true,
+   "greens": true,
+   "source": "WAFCT2019:14_007",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "Akan",
+    "Ewe",
+    "Ga-Adangbe"
+   ],
+   "ingredients": [
+    "garden_egg_fruit",
+    "dried_fish",
+    "palm_oil",
+    "tomato",
+    "onion"
+   ],
+   "source_note": "Stand-in: Koum zindo (Burkina Faso)"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "palm_oil_sauce",
+   "name": "Palm oil fish sauce",
+   "aliases": [
+    "zomi sauce",
+    "red oil stew"
+   ],
+   "category": "stew",
+   "detail": "Red palm oil sauce with fish and vegetables",
+   "kcal_per_100g": 127.0,
+   "protein_g": 5.7,
+   "carbs_g": 3.8,
+   "fat_g": 9.5,
+   "typical_portion_g": 150,
+   "typical_portion_label": "1 ladle",
+   "count_g": null,
+   "oily": true,
+   "greens": false,
+   "source": "WAFCT2019:14_005",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "Ewe",
+    "Ga-Adangbe"
+   ],
+   "ingredients": [
+    "palm_oil",
+    "dried_fish",
+    "tomato",
+    "onion"
+   ],
+   "source_note": "Stand-in: Téi kam zéédo (Burkina Faso)"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "chicken_soup_dawadawa",
+   "name": "Northern chicken soup",
+   "aliases": [
+    "chicken soup",
+    "local chicken soup",
+    "akokɔ nkwan"
+   ],
+   "category": "soup",
+   "detail": "Chicken soup with vegetables and dawadawa",
+   "kcal_per_100g": 81.0,
+   "protein_g": 5.4,
+   "carbs_g": 2.1,
+   "fat_g": 5.4,
+   "typical_portion_g": 350,
+   "typical_portion_label": "1 bowl",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:14_033",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "Mole-Dagbani",
+    "Akan"
+   ],
+   "ingredients": [
+    "chicken",
+    "dawadawa",
+    "tomato",
+    "onion"
+   ],
+   "source_note": "Stand-in: Soup from chicken, beer yeast, vegetables and fermented African locust beans (Burkina Faso)"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "tomato_meat_sauce",
+   "name": "Tomato sauce with mutton",
+   "aliases": [
+    "mutton stew",
+    "tomato stew with lamb"
+   ],
+   "category": "stew",
+   "detail": "Tomato sauce with mutton and vegetables",
+   "kcal_per_100g": 188.0,
+   "protein_g": 5.9,
+   "carbs_g": 4.4,
+   "fat_g": 15.9,
+   "typical_portion_g": 200,
+   "typical_portion_label": "1 ladle",
+   "count_g": null,
+   "oily": true,
+   "greens": false,
+   "source": "WAFCT2019:14_002",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "Hausa / Zongo",
+    "All"
+   ],
+   "ingredients": [
+    "tomato",
+    "onion",
+    "mutton",
+    "vegetable_oil"
+   ],
+   "source_note": "Stand-in: Pésgo né tomate zéindo (Burkina Faso)"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "sesame_sauce",
+   "name": "Sesame soup",
+   "aliases": [
+    "benniseed soup",
+    "sesame soup"
+   ],
+   "category": "soup",
+   "detail": "Sesame sauce with fish",
+   "kcal_per_100g": 203.0,
+   "protein_g": 6.3,
+   "carbs_g": 3.1,
+   "fat_g": 17.7,
+   "typical_portion_g": 300,
+   "typical_portion_label": "1 bowl",
+   "count_g": null,
+   "oily": true,
+   "greens": false,
+   "source": "WAFCT2019:14_028",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "Mole-Dagbani"
+   ],
+   "ingredients": [
+    "sesame",
+    "dried_fish"
+   ],
+   "source_note": "Stand-in: Siné zindo (Burkina Faso)"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "goat_grilled",
+   "name": "Grilled goat meat",
+   "aliases": [
+    "goat khebab",
+    "aponkye khebab",
+    "goat suya"
+   ],
+   "category": "protein",
+   "detail": "Lean goat, grilled",
+   "kcal_per_100g": 167.0,
+   "protein_g": 27.8,
+   "carbs_g": 0.0,
+   "fat_g": 6.2,
+   "typical_portion_g": 100,
+   "typical_portion_label": "5 pieces",
+   "count_g": 20,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:07_114",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "mutton",
+   "name": "Mutton (lamb), stewed",
+   "aliases": [
+    "lamb",
+    "ram meat",
+    "eid ram",
+    "mutton"
+   ],
+   "category": "protein",
+   "detail": "Lean mutton, stewed",
+   "kcal_per_100g": 221.0,
+   "protein_g": 30.6,
+   "carbs_g": 0.0,
+   "fat_g": 11.0,
+   "typical_portion_g": 100,
+   "typical_portion_label": "3 pieces",
+   "count_g": 33,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:07_128",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "Hausa / Zongo",
+    "Mole-Dagbani",
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "pork",
+   "name": "Pork, stewed",
+   "aliases": [
+    "pork",
+    "prako"
+   ],
+   "category": "protein",
+   "detail": "Pork, moderately fat, stewed",
+   "kcal_per_100g": 425.0,
+   "protein_g": 25.0,
+   "carbs_g": 0.0,
+   "fat_g": 36.2,
+   "typical_portion_g": 100,
+   "typical_portion_label": "3 pieces",
+   "count_g": 33,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:07_122",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "Ewe",
+    "Ga-Adangbe",
+    "Akan"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "pork_grilled",
+   "name": "Grilled pork",
+   "aliases": [
+    "pork khebab",
+    "pork chops",
+    "prako khebab"
+   ],
+   "category": "protein",
+   "detail": "Pork, moderately fat, grilled",
+   "kcal_per_100g": 345.0,
+   "protein_g": 23.2,
+   "carbs_g": 0.0,
+   "fat_g": 28.0,
+   "typical_portion_g": 100,
+   "typical_portion_label": "3 pieces",
+   "count_g": 33,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:07_058",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "Ewe",
+    "Ga-Adangbe",
+    "Akan"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "chicken_breast",
+   "name": "Chicken breast, no skin",
+   "aliases": [
+    "grilled chicken breast",
+    "chicken white meat"
+   ],
+   "category": "protein",
+   "detail": "Chicken light meat without skin, grilled",
+   "kcal_per_100g": 149.0,
+   "protein_g": 29.5,
+   "carbs_g": 0.0,
+   "fat_g": 3.5,
+   "typical_portion_g": 120,
+   "typical_portion_label": "1 breast",
+   "count_g": 120,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:07_035",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "beef_liver",
+   "name": "Liver (beef), stewed",
+   "aliases": [
+    "liver",
+    "cow liver"
+   ],
+   "category": "protein",
+   "detail": "Beef liver, stewed",
+   "kcal_per_100g": 171.0,
+   "protein_g": 25.7,
+   "carbs_g": 4.5,
+   "fat_g": 5.6,
+   "typical_portion_g": 80,
+   "typical_portion_label": "3 pieces",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:07_089",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "bush_meat",
+   "name": "Bush meat (akrantie), smoked",
+   "aliases": [
+    "akrantie",
+    "grasscutter",
+    "bushmeat",
+    "smoked grasscutter",
+    "antelope"
+   ],
+   "category": "protein",
+   "detail": "Smoked, salted game meat",
+   "kcal_per_100g": 330.0,
+   "protein_g": 66.7,
+   "carbs_g": 0.0,
+   "fat_g": 7.0,
+   "typical_portion_g": 60,
+   "typical_portion_label": "2 pieces",
+   "count_g": 30,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:07_027",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "Akan",
+    "Ewe",
+    "Mole-Dagbani"
+   ],
+   "ingredients": [],
+   "source_note": "Stand-in: Game meat, dried, salted"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "kilishi",
+   "name": "Kilishi (dried spiced beef)",
+   "aliases": [
+    "kilishi",
+    "beef jerky"
+   ],
+   "category": "protein",
+   "detail": "Dried lean beef",
+   "kcal_per_100g": 142.0,
+   "protein_g": 31.1,
+   "carbs_g": 0.0,
+   "fat_g": 1.9,
+   "typical_portion_g": 30,
+   "typical_portion_label": "1 strip",
+   "count_g": 30,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:07_017",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "Hausa / Zongo",
+    "Fulani"
+   ],
+   "ingredients": [],
+   "source_note": "Stand-in: Beef meat, lean, cured, dried"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "wagashi",
+   "name": "Wagashi (Fulani cheese)",
+   "aliases": [
+    "wagashi",
+    "wagasi",
+    "fulani cheese"
+   ],
+   "category": "protein",
+   "detail": "Fresh curd cheese",
+   "kcal_per_100g": 219.0,
+   "protein_g": 15.5,
+   "carbs_g": 3.8,
+   "fat_g": 15.7,
+   "typical_portion_g": 80,
+   "typical_portion_label": "2 pieces",
+   "count_g": 40,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:10_028",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "Fulani",
+    "Mole-Dagbani"
+   ],
+   "ingredients": [],
+   "source_note": "Stand-in: Cheese, fresh curd, from cow’s milk"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "sausages",
+   "name": "Sausages (canned)",
+   "aliases": [
+    "sausage",
+    "vienna sausage",
+    "hot dog"
+   ],
+   "category": "protein",
+   "detail": "Canned wiener sausages",
+   "kcal_per_100g": 234.0,
+   "protein_g": 12.4,
+   "carbs_g": 1.2,
+   "fat_g": 19.9,
+   "typical_portion_g": 60,
+   "typical_portion_label": "3 sausages",
+   "count_g": 20,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:07_063",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "duck_egg",
+   "name": "Duck egg, boiled",
+   "aliases": [
+    "duck egg"
+   ],
+   "category": "protein",
+   "detail": "Duck egg, boiled",
+   "kcal_per_100g": 179.2,
+   "protein_g": 11.8,
+   "carbs_g": 2.4,
+   "fat_g": 13.6,
+   "typical_portion_g": 70,
+   "typical_portion_label": "1 egg",
+   "count_g": 70,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:08_014",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "guinea_fowl_egg",
+   "name": "Guinea fowl egg, boiled",
+   "aliases": [
+    "akonfem kesua",
+    "guinea fowl egg"
+   ],
+   "category": "protein",
+   "detail": "Guinea fowl egg, boiled",
+   "kcal_per_100g": 184.6,
+   "protein_g": 12.9,
+   "carbs_g": 2.2,
+   "fat_g": 13.8,
+   "typical_portion_g": 80,
+   "typical_portion_label": "2 eggs",
+   "count_g": 40,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:08_013",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "Mole-Dagbani"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "catfish",
+   "name": "Catfish, grilled",
+   "aliases": [
+    "catfish",
+    "mudfish",
+    "adwene"
+   ],
+   "category": "protein",
+   "detail": "Catfish fillet, grilled",
+   "kcal_per_100g": 145.5,
+   "protein_g": 24.0,
+   "carbs_g": 0.0,
+   "fat_g": 5.5,
+   "typical_portion_g": 150,
+   "typical_portion_label": "1 piece",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:09_020",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "Akan",
+    "Ewe",
+    "Mole-Dagbani"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "nile_perch",
+   "name": "Nile perch, grilled",
+   "aliases": [
+    "perch",
+    "volta fish"
+   ],
+   "category": "protein",
+   "detail": "Nile perch fillet, grilled",
+   "kcal_per_100g": 134.1,
+   "protein_g": 29.7,
+   "carbs_g": 0.0,
+   "fat_g": 1.7,
+   "typical_portion_g": 150,
+   "typical_portion_label": "1 piece",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:09_034",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "Ewe",
+    "Mole-Dagbani"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "barracuda",
+   "name": "Barracuda, grilled",
+   "aliases": [
+    "barracuda",
+    "tsile"
+   ],
+   "category": "protein",
+   "detail": "Barracuda fillet, grilled",
+   "kcal_per_100g": 120.8,
+   "protein_g": 27.5,
+   "carbs_g": 0.0,
+   "fat_g": 1.2,
+   "typical_portion_g": 150,
+   "typical_portion_label": "1 piece",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:09_014",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "Ga-Adangbe",
+    "Akan"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "grouper",
+   "name": "Grouper, grilled",
+   "aliases": [
+    "grouper",
+    "mamaedwe"
+   ],
+   "category": "protein",
+   "detail": "White grouper fillet, grilled",
+   "kcal_per_100g": 139.0,
+   "protein_g": 28.0,
+   "carbs_g": 0.0,
+   "fat_g": 3.0,
+   "typical_portion_g": 150,
+   "typical_portion_label": "1 piece",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:09_047",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "Ga-Adangbe",
+    "Akan"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "prawns",
+   "name": "Prawns (shrimp), boiled",
+   "aliases": [
+    "prawns",
+    "shrimps",
+    "fresh shrimp"
+   ],
+   "category": "protein",
+   "detail": "Shrimp flesh, boiled",
+   "kcal_per_100g": 123.3,
+   "protein_g": 26.7,
+   "carbs_g": 0.3,
+   "fat_g": 1.7,
+   "typical_portion_g": 80,
+   "typical_portion_label": "1 handful",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:09_104",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "Ga-Adangbe",
+    "Ewe",
+    "Akan"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "clams",
+   "name": "Clams, steamed",
+   "aliases": [
+    "clams",
+    "adodi",
+    "volta clams"
+   ],
+   "category": "protein",
+   "detail": "Venus clams, steamed",
+   "kcal_per_100g": 97.5,
+   "protein_g": 14.6,
+   "carbs_g": 5.5,
+   "fat_g": 1.9,
+   "typical_portion_g": 100,
+   "typical_portion_label": "1 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:09_094",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "Ga-Adangbe",
+    "Ewe"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "sardines_tin",
+   "name": "Sardines (tinned)",
+   "aliases": [
+    "sardines",
+    "tin sardine"
+   ],
+   "category": "protein",
+   "detail": "Sardines canned in oil, drained",
+   "kcal_per_100g": 239.0,
+   "protein_g": 24.8,
+   "carbs_g": 0.0,
+   "fat_g": 15.5,
+   "typical_portion_g": 90,
+   "typical_portion_label": "1 tin",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:09_037",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "mackerel_tin",
+   "name": "Mackerel (tinned)",
+   "aliases": [
+    "geisha",
+    "tinned mackerel",
+    "jack mackerel"
+   ],
+   "category": "protein",
+   "detail": "Jack mackerel canned in oil, drained",
+   "kcal_per_100g": 149.0,
+   "protein_g": 23.2,
+   "carbs_g": 0.0,
+   "fat_g": 6.3,
+   "typical_portion_g": 155,
+   "typical_portion_label": "1 tin",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:09_109",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "All"
+   ],
+   "ingredients": [],
+   "source_note": "Stand-in: Mackerel, jack, canned in oil, drained"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "tuna_tin",
+   "name": "Tuna (tinned in oil)",
+   "aliases": [
+    "tuna",
+    "tin tuna"
+   ],
+   "category": "protein",
+   "detail": "Tuna canned in oil, drained",
+   "kcal_per_100g": 186.0,
+   "protein_g": 25.4,
+   "carbs_g": 0.0,
+   "fat_g": 9.4,
+   "typical_portion_g": 80,
+   "typical_portion_label": "1/2 tin",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:09_111",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "pigeon_peas",
+   "name": "Pigeon peas, boiled",
+   "aliases": [
+    "pigeon peas",
+    "aduwa"
+   ],
+   "category": "protein",
+   "detail": "Pigeon peas, boiled",
+   "kcal_per_100g": 135.0,
+   "protein_g": 9.0,
+   "carbs_g": 18.1,
+   "fat_g": 0.9,
+   "typical_portion_g": 150,
+   "typical_portion_label": "1 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:03_033",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "Ewe",
+    "Mole-Dagbani"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "alasa",
+   "name": "Alasa (African star apple)",
+   "aliases": [
+    "alasa",
+    "african star apple",
+    "adasema"
+   ],
+   "category": "fruit",
+   "detail": "Ripe African star apple",
+   "kcal_per_100g": 132.0,
+   "protein_g": 3.4,
+   "carbs_g": 16.4,
+   "fat_g": 5.2,
+   "typical_portion_g": 120,
+   "typical_portion_label": "3 fruits",
+   "count_g": 40,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:05_053",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "Akan",
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "guava",
+   "name": "Guava",
+   "aliases": [
+    "guava",
+    "gova"
+   ],
+   "category": "fruit",
+   "detail": "Ripe guava",
+   "kcal_per_100g": 68.0,
+   "protein_g": 1.0,
+   "carbs_g": 12.3,
+   "fat_g": 0.4,
+   "typical_portion_g": 100,
+   "typical_portion_label": "1 guava",
+   "count_g": 100,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:05_010",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "soursop",
+   "name": "Soursop",
+   "aliases": [
+    "aluguntugui",
+    "soursop"
+   ],
+   "category": "fruit",
+   "detail": "Ripe soursop",
+   "kcal_per_100g": 77.0,
+   "protein_g": 1.2,
+   "carbs_g": 13.9,
+   "fat_g": 0.8,
+   "typical_portion_g": 220,
+   "typical_portion_label": "1 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:05_054",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "sweet_apple",
+   "name": "Sweet apple (sweetsop)",
+   "aliases": [
+    "sweet apple",
+    "sweetsop",
+    "custard apple"
+   ],
+   "category": "fruit",
+   "detail": "Ripe sweetsop",
+   "kcal_per_100g": 93.0,
+   "protein_g": 1.5,
+   "carbs_g": 18.8,
+   "fat_g": 0.2,
+   "typical_portion_g": 120,
+   "typical_portion_label": "1 fruit",
+   "count_g": 120,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:05_045",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "cashew_apple",
+   "name": "Cashew apple",
+   "aliases": [
+    "cashew fruit"
+   ],
+   "category": "fruit",
+   "detail": "Cashew apple",
+   "kcal_per_100g": 55.0,
+   "protein_g": 1.0,
+   "carbs_g": 10.9,
+   "fat_g": 0.4,
+   "typical_portion_g": 70,
+   "typical_portion_label": "1 fruit",
+   "count_g": 70,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:05_006",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "Akan",
+    "Mole-Dagbani"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "baobab_fruit",
+   "name": "Baobab fruit (monkey bread)",
+   "aliases": [
+    "baobab pulp",
+    "kuka fruit",
+    "monkey bread"
+   ],
+   "category": "fruit",
+   "detail": "Baobab fruit pulp",
+   "kcal_per_100g": 305.0,
+   "protein_g": 2.1,
+   "carbs_g": 70.0,
+   "fat_g": 0.3,
+   "typical_portion_g": 30,
+   "typical_portion_label": "1 handful",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:05_004",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "Mole-Dagbani"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "shea_fruit",
+   "name": "Shea fruit",
+   "aliases": [
+    "taanga",
+    "shea fruit",
+    "nku aba"
+   ],
+   "category": "fruit",
+   "detail": "Ripe shea fruit pulp",
+   "kcal_per_100g": 101.0,
+   "protein_g": 1.5,
+   "carbs_g": 19.8,
+   "fat_g": 0.9,
+   "typical_portion_g": 100,
+   "typical_portion_label": "5 fruits",
+   "count_g": 20,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:05_044",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "Mole-Dagbani"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "tamarind",
+   "name": "Tamarind (puna)",
+   "aliases": [
+    "tsamiya",
+    "puna",
+    "tamarind",
+    "dzowe"
+   ],
+   "category": "fruit",
+   "detail": "Ripe tamarind pulp",
+   "kcal_per_100g": 278.0,
+   "protein_g": 3.7,
+   "carbs_g": 61.3,
+   "fat_g": 0.9,
+   "typical_portion_g": 20,
+   "typical_portion_label": "1 tbsp",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:05_021",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "Mole-Dagbani",
+    "Hausa / Zongo",
+    "Ewe"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "dawadawa_pulp",
+   "name": "Dawadawa pulp",
+   "aliases": [
+    "dawadawa powder",
+    "yellow dawadawa"
+   ],
+   "category": "fruit",
+   "detail": "African locust bean fruit pulp",
+   "kcal_per_100g": 285.0,
+   "protein_g": 3.3,
+   "carbs_g": 49.8,
+   "fat_g": 1.8,
+   "typical_portion_g": 15,
+   "typical_portion_label": "1 tbsp",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:05_001",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "Mole-Dagbani"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "dates",
+   "name": "Dates",
+   "aliases": [
+    "dabino",
+    "dates"
+   ],
+   "category": "fruit",
+   "detail": "Dried dates",
+   "kcal_per_100g": 282.0,
+   "protein_g": 2.2,
+   "carbs_g": 64.1,
+   "fat_g": 0.1,
+   "typical_portion_g": 40,
+   "typical_portion_label": "5 dates",
+   "count_g": 8,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:05_031",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "Hausa / Zongo",
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "apple",
+   "name": "Apple",
+   "aliases": [
+    "apple"
+   ],
+   "category": "fruit",
+   "detail": "Apple with skin",
+   "kcal_per_100g": 59.0,
+   "protein_g": 0.3,
+   "carbs_g": 12.2,
+   "fat_g": 0.4,
+   "typical_portion_g": 150,
+   "typical_portion_label": "1 apple",
+   "count_g": 150,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:05_026",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "young_coconut",
+   "name": "Young coconut flesh",
+   "aliases": [
+    "coconut jelly",
+    "soft coconut"
+   ],
+   "category": "fruit",
+   "detail": "Immature coconut kernel",
+   "kcal_per_100g": 147.0,
+   "protein_g": 1.5,
+   "carbs_g": 6.1,
+   "fat_g": 12.2,
+   "typical_portion_g": 80,
+   "typical_portion_label": "1 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:06_004",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "lemon",
+   "name": "Lemon / lime",
+   "aliases": [
+    "lime",
+    "ankaa twadeɛ",
+    "lemon"
+   ],
+   "category": "fruit",
+   "detail": "Lemon",
+   "kcal_per_100g": 36.0,
+   "protein_g": 0.7,
+   "carbs_g": 5.8,
+   "fat_g": 0.6,
+   "typical_portion_g": 60,
+   "typical_portion_label": "1 lemon",
+   "count_g": 60,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:05_014",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "cashew_nuts",
+   "name": "Cashew nuts",
+   "aliases": [
+    "cashew",
+    "cashew nuts"
+   ],
+   "category": "snack",
+   "detail": "Cashew nuts",
+   "kcal_per_100g": 591.0,
+   "protein_g": 16.1,
+   "carbs_g": 27.8,
+   "fat_g": 45.4,
+   "typical_portion_g": 30,
+   "typical_portion_label": "1 handful",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:06_001",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "kola_nut",
+   "name": "Kola nut",
+   "aliases": [
+    "bese",
+    "goro",
+    "kola",
+    "cola nut"
+   ],
+   "category": "snack",
+   "detail": "Fresh kola nut",
+   "kcal_per_100g": 135.0,
+   "protein_g": 2.8,
+   "carbs_g": 20.2,
+   "fat_g": 1.0,
+   "typical_portion_g": 15,
+   "typical_portion_label": "1 nut",
+   "count_g": 15,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:06_018",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "Mole-Dagbani",
+    "Hausa / Zongo",
+    "Akan"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "bitter_kola",
+   "name": "Bitter kola",
+   "aliases": [
+    "bitter cola",
+    "namijin goro"
+   ],
+   "category": "snack",
+   "detail": "Fresh bitter kola seeds",
+   "kcal_per_100g": 183.0,
+   "protein_g": 2.6,
+   "carbs_g": 37.3,
+   "fat_g": 2.1,
+   "typical_portion_g": 10,
+   "typical_portion_label": "2 seeds",
+   "count_g": 5,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:06_032",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "kulikuli",
+   "name": "Kulikuli (groundnut cake)",
+   "aliases": [
+    "kuli kuli",
+    "kulikuli",
+    "groundnut cake"
+   ],
+   "category": "snack",
+   "detail": "Pressed groundnut cake",
+   "kcal_per_100g": 381.0,
+   "protein_g": 42.5,
+   "carbs_g": 22.6,
+   "fat_g": 9.9,
+   "typical_portion_g": 40,
+   "typical_portion_label": "3 pieces",
+   "count_g": 13,
+   "oily": true,
+   "greens": false,
+   "source": "WAFCT2019:06_028",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "Hausa / Zongo",
+    "Mole-Dagbani"
+   ],
+   "ingredients": [
+    "groundnut_paste"
+   ],
+   "source_note": "Stand-in: Groundnut flour, partially defatted"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "sugar_bread",
+   "name": "Sugar bread / butter bread",
+   "aliases": [
+    "butter bread",
+    "sugar bread",
+    "rolls"
+   ],
+   "category": "staple",
+   "detail": "Soft white bread rolls",
+   "kcal_per_100g": 271.0,
+   "protein_g": 9.5,
+   "carbs_g": 51.0,
+   "fat_g": 2.7,
+   "typical_portion_g": 80,
+   "typical_portion_label": "2 slices",
+   "count_g": 40,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:01_045",
+   "confidence": "proxy",
+   "needs_review": true,
+   "people": [
+    "All"
+   ],
+   "ingredients": [],
+   "source_note": "Stand-in: Bread/rolls, white, unfortified"
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "brown_bread",
+   "name": "Brown bread (wheat)",
+   "aliases": [
+    "wheat bread",
+    "wholemeal bread"
+   ],
+   "category": "staple",
+   "detail": "Wholemeal bread",
+   "kcal_per_100g": 232.0,
+   "protein_g": 11.1,
+   "carbs_g": 37.6,
+   "fat_g": 2.8,
+   "typical_portion_g": 70,
+   "typical_portion_label": "2 slices",
+   "count_g": 35,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:01_048",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "biscuits",
+   "name": "Biscuits",
+   "aliases": [
+    "biscuit",
+    "cream crackers",
+    "digestive"
+   ],
+   "category": "snack",
+   "detail": "Sweet plain biscuits",
+   "kcal_per_100g": 479.0,
+   "protein_g": 6.2,
+   "carbs_g": 64.9,
+   "fat_g": 21.2,
+   "typical_portion_g": 40,
+   "typical_portion_label": "4 biscuits",
+   "count_g": 10,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:01_188",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "cake",
+   "name": "Cake",
+   "aliases": [
+    "pound cake",
+    "sponge cake",
+    "cake"
+   ],
+   "category": "snack",
+   "detail": "Plain cake",
+   "kcal_per_100g": 363.0,
+   "protein_g": 6.1,
+   "carbs_g": 51.4,
+   "fat_g": 14.5,
+   "typical_portion_g": 80,
+   "typical_portion_label": "1 slice",
+   "count_g": 80,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:01_187",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "cornflakes",
+   "name": "Cornflakes",
+   "aliases": [
+    "cornflakes",
+    "cereal"
+   ],
+   "category": "porridge",
+   "detail": "Cornflakes, dry",
+   "kcal_per_100g": 383.0,
+   "protein_g": 6.3,
+   "carbs_g": 80.6,
+   "fat_g": 2.9,
+   "typical_portion_g": 30,
+   "typical_portion_label": "1 bowl",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:01_182",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "chocolate",
+   "name": "Milk chocolate",
+   "aliases": [
+    "chocolate",
+    "kingsbite",
+    "golden tree"
+   ],
+   "category": "snack",
+   "detail": "Milk chocolate",
+   "kcal_per_100g": 532.0,
+   "protein_g": 4.4,
+   "carbs_g": 55.1,
+   "fat_g": 31.1,
+   "typical_portion_g": 50,
+   "typical_portion_label": "1 bar",
+   "count_g": 50,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:13_021",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "nono",
+   "name": "Nono (fermented milk)",
+   "aliases": [
+    "nono",
+    "fermented milk",
+    "brukina milk"
+   ],
+   "category": "drink",
+   "detail": "Fermented cow's milk",
+   "kcal_per_100g": 62.0,
+   "protein_g": 3.3,
+   "carbs_g": 4.0,
+   "fat_g": 3.6,
+   "typical_portion_g": 250,
+   "typical_portion_label": "1 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:10_022",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "Fulani",
+    "Hausa / Zongo"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "soya_milk",
+   "name": "Soya milk",
+   "aliases": [
+    "soy milk",
+    "soya drink"
+   ],
+   "category": "drink",
+   "detail": "Soya milk, unsweetened",
+   "kcal_per_100g": 45.0,
+   "protein_g": 3.0,
+   "carbs_g": 3.9,
+   "fat_g": 1.8,
+   "typical_portion_g": 250,
+   "typical_portion_label": "1 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:12_025",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "ovaltine",
+   "name": "Ovaltine with milk",
+   "aliases": [
+    "ovaltine",
+    "bournvita"
+   ],
+   "category": "drink",
+   "detail": "Ovaltine with whole milk, no sugar",
+   "kcal_per_100g": 108.0,
+   "protein_g": 3.6,
+   "carbs_g": 13.4,
+   "fat_g": 4.4,
+   "typical_portion_g": 300,
+   "typical_portion_label": "1 mug",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:12_015",
+   "confidence": "calculated",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "palm_sap",
+   "name": "Fresh palm sap (sweet palm wine)",
+   "aliases": [
+    "nsafufuo",
+    "sweet palm wine",
+    "fresh palm wine"
+   ],
+   "category": "drink",
+   "detail": "Fresh palm sap",
+   "kcal_per_100g": 47.0,
+   "protein_g": 0.3,
+   "carbs_g": 10.8,
+   "fat_g": 0.0,
+   "typical_portion_g": 250,
+   "typical_portion_label": "1 cup",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:12_007",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "Akan",
+    "Ewe",
+    "Nzema / Ahanta"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "millet_beer",
+   "name": "Millet beer",
+   "aliases": [
+    "pito millet",
+    "dam"
+   ],
+   "category": "drink",
+   "detail": "Millet beer (about 3%)",
+   "kcal_per_100g": 43.0,
+   "protein_g": 0.7,
+   "carbs_g": 5.7,
+   "fat_g": 0.0,
+   "typical_portion_g": 500,
+   "typical_portion_label": "1 calabash",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:12_003",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "Mole-Dagbani"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "juice_sweetened",
+   "name": "Juice (sweetened, boxed)",
+   "aliases": [
+    "boxed juice",
+    "fruit drink",
+    "ceres",
+    "tampico"
+   ],
+   "category": "drink",
+   "detail": "Bottled or boxed sweetened juice",
+   "kcal_per_100g": 48.0,
+   "protein_g": 0.1,
+   "carbs_g": 11.5,
+   "fat_g": 0.1,
+   "typical_portion_g": 300,
+   "typical_portion_label": "1 glass",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "WAFCT2019:12_012",
+   "confidence": "primary",
+   "needs_review": false,
+   "people": [
+    "All"
+   ],
+   "ingredients": []
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "gari_soakings",
+   "name": "Gari soakings",
+   "aliases": [
+    "soaking gari",
+    "gari and sugar",
+    "gari soakings",
+    "gari with groundnuts"
+   ],
+   "category": "porridge",
+   "detail": "Gari in cold water with sugar, milk and groundnuts",
+   "kcal_per_100g": 96.2,
+   "protein_g": 1.6,
+   "carbs_g": 16.3,
+   "fat_g": 2.5,
+   "typical_portion_g": 345,
+   "typical_portion_label": "1 bowl",
+   "count_g": null,
+   "oily": false,
+   "greens": false,
+   "source": "recipe:gari_soakings",
+   "confidence": "calculated",
+   "needs_review": true,
+   "people": [
+    "All"
+   ],
+   "ingredients": [
+    "gari",
+    "sugar",
+    "groundnuts"
+   ],
+   "recipe": {
+    "parts": [
+     {
+      "wafct": "02_039",
+      "name": "Cassava, grated, from fermented white cassava, toasted without oil (white gari)",
+      "g": 50
+     },
+     {
+      "wafct": "12_019",
+      "name": "Water, tap",
+      "g": 250
+     },
+     {
+      "wafct": "13_002",
+      "name": "Sugar, white",
+      "g": 10
+     },
+     {
+      "wafct": "10_016",
+      "name": "Milk, cow, canned, evaporated",
+      "g": 20
+     },
+     {
+      "wafct": "06_025",
+      "name": "Groundnut, combined varieties, shelled, dried, raw (Ghana)",
+      "g": 15
+     }
+    ],
+    "cooked_g": 345,
+    "note": "nothing evaporates"
+   }
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "gari_foto",
+   "name": "Gari foto",
+   "aliases": [
+    "garifoto",
+    "gari fotor",
+    "gari jollof"
+   ],
+   "category": "staple",
+   "detail": "Gari stirred into tomato and egg stew",
+   "kcal_per_100g": 192.3,
+   "protein_g": 2.7,
+   "carbs_g": 25.0,
+   "fat_g": 8.6,
+   "typical_portion_g": 300,
+   "typical_portion_label": "1 plate",
+   "count_g": null,
+   "oily": true,
+   "greens": false,
+   "source": "recipe:gari_foto",
+   "confidence": "calculated",
+   "needs_review": true,
+   "people": [
+    "Ewe",
+    "Ga-Adangbe",
+    "All"
+   ],
+   "ingredients": [
+    "gari",
+    "tomato",
+    "onion",
+    "egg",
+    "vegetable_oil"
+   ],
+   "recipe": {
+    "parts": [
+     {
+      "wafct": "02_039",
+      "name": "Cassava, grated, from fermented white cassava, toasted without oil (white gari)",
+      "g": 100
+     },
+     {
+      "wafct": "11_010",
+      "name": "Vegetable oil, unfortified",
+      "g": 25
+     },
+     {
+      "wafct": "04_021",
+      "name": "Tomato, red, ripe, raw",
+      "g": 120
+     },
+     {
+      "wafct": "04_018",
+      "name": "Onion, fresh, raw",
+      "g": 40
+     },
+     {
+      "wafct": "08_002",
+      "name": "Egg, chicken, boiled",
+      "g": 50
+     },
+     {
+      "wafct": "12_019",
+      "name": "Water, tap",
+      "g": 80
+     }
+    ],
+    "cooked_g": 360,
+    "note": "about 55 g of the tomato, onion and water cooks off"
+   }
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "nkatie_cake",
+   "name": "Nkatie cake (groundnut brittle)",
+   "aliases": [
+    "nkate cake",
+    "groundnut cake",
+    "peanut brittle"
+   ],
+   "category": "snack",
+   "detail": "Roasted groundnuts in caramel",
+   "kcal_per_100g": 506.3,
+   "protein_g": 12.8,
+   "carbs_g": 54.1,
+   "fat_g": 25.4,
+   "typical_portion_g": 30,
+   "typical_portion_label": "1 piece",
+   "count_g": 30,
+   "oily": false,
+   "greens": false,
+   "source": "recipe:nkatie_cake",
+   "confidence": "calculated",
+   "needs_review": true,
+   "people": [
+    "All"
+   ],
+   "ingredients": [
+    "groundnuts",
+    "sugar"
+   ],
+   "recipe": {
+    "parts": [
+     {
+      "wafct": "06_025",
+      "name": "Groundnut, combined varieties, shelled, dried, raw (Ghana)",
+      "g": 100
+     },
+     {
+      "wafct": "13_002",
+      "name": "Sugar, white",
+      "g": 80
+     }
+    ],
+    "cooked_g": 175,
+    "note": "about 5 g of moisture cooks off"
+   }
+  },
+  {
+   "region": "GH",
+   "portion_source": "PlateWise default",
+   "added_by": "build_ghana_foods",
+   "id": "kube_cake",
+   "name": "Kube cake (coconut candy)",
+   "aliases": [
+    "coconut cake",
+    "kube toffee"
+   ],
+   "category": "snack",
+   "detail": "Grated coconut cooked in caramel",
+   "kcal_per_100g": 479.2,
+   "protein_g": 2.5,
+   "carbs_g": 50.0,
+   "fat_g": 28.3,
+   "typical_portion_g": 30,
+   "typical_portion_label": "1 piece",
+   "count_g": 30,
+   "oily": false,
+   "greens": false,
+   "source": "recipe:kube_cake",
+   "confidence": "calculated",
+   "needs_review": true,
+   "people": [
+    "All"
+   ],
+   "ingredients": [
+    "coconut",
+    "sugar"
+   ],
+   "recipe": {
+    "parts": [
+     {
+      "wafct": "06_002",
+      "name": "Coconut, mature kernel, fresh, raw",
+      "g": 100
+     },
+     {
+      "wafct": "13_002",
+      "name": "Sugar, white",
+      "g": 60
+     }
+    ],
+    "cooked_g": 130,
+    "note": "about 30 g of coconut water cooks off"
+   }
   }
  ],
  "sources": {
   "WAFCT2019": "FAO/INFOODS West African Food Composition Table 2019",
   "Appiah2020": "Appiah et al. 2020, AJFAND 20(3)",
   "USDA": "USDA FoodData Central",
-  "PLOSONE2020": "PLOS ONE 2020 (PMC7660496)"
+  "PLOSONE2020": "PLOS ONE 2020 (PMC7660496)",
+  "recipe": "PlateWise recipe from WAFCT 2019 ingredient rows (see each row's recipe)"
  }
 }

@@ -7,7 +7,8 @@ from typing import Any
 from PIL import Image, ImageOps
 
 from app.nutrition.calc import nutrients, oil_from_visible
-from app.nutrition.matcher import AUTO_ACCEPT, match
+from app.nutrition.guess import GUESS_USE, Guess, compose, guess_dishes, seen_ingredients
+from app.nutrition.matcher import AUTO_ACCEPT, Candidate, match
 from app.nutrition.portions import stated_grams
 from app.vision.schema import AnalysisItem, MealAnalysis
 
@@ -30,6 +31,16 @@ def build_item(ai: AnalysisItem, idx: int, said: str | None = None) -> dict[str,
     cands = match(ai.food_name, ai.local_aliases, ai.catalog_id)
     top = cands[0] if cands else None
     food = top.food if top and top.score >= AUTO_ACCEPT else None
+    # Not sure what the dish is: guess it from the ingredients seen, or work it out from them.
+    guessed = mixed = False
+    guesses: list[Guess] = []
+    if food is None and ai.ingredients:
+        seen = seen_ingredients([(i.name, i.share) for i in ai.ingredients])
+        guesses = guess_dishes(seen)
+        if guesses and guesses[0].score >= GUESS_USE:
+            food, guessed = guesses[0].food, True
+        elif (built := compose(seen, ai.food_name.strip().capitalize() or "Mixed dish")) is not None:
+            food, mixed = built, True
     lo, hi = sorted((ai.grams_low, ai.grams_high))
     grams = min(max(ai.grams_estimate, lo), hi)
     # An amount the person stated ("two balls") beats the model's guess: use the table's portion.
@@ -55,9 +66,13 @@ def build_item(ai: AnalysisItem, idx: int, said: str | None = None) -> dict[str,
         kind = "oil"
     oil = oil_from_visible(ai.visible_oil_level)
 
-    low = ai.confidence < LOW_CONFIDENCE or food is None
+    low = ai.confidence < LOW_CONFIDENCE or food is None or guessed or mixed
     if food is None:
         hint = "Pick the closest match"
+    elif guessed:
+        hint = f"Looks like {food.name.lower()} from what we can see. Tap to check"
+    elif mixed:
+        hint = "Worked out from its ingredients. Tap to check"
     elif low:
         hint = f"Is this {food.name.lower()}? Tap to check"
     elif kind == "oil":
@@ -73,8 +88,8 @@ def build_item(ai: AnalysisItem, idx: int, said: str | None = None) -> dict[str,
         "id": f"i{idx}",
         "name": food.name if food else ai.food_name.strip().capitalize(),
         "ai_name": ai.food_name,
-        "food_id": food.id if food else None,
-        "ai_food_id": food.id if food else None,
+        "food_id": food.id if food and not mixed else None,
+        "ai_food_id": food.id if food and not mixed else None,
         "grams": round(grams),
         "grams_low": round(lo),
         "grams_high": round(hi),
@@ -94,10 +109,20 @@ def build_item(ai: AnalysisItem, idx: int, said: str | None = None) -> dict[str,
         "protein": round(n.protein, 1) if n else None,
         "carbs": round(n.carbs, 1) if n else None,
         "fat": round(n.fat, 1) if n else None,
-        "candidates": [{"food_id": c.food.id, "name": c.food.name, "detail": c.food.detail, "score": c.score} for c in cands[:3]],
+        "candidates": _candidates(guesses, cands),
+        "built_from": [i for i in food.ingredients] if mixed and food else None,
         "cooking_method": ai.cooking_method,
         "bbox": ai.bbox if ai.bbox and len(ai.bbox) == 4 else None,
     }
+
+
+def _candidates(guesses: list[Guess], cands: list[Candidate]) -> list[dict[str, Any]]:
+    """Dishes guessed from ingredients first, then name matches; no repeats, at most 4."""
+    out: list[dict[str, Any]] = []
+    for f, score in [(g.food, g.score) for g in guesses] + [(c.food, c.score) for c in cands]:
+        if f.id not in {o["food_id"] for o in out}:
+            out.append({"food_id": f.id, "name": f.name, "detail": f.detail, "score": score})
+    return out[:4]
 
 
 def build_scan(analysis: MealAnalysis, provider: str, prompt_version: str, said: str | None = None) -> dict[str, Any]:

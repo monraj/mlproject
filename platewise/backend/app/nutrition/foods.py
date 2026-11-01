@@ -28,6 +28,8 @@ class Food:
     source: str
     needs_review: bool
     confidence: str = "estimate"
+    people: tuple[str, ...] = ()
+    ingredients: tuple[str, ...] = ()
 
     def public(self) -> dict[str, object]:
         return {
@@ -45,6 +47,8 @@ class Food:
             "source": self.source,
             "needs_review": self.needs_review,
             "confidence": self.confidence,
+            "people": list(self.people),
+            "ingredients": list(self.ingredients),
         }
 
 
@@ -73,6 +77,8 @@ def load_foods() -> dict[str, Food]:
             source=r["source"],
             needs_review=bool(r.get("needs_review", True)),
             confidence=r.get("confidence", "estimate"),
+            people=tuple(r.get("people", [])),
+            ingredients=tuple(r.get("ingredients", [])),
         )
     return foods
 

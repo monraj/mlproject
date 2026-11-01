@@ -9,6 +9,11 @@ CookingMethod = Literal["raw", "boiled", "steamed", "fried", "grilled", "stewed"
 OilVisible = Literal["none", "low", "medium", "high", "unknown"]
 
 
+class SeenIngredient(BaseModel):
+    name: str
+    share: float = Field(default=0.2, ge=0, le=1)
+
+
 class AnalysisItem(BaseModel):
     food_name: str
     catalog_id: str | None = None
@@ -21,6 +26,9 @@ class AnalysisItem(BaseModel):
     visible_oil_level: OilVisible = "unknown"
     confidence: float = Field(ge=0, le=1)
     bbox: list[float] | None = None
+    # What the food seems to be made of, with each one's rough share of its weight. Lets the app
+    # guess a dish it can't name, or work one out from its ingredients.
+    ingredients: list[SeenIngredient] = Field(default_factory=list)
 
 
 class MealAnalysis(BaseModel):
@@ -103,6 +111,7 @@ MEAL_SCHEMA = _obj(
                     "visible_oil_level": {"type": "string", "enum": ["none", "low", "medium", "high", "unknown"]},
                     "confidence": {"type": "number"},
                     "bbox": {"anyOf": [{"type": "array", "items": {"type": "number"}}, {"type": "null"}]},
+                    "ingredients": {"type": "array", "items": _obj({"name": {"type": "string"}, "share": {"type": "number"}})},
                 }
             ),
         },

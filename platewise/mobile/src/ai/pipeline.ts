@@ -2,6 +2,7 @@ import type { Food } from '../data/foods';
 import type { Candidate, DraftItem, OilLevel } from '../state/types';
 import { AUTO_ACCEPT, matchFood } from './matcher';
 import { statedGrams } from './portions';
+import { GUESS_USE, compose, guessDishes, seenIngredients, type Guess } from './guess';
 
 // Port of backend/app/vision/pipeline.py: the model names foods and gram ranges; this code matches
 // them to the food table. Calories are computed later by state/calc.ts, never by the model.
@@ -17,6 +18,8 @@ export type AnalysisItem = {
   visible_oil_level?: 'none' | 'low' | 'medium' | 'high' | 'unknown';
   confidence: number;
   bbox?: number[] | null;
+  /** What the food seems to be made of, with each one's rough share of its weight. */
+  ingredients?: { name: string; share: number }[];
 };
 
 export type MealAnalysis = { is_food: boolean; items?: AnalysisItem[]; notes?: string | null };
@@ -37,7 +40,23 @@ export function buildItem(ai0: AnalysisItem, idx: number, said?: string): DraftI
   let ai = ai0;
   const cands = matchFood(ai.food_name, ai.local_aliases ?? [], ai.catalog_id ?? null);
   const top = cands[0];
-  const food: Food | undefined = top && top.score >= AUTO_ACCEPT ? top.food : undefined;
+  let food: Food | undefined = top && top.score >= AUTO_ACCEPT ? top.food : undefined;
+  // Not sure what the dish is: guess it from the ingredients seen, or work it out from them.
+  let guessed = false;
+  let mixed = false;
+  let guesses: Guess[] = [];
+  if (!food && ai.ingredients?.length) {
+    const seen = seenIngredients(ai.ingredients);
+    guesses = guessDishes(seen);
+    const built = guesses[0]?.score >= GUESS_USE ? null : compose(seen, cap(ai.food_name.trim()) || 'Mixed dish');
+    if (guesses[0]?.score >= GUESS_USE) {
+      food = guesses[0].food;
+      guessed = true;
+    } else if (built) {
+      food = built;
+      mixed = true;
+    }
+  }
   const [lo0, hi0] = [ai.grams_low, ai.grams_high].sort((a, b) => a - b);
   let lo = lo0;
   let hi = hi0;
@@ -69,9 +88,11 @@ export function buildItem(ai0: AnalysisItem, idx: number, said?: string): DraftI
   }
   const oil = oilFromVisible(ai.visible_oil_level);
 
-  const low = ai.confidence < LOW_CONFIDENCE || !food;
+  const low = ai.confidence < LOW_CONFIDENCE || !food || guessed || mixed;
   let hint: string;
   if (!food) hint = 'Pick the closest match';
+  else if (guessed) hint = `Looks like ${food.name.toLowerCase()} from what we can see. Tap to check`;
+  else if (mixed) hint = 'Worked out from its ingredients. Tap to check';
   else if (low) hint = `Is this ${food.name.toLowerCase()}? Tap to check`;
   else if (kind === 'oil') hint = 'How oily was it?';
   else if (kind === 'count') {
@@ -84,8 +105,8 @@ export function buildItem(ai0: AnalysisItem, idx: number, said?: string): DraftI
     id: `i${idx}-${Date.now().toString(36)}`,
     name: food ? food.name : cap(ai.food_name.trim()),
     hint,
-    foodId: food?.id ?? null,
-    aiFoodId: food?.id ?? null,
+    foodId: mixed ? null : food?.id ?? null,
+    aiFoodId: mixed ? null : food?.id ?? null,
     aiGrams: Math.round(grams),
     grams: Math.round(grams),
     gramsLow: Math.round(lo),
@@ -99,7 +120,10 @@ export function buildItem(ai0: AnalysisItem, idx: number, said?: string): DraftI
     oil,
     oily: !!food?.oily,
     greens: !!food?.greens,
-    candidates: cands.slice(0, 3).map((c): Candidate => ({ foodId: c.food.id, name: c.food.name, detail: c.food.detail })),
+    candidates: [...guesses.map((g) => g.food), ...cands.map((c) => c.food)]
+      .filter((f, i, all) => all.findIndex((x) => x.id === f.id) === i)
+      .slice(0, 4)
+      .map((f): Candidate => ({ foodId: f.id, name: f.name, detail: f.detail })),
     bbox: ai.bbox && ai.bbox.length === 4 ? ai.bbox : null,
     onDevice: true,
   };

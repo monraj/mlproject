@@ -25,6 +25,7 @@ export const MEAL_SCHEMA = obj({
       visible_oil_level: { type: 'string', enum: ['none', 'low', 'medium', 'high', 'unknown'] },
       confidence: { type: 'number' },
       bbox: { anyOf: [{ type: 'array', items: { type: 'number' } }, { type: 'null' }] },
+      ingredients: { type: 'array', items: obj({ name: { type: 'string' }, share: { type: 'number' } }) },
     }),
   },
   plate_or_reference: nullable('string'),

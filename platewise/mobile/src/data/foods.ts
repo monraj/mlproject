@@ -18,6 +18,10 @@ export type Food = {
   greens: boolean;
   /** How sure the values are: primary/calculated (sourced), proxy (similar dish), estimate (unsourced). */
   confidence: 'primary' | 'calculated' | 'proxy' | 'estimate';
+  /** Who mainly eats it ("All" = countrywide), e.g. "Ewe", "Mole-Dagbani". */
+  people?: string[];
+  /** Main visible ingredients (ids in this table), used to guess a dish from what a scan sees. */
+  ingredients?: string[];
 };
 
 type RawFood = (typeof raw.foods)[number];
@@ -35,6 +39,8 @@ export const FOODS: Food[] = raw.foods.map((f: RawFood) => ({
   oily: f.oily,
   greens: f.greens,
   confidence: ((f as { confidence?: string }).confidence ?? 'estimate') as Food['confidence'],
+  people: (f as { people?: string[] }).people ?? [],
+  ingredients: (f as { ingredients?: string[] }).ingredients ?? [],
 }));
 
 const BY_ID = new Map(FOODS.map((f) => [f.id, f]));

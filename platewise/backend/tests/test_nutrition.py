@@ -13,8 +13,8 @@ def test_every_food_has_a_source_and_review_flag():
     for r in json.loads(FOODS_PATH.read_text())["foods"]:
         assert r["source"], r["id"]
         assert r["confidence"] in ("primary", "calculated", "proxy", "estimate"), r["id"]
-        # Stand-ins and estimates are flagged for review; sourced table values are not (CLAUDE.md rule 2).
-        assert r["needs_review"] is (r["confidence"] in ("proxy", "estimate")), r["id"]
+        # Stand-ins, estimates and our own recipe ratios are flagged for review; table values are not (CLAUDE.md rule 2).
+        assert r["needs_review"] is (r["confidence"] in ("proxy", "estimate") or r["source"].startswith("recipe:")), r["id"]
         if r["confidence"] != "estimate":
             assert ":" in r["source"] or "label" in r["source"].lower() or r["source"].startswith("KNUST"), r["id"]
 
