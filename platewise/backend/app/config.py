@@ -33,6 +33,10 @@ class Settings(BaseSettings):
     # Most AI requests one address may make per hour (0 = no limit).
     ai_requests_per_hour: int = 120
 
+    # Public pages (home, privacy, terms): where the Android app can be downloaded and who to write to.
+    download_url: str | None = "https://drive.google.com/drive/folders/1xAYiWamlmkRT06ARg0fuqPPWHTeWyf3k"
+    contact_email: str = "monraj187@gmail.com"
+
 
 @lru_cache
 def get_settings() -> Settings:

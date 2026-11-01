@@ -13,14 +13,16 @@ from app.admin.routes import is_admin
 from app.admin.routes import router as admin_router
 from app.api.routes import router
 from app.config import get_settings
+from app.site import router as site_router
 
 logging.basicConfig(level=logging.INFO)
 
 app = FastAPI(title="PlateWise API", version="0.1.0")
 app.include_router(router)
 app.include_router(admin_router)
+app.include_router(site_router)
 
-OPEN_PATHS = {"/health", "/docs", "/openapi.json"}
+OPEN_PATHS = {"/health", "/docs", "/openapi.json", "/", "/privacy", "/terms"}
 AI_PATHS = ("/scans", "/parse", "/coach", "/ideas", "/products/label")
 _hits: dict[str, deque[float]] = defaultdict(deque)
 
