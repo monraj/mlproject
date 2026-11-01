@@ -1,4 +1,4 @@
-import type { Day, DraftItem, Health, MealItem, OilLevel, Profile, Sex, Weight } from './types';
+import type { Day, DraftItem, Fasting, FastingPlan, Health, MealItem, OilLevel, Profile, Sex, Weight } from './types';
 import { daysBetween, shiftKey } from '../lib/dates';
 
 export type KcalRange = { mid: number; low: number; high: number };
@@ -150,6 +150,41 @@ export function healthNotes(health?: Health): string[] {
   if (health.bloodPressure) out.push('With high blood pressure, salt and seasoning cubes matter as much as calories. Keep taking your medication and check changes with your doctor.');
   return out;
 }
+
+// Time-restricted eating: mirror the fasting section of backend/app/safety/rules.py.
+export const FAST_HOURS: Record<FastingPlan, number> = { '12:12': 12, '14:10': 14, '16:8': 16 };
+export const FAST_BREAK_GLUCOSE_MMOL = 3.9;
+export const DIABETES_MAX_FAST_HOURS = 12;
+export type FastingBlock = 'age' | 'pregnant' | 'eating_disorder' | 'underweight' | 'glucose_meds';
+
+export function fastingBlock(p: Pick<Profile, 'age' | 'weightKg' | 'heightCm' | 'health'>, f: Pick<Fasting, 'eatingDisorder' | 'meds' | 'doctorOk'>): FastingBlock | null {
+  if (p.age < MIN_AGE) return 'age';
+  if (p.health?.pregnant) return 'pregnant';
+  if (f.eatingDisorder) return 'eating_disorder';
+  if (p.weightKg < minGoalWeight(p.heightCm)) return 'underweight';
+  if (f.meds === 'other' && !f.doctorOk) return 'glucose_meds';
+  return null;
+}
+
+export function maxFastHours(diabetes: boolean, doctorOk: boolean): number {
+  return diabetes && !doctorOk ? DIABETES_MAX_FAST_HOURS : Math.max(...Object.values(FAST_HOURS));
+}
+
+export function fastingPlanAllowed(plan: FastingPlan, diabetes: boolean, doctorOk: boolean): boolean {
+  return FAST_HOURS[plan] <= maxFastHours(diabetes, doctorOk);
+}
+
+export function mustBreakFast(mmol: number): boolean {
+  return mmol < FAST_BREAK_GLUCOSE_MMOL;
+}
+
+export const FASTING_BLOCK_TEXT: Record<FastingBlock, string> = {
+  age: 'PlateWise is for adults 18 and over.',
+  pregnant: 'Fasting isn’t advised while pregnant or breastfeeding. Regular meals with protein and greens are the best plan for now.',
+  eating_disorder: 'With an eating disorder now or in the past, fasting can bring old patterns back. Regular meals are the kinder plan. A doctor or dietitian can help.',
+  underweight: 'Your weight is below the healthy range for your height, so fasting isn’t offered. Regular meals help you get back to a healthy range.',
+  glucose_meds: 'Insulin and some diabetes tablets (like glibenclamide or gliclazide) can make blood sugar fall too low while fasting. Ask your doctor first. Once they agree, tick the box below.',
+};
 
 /**
  * Days logged in the last 7 (today included). A forgiving measure: one missed day lowers it by one

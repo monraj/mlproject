@@ -2,4 +2,10 @@
     <string name="app_name">PlateWise</string>
     <string name="tile_label">PlateWise · today</string>
     <string name="complication_label">PlateWise · kcal left</string>
+    <string name="c_stress">PlateWise · stress</string>
+    <string name="c_sugar">PlateWise · blood sugar</string>
+    <string name="c_fast">PlateWise · fasting window</string>
+    <string name="c_summary">PlateWise · today\'s summary</string>
+    <string name="c_gemini">PlateWise · ask Gemini</string>
+    <string name="tile_signals">PlateWise · body &amp; plan</string>
 </resources>

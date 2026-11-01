@@ -30,6 +30,25 @@ export type Profile = {
   showWalking?: boolean;
   /** Smartwatch via Health Connect. adjustBudget adds part of measured exercise to the day's budget. */
   watch?: { connected: boolean; adjustBudget: boolean };
+  /** Afternoon and evening summary notifications. On unless switched off. */
+  reports?: boolean;
+  /** Time-restricted eating, only after the safety check in calc.ts (fastingBlock). */
+  fasting?: Fasting;
+};
+
+export type FastingPlan = '12:12' | '14:10' | '16:8';
+export type DiabetesMeds = 'none' | 'metformin' | 'other';
+export type Fasting = {
+  on: boolean;
+  plan: FastingPlan;
+  /** Start of the eating window, HH:MM. */
+  eatFrom: string;
+  /** Answers to the safety check, kept so the plan can be re-checked when the profile changes. */
+  eatingDisorder: boolean;
+  meds: DiabetesMeds;
+  doctorOk: boolean;
+  /** Remind at the start and end of the eating window. */
+  remind: boolean;
 };
 
 export type Candidate = { foodId: string; name: string; detail: string };
@@ -111,9 +130,22 @@ export type WatchDay = {
   sleepMin: number | null;
   restingHr: number | null;
   avgHr: number | null;
+  minHr?: number | null;
+  maxHr?: number | null;
+  /** Average heart rate variability (RMSSD, ms) that day. Higher usually means more rested. */
+  hrvMs?: number | null;
+  /** Blood sugar readings a meter or app shared through Health Connect. */
+  glucose?: Glucose[];
   sources: string[];
   syncedAt: string;
 };
+
+export type GlucoseWhen = 'fasting' | 'before' | 'after' | 'random';
+/** One blood sugar reading in mmol/L (the unit used in Ghana). */
+export type Glucose = { id: string; at: string; mmol: number; when: GlucoseWhen; source: 'manual' | 'watch' };
+/** "How stressed do you feel?" from 1 (calm) to 5 (very stressed). */
+export type StressLevel = 1 | 2 | 3 | 4 | 5;
+export type StressCheck = { at: string; level: StressLevel; from: 'phone' | 'watch' };
 
 export type Day = {
   meals: Meal[];
@@ -124,6 +156,11 @@ export type Day = {
   watch?: WatchDay;
   /** Cups of water added from the Pixel Watch app so far (so they're never added twice). */
   watchWater?: number;
+  /** Cups added with the home-screen widget's button (a running count, like watchWater). */
+  widgetWater?: number;
+  /** Blood sugar the person typed in. */
+  glucose?: Glucose[];
+  stress?: StressCheck[];
 };
 export type Weight = { date: string; kg: number };
 export type SavedMeal = { id: string; name: string; kcal: number; items: MealItem[] };

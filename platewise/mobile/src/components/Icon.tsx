@@ -29,7 +29,10 @@ export type IconName =
   | 'flame'
   | 'share'
   | 'send'
-  | 'info';
+  | 'info'
+  | 'trash'
+  | 'heart'
+  | 'bell';
 
 type Props = { name: IconName; size?: number; color: string; strokeWidth?: number };
 
@@ -45,6 +48,15 @@ export function Icon({ name, size = 22, color, strokeWidth = 2 }: Props) {
   switch (name) {
     case 'back':
       body = <Path d="M15 18l-6-6 6-6" {...p} />;
+      break;
+    case 'trash':
+      body = <Path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6" {...p} />;
+      break;
+    case 'heart':
+      body = <Path d="M12 20s-7-4.5-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.5-7 10-7 10z" {...p} />;
+      break;
+    case 'bell':
+      body = <Path d="M6 16V11a6 6 0 0112 0v5l2 2H4zM10 20a2 2 0 004 0" {...p} />;
       break;
     case 'close':
       body = <Path d="M6 6l12 12M18 6L6 18" {...p} />;

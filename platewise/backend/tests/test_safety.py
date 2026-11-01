@@ -1,5 +1,5 @@
 from app.energy.bmr import bmr, daily_budget, tdee
-from app.safety.rules import age_allowed, clamp_budget, clamp_pace, goal_allowed, min_goal_weight
+from app.safety.rules import age_allowed, clamp_budget, clamp_pace, fasting_block, fasting_plan_allowed, goal_allowed, min_goal_weight, must_break_fast
 
 
 def test_floor_by_sex():
@@ -38,3 +38,34 @@ def test_budget_loss_and_maintain():
     t = 2400
     assert daily_budget(t, "female", 84, 76, 0.5) == 1850  # 2400 − 550
     assert daily_budget(t, "female", 84, 84, 0.5) == 2400
+
+OK = dict(age=35, weight_kg=70.0, height_cm=165.0, pregnant=False, eating_disorder=False, diabetes_meds="none", doctor_ok=False)
+
+
+def test_fasting_open_to_healthy_adults():
+    assert fasting_block(**OK) is None  # type: ignore[arg-type]
+
+
+def test_fasting_never_offered_in_pregnancy_ed_or_underweight():
+    assert fasting_block(**{**OK, "pregnant": True}) == "pregnant"  # type: ignore[arg-type]
+    assert fasting_block(**{**OK, "eating_disorder": True, "doctor_ok": True}) == "eating_disorder"  # type: ignore[arg-type]
+    assert fasting_block(**{**OK, "weight_kg": 48.0}) == "underweight"  # type: ignore[arg-type]
+    assert fasting_block(**{**OK, "age": 17}) == "age"  # type: ignore[arg-type]
+
+
+def test_low_sugar_medicines_need_a_doctor():
+    assert fasting_block(**{**OK, "diabetes_meds": "other"}) == "glucose_meds"  # type: ignore[arg-type]
+    assert fasting_block(**{**OK, "diabetes_meds": "other", "doctor_ok": True}) is None  # type: ignore[arg-type]
+    assert fasting_block(**{**OK, "diabetes_meds": "metformin"}) is None  # type: ignore[arg-type]
+
+
+def test_diabetes_keeps_to_twelve_hours_without_a_doctor():
+    assert fasting_plan_allowed("12:12", diabetes=True, doctor_ok=False)
+    assert not fasting_plan_allowed("16:8", diabetes=True, doctor_ok=False)
+    assert fasting_plan_allowed("16:8", diabetes=True, doctor_ok=True)
+    assert fasting_plan_allowed("16:8", diabetes=False, doctor_ok=False)
+
+
+def test_low_sugar_ends_the_fast():
+    assert must_break_fast(3.8)
+    assert not must_break_fast(3.9)

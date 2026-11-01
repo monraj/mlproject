@@ -1,5 +1,5 @@
-import React from 'react';
-import { Alert, Platform, StyleSheet, View } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, LinearTransition, ZoomIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -18,6 +18,11 @@ import { SLOTS, chooseSlot, slotOf } from '../../src/lib/mealSlots';
 import { WEEKDAYS, keyDate } from '../../src/lib/dates';
 import type { Meal } from '../../src/state/types';
 import { duration, stagger } from '../../src/lib/motion';
+import { SwipeToDelete, type SwipeToDeleteHandle } from '../../src/components/SwipeToDelete';
+import { UndoToast } from '../../src/components/UndoToast';
+import { SuggestCard } from '../../src/components/SuggestCard';
+import { glucoseAdvice, readingsOf, stressRead } from '../../src/state/vitals';
+import { fastWindow } from '../../src/state/fasting';
 
 export default function Today() {
   const { c } = useTheme();
@@ -33,6 +38,19 @@ export default function Today() {
   const plan = s.plans[today];
   const change = s.budgetChange;
   const wellbeing = s.profile ? wellbeingCheck(s.profile, s.days, s.weights, today) : null;
+  const stress = stressRead(s.days, today);
+  const sugar = readingsOf(day).slice(-1)[0];
+  const fast = s.profile?.fasting?.on ? fastWindow(s.profile.fasting, now) : null;
+  const fastLine = fast
+    ? fast.eating
+      ? `Eating window · closes ${fast.end.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`
+      : `Fasting · eat from ${fast.end.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`
+    : 'Fasting, herbs and traditional foods';
+  const signals = [
+    { label: 'Stress', value: stress ? { calm: 'Calm', usual: 'Usual', raised: 'Raised' }[stress.level] : 'Check in', color: stress?.level === 'raised' ? c.amber : c.mint },
+    { label: 'Sugar', value: sugar ? `${sugar.mmol} mmol/L` : 'Add', color: sugar && glucoseAdvice(sugar).band !== 'usual' ? c.amber : c.water },
+    { label: 'Heart', value: day.watch?.restingHr ? `${day.watch.restingHr} bpm` : '–', color: c.steps },
+  ];
 
   const habit = (key: 'water' | 'greensExtra', delta: number) => {
     const cur = day[key];
@@ -40,13 +58,12 @@ export default function Today() {
     dispatch({ type: 'habit', date: today, key, value: cur + delta });
   };
 
+  // Swipe a meal left (or hold it) to delete; Undo puts it back, so no "are you sure?" dialog.
+  const rows = useRef<Record<string, SwipeToDeleteHandle | null>>({});
+  const [removed, setRemoved] = useState<Meal | null>(null);
   const removeMeal = (m: Meal) => {
-    const go = () => dispatch({ type: 'deleteMeal', date: today, id: m.id });
-    if (Platform.OS === 'web') return go();
-    Alert.alert('Delete this meal?', m.title, [
-      { text: 'Keep', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: go },
-    ]);
+    dispatch({ type: 'deleteMeal', date: today, id: m.id });
+    setRemoved(m);
   };
 
   const habits = [
@@ -57,6 +74,7 @@ export default function Today() {
   ];
 
   return (
+    <View style={{ flex: 1 }}>
     <Screen>
       <Rise style={styles.header}>
         <View style={{ gap: 2, flex: 1 }}>
@@ -179,6 +197,41 @@ export default function Today() {
         </Press>
       </Card>
 
+      <Rise order={3} style={{ gap: 8 }}>
+        <Press onPress={() => router.push('/vitals')} accessibilityRole="link" accessibilityLabel={`Body signals. ${signals.map((x) => `${x.label} ${x.value}`).join(', ')}`} style={[styles.signals, { backgroundColor: c.surface }]}>
+          {signals.map((x) => (
+            <View key={x.label} style={{ flex: 1, gap: 2 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <View style={[styles.signalDot, { backgroundColor: x.color }]} />
+                <T v="small" size={12} weight="semibold" muted>
+                  {x.label}
+                </T>
+              </View>
+              <T v="body" weight="bold" numberOfLines={1}>
+                {x.value}
+              </T>
+            </View>
+          ))}
+          <Icon name="chevron" color={c.muted} />
+        </Press>
+        <Press onPress={() => router.push('/report')} accessibilityRole="link" style={[styles.reportLink, { backgroundColor: c.surface }]}>
+          <Icon name="calendar" color={c.mintText} size={18} />
+          <T v="small" weight="bold" color={c.mintText} style={{ flex: 1 }}>
+            {now.getHours() >= 18 ? 'Your day in review' : 'Today’s summary so far'}
+          </T>
+          <Icon name="chevron" color={c.muted} size={18} />
+        </Press>
+        <Press onPress={() => router.push('/plan')} accessibilityRole="link" style={[styles.reportLink, { backgroundColor: c.surface }]}>
+          <Icon name="leaf" color={c.mintText} size={18} />
+          <T v="small" weight="bold" color={c.mintText} style={{ flex: 1 }}>
+            {fastLine}
+          </T>
+          <Icon name="chevron" color={c.muted} size={18} />
+        </Press>
+      </Rise>
+
+      <SuggestCard order={3} />
+
       {wellbeing ? (
         <Card order={3} tone="amber">
           <T v="small" color={c.amberText}>
@@ -218,7 +271,14 @@ export default function Today() {
                   entering={m.id === s.lastSavedId ? ZoomIn.springify().damping(14) : FadeInDown.duration(duration.slow)}
                   style={{ borderRadius: 20 }}
                 >
-                  <Press onLongPress={() => removeMeal(m)} accessibilityHint="Hold to delete" style={[styles.meal, { backgroundColor: c.surface }]}>
+                  <SwipeToDelete ref={(r) => void (rows.current[m.id] = r)} onDelete={() => removeMeal(m)}>
+                  <Press
+                    onLongPress={() => rows.current[m.id]?.dismiss()}
+                    accessibilityHint="Swipe left or hold to delete"
+                    accessibilityActions={[{ name: 'delete', label: 'Delete meal' }]}
+                    onAccessibilityAction={(e) => e.nativeEvent.actionName === 'delete' && removeMeal(m)}
+                    style={[styles.meal, { backgroundColor: c.surface }]}
+                  >
                     <View style={[styles.thumb, { backgroundColor: m.swatch }]} />
                     <View style={{ flex: 1, gap: 2 }}>
                       <T v="small" size={12} weight="semibold" muted>
@@ -234,6 +294,7 @@ export default function Today() {
                       </T>
                     )}
                   </Press>
+                  </SwipeToDelete>
                 </Animated.View>
               ))}
               {!meals.length ? (
@@ -270,6 +331,8 @@ export default function Today() {
         </Press>
       </Rise>
     </Screen>
+      {removed ? <UndoToast key={removed.id} text={`Removed ${removed.title}`} onUndo={() => { dispatch({ type: 'restoreMeal', date: today, meal: removed }); setRemoved(null); }} onDone={() => setRemoved(null)} /> : null}
+    </View>
   );
 }
 
@@ -283,4 +346,7 @@ const styles = StyleSheet.create({
   meal: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10, paddingRight: 14, borderRadius: 20 },
   plan: { borderWidth: 2, borderStyle: 'dashed' },
   thumb: { width: 46, height: 46, borderRadius: 14 },
+  signals: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: 20 },
+  signalDot: { width: 8, height: 8, borderRadius: 4 },
+  reportLink: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 48, paddingHorizontal: 14, borderRadius: 20 },
 });

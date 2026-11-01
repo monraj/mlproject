@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="platewise_widget_label">PlateWise · today</string>
+    <string name="platewise_widget_description">Calories left, body signals and meal ideas, with quick water and snap buttons.</string>
+    <!-- Fresh mint, light (CLAUDE.md design tokens). Dark is in values-night. -->
+    <color name="pw_widget_bg">#FFFFFFFF</color>
+    <color name="pw_widget_surface">#FFF4F6F5</color>
+    <color name="pw_widget_ink">#FF101828</color>
+    <color name="pw_widget_muted">#FF475467</color>
+    <color name="pw_widget_mint_text">#FF027A48</color>
+    <color name="pw_widget_button">#FF101828</color>
+    <color name="pw_widget_button_text">#FFFFFFFF</color>
+    <color name="pw_widget_water">#FFEFF8FF</color>
+    <color name="pw_widget_water_text">#FF175CD3</color>
+    <color name="pw_widget_track">#FFEAECF0</color>
+    <color name="pw_widget_protein">#FF12B76A</color>
+    <color name="pw_widget_greens">#FF7E9A2E</color>
+    <color name="pw_widget_water_bar">#FF2E90FA</color>
+</resources>

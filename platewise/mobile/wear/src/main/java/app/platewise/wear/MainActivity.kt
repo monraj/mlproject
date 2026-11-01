@@ -27,8 +27,10 @@ import androidx.viewpager2.widget.ViewPager2
 import kotlin.math.abs
 
 /**
- * PlateWise on the wrist. Five pages, scrolled with a swipe or the crown: the day's rings, water,
- * meals by part of the day, log a meal again, and the week.
+ * PlateWise on the wrist. Pages scrolled with a swipe or the crown: the day's rings, body signals
+ * (stress check-in, sugar, heart), the summary with a Gemini shortcut, the fasting window and a meal
+ * idea, water, meals by part of the day, log a meal again, and the week. Watch-face shortcuts open a
+ * page directly (Shortcuts.EXTRA_PAGE).
  */
 class MainActivity : ComponentActivity() {
     private lateinit var pager: ViewPager2
@@ -36,6 +38,16 @@ class MainActivity : ComponentActivity() {
     private val ring by lazy { RingView(this) }
     private val water by lazy { WaterView(this) }
     private val week by lazy { WeekView(this) }
+    private val breath by lazy { BreathView(this) }
+    private val stressWord by lazy { text("", 16f, Palette.INK, Fonts.heavy(this)) }
+    private val stressTip by lazy { text("", 11f, Palette.MUTED).apply { maxLines = 2; ellipsize = android.text.TextUtils.TruncateAt.END } }
+    private val feel by lazy { LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER } }
+    private val vitalsLine by lazy { text("", 11f, Palette.INK, Fonts.semi(this)) }
+    private val summaryTitle by lazy { text("", 15f, Palette.INK, Fonts.heavy(this)) }
+    private val summaryList by lazy { column() }
+    private val dial by lazy { FastDial(this) }
+    private val fastOff by lazy { text("Fasting is off. Turn it on in PlateWise on your phone.", 12f, Palette.MUTED) }
+    private val ideaText by lazy { text("", 12f, Palette.INK, Fonts.semi(this)).apply { maxLines = 3 } }
     private val mealsList by lazy { column() }
     private val quickList by lazy { column() }
     private val weekNote by lazy { text("", 12f, Palette.MUTED) }
@@ -52,6 +64,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         pages += page(ring, pad = 0.04f)
+        pages += signalsPage()
+        pages += summaryPage()
+        pages += planPage()
         pages += waterPage()
         pages += listPage("Today's meals", mealsList, streakText)
         pages += listPage("Log again", quickList, null)
@@ -84,6 +99,18 @@ class MainActivity : ComponentActivity() {
             addView(dots, FrameLayout.LayoutParams(dp(8), -1, Gravity.END or Gravity.CENTER_VERTICAL).apply { marginEnd = dp(6) })
         })
         render(replay = true)
+        openPage(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        openPage(intent)
+    }
+
+    /** A watch-face shortcut or tile asked for a page. */
+    private fun openPage(intent: Intent?) {
+        val i = PAGES.indexOf(intent?.getStringExtra(Shortcuts.EXTRA_PAGE) ?: return)
+        if (i >= 0) pager.post { pager.setCurrentItem(i, false); replayPage(i) }
     }
 
     override fun onStart() {
@@ -120,6 +147,9 @@ class MainActivity : ComponentActivity() {
             return
         }
         ring.set(t, replay && shown <= 0)
+        fillSignals(t)
+        fillSummary(t)
+        fillPlan(t, replay = false)
         water.set(t.water, t.waterGoal, replay)
         week.set(t.week, t.hide, replay)
         fillMeals(t)
@@ -136,14 +166,97 @@ class MainActivity : ComponentActivity() {
         val t = today ?: return
         when (position) {
             0 -> ring.set(t, replay = true)
-            1 -> water.set(t.water, t.waterGoal, replay = true)
-            2 -> { fillMeals(t); stagger(mealsList) }
-            3 -> stagger(quickList)
-            4 -> week.play()
+            1 -> { fillSignals(t); stagger(feel) }
+            2 -> { fillSummary(t); stagger(summaryList) }
+            3 -> fillPlan(t, replay = true)
+            4 -> water.set(t.water, t.waterGoal, replay = true)
+            5 -> { fillMeals(t); stagger(mealsList) }
+            6 -> stagger(quickList)
+            7 -> week.play()
         }
     }
 
     // ---- pages ----
+
+    private fun signalsPage(): View {
+        val col = column()
+        col.addView(breath, LinearLayout.LayoutParams(dp(60), dp(60)))
+        col.addView(stressWord, LinearLayout.LayoutParams(-1, -2))
+        col.addView(stressTip, LinearLayout.LayoutParams(-1, -2))
+        col.addView(feel, LinearLayout.LayoutParams(-1, dp(30)).apply { topMargin = dp(5) })
+        col.addView(vitalsLine, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(5) })
+        return page(col, pad = 0.12f)
+    }
+
+    private fun fillSignals(t: Today) {
+        val s = t.signals
+        breath.set(s.stressLevel == "raised")
+        stressWord.text = s.stressWord
+        stressTip.text = if (s.stressLevel == null) "How stressed are you? Tap 1–5." else s.stressTip
+        feel.removeAllViews()
+        (1..5).forEach { n ->
+            val on = s.checkIn == n
+            val b = pill("$n", if (on) Palette.MINT else Palette.SURFACE, if (on) 0xFF0C111D.toInt() else Palette.INK) { v ->
+                v.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                Today.checkIn(this, n)
+                today = Today.load(this)
+                today?.let(::fillSignals)
+            }.apply { setPadding(0, 0, 0, 0) }
+            feel.addView(b, LinearLayout.LayoutParams(dp(28), dp(28)).apply { marginStart = dp(2); marginEnd = dp(2) })
+        }
+        val parts = mutableListOf<String>()
+        s.sugar?.let { parts += "Sugar ${"%.1f".format(it.mmol)}" }
+        s.restingHr?.let { parts += "Heart $it bpm" }
+        if (parts.isEmpty()) s.hrv?.let { parts += "HRV $it ms" }
+        vitalsLine.text = if (parts.isEmpty()) "Sugar and heart show here" else parts.joinToString("  ·  ")
+        vitalsLine.setTextColor(if (s.sugar?.usual == false) Palette.SUN else Palette.INK)
+    }
+
+    private fun summaryPage(): View {
+        val col = column()
+        col.addView(summaryTitle)
+        col.addView(summaryList, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(4) })
+        val ask = pill("✦  Ask Gemini", Palette.RAISED, Palette.INK) { v ->
+            v.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+            Shortcuts.openGemini(this)
+        }
+        col.addView(ask, LinearLayout.LayoutParams(-2, dp(38)).apply { topMargin = dp(8) })
+        return page(col, pad = 0.12f)
+    }
+
+    private fun fillSummary(t: Today) {
+        val s = t.signals
+        summaryTitle.text = s.reportTitle
+        summaryList.removeAllViews()
+        s.urgent?.let { summaryList.addView(text(it, 11f, Palette.SUN, Fonts.semi(this)).apply { maxLines = 3 }) }
+        val lines = s.lines.take(if (s.urgent != null) 2 else 3)
+        if (lines.isEmpty()) summaryList.addView(text("Log a meal and your summary builds through the day.", 12f, Palette.MUTED))
+        lines.forEach { l ->
+            val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+            row.addView(View(this).apply { background = GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(if (l.good) Palette.MINT else Palette.WATER) } }, LinearLayout.LayoutParams(dp(6), dp(6)).apply { marginEnd = dp(6) })
+            row.addView(text(if (l.label.isNotEmpty()) "${l.label}: ${l.text}" else l.text, 11f, Palette.INK, gravity = Gravity.START).apply { maxLines = 2; ellipsize = android.text.TextUtils.TruncateAt.END }, LinearLayout.LayoutParams(0, -2, 1f))
+            summaryList.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(4) })
+        }
+        s.next.firstOrNull()?.let { summaryList.addView(text("Next: $it", 11f, Palette.MINT, Fonts.semi(this)).apply { maxLines = 2 }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(5) }) }
+    }
+
+    private fun planPage(): View {
+        val col = column()
+        col.addView(FrameLayout(this).apply {
+            addView(dial, FrameLayout.LayoutParams(-1, -1))
+            addView(fastOff, FrameLayout.LayoutParams(-1, -2, Gravity.CENTER))
+        }, LinearLayout.LayoutParams(dp(128), dp(128)))
+        col.addView(ideaText, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(6) })
+        return page(col, pad = 0.12f)
+    }
+
+    private fun fillPlan(t: Today, replay: Boolean) {
+        val s = t.signals
+        dial.set(s.fast, replay)
+        dial.visibility = if (s.fast == null) View.INVISIBLE else View.VISIBLE
+        fastOff.visibility = if (s.fast == null) View.VISIBLE else View.GONE
+        ideaText.text = s.idea?.let { i -> "${i.slot} idea: ${i.name}" + (i.kcal?.let { " · about ${kcalText(it)} kcal" } ?: "") } ?: "Meal ideas show here when there's room in your day."
+    }
 
     private fun waterPage(): View {
         val add = pill("+ Cup of water", Palette.WATER, 0xFF0C111D.toInt()) { v ->
@@ -299,6 +412,11 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
+
+    companion object {
+        /** Page order, for shortcuts. */
+        private val PAGES = listOf(Shortcuts.RING, Shortcuts.SIGNALS, Shortcuts.SUMMARY, Shortcuts.PLAN, Shortcuts.WATER)
+    }
 
     /** A thin rounded bar that grows to its share. */
     private class Bar(context: Context, private val share: Float) : View(context) {

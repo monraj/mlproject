@@ -195,6 +195,26 @@ export default function Me() {
         <View style={styles.switchRow}>
           <View style={{ flex: 1, gap: 2 }}>
             <T v="body" weight="semibold">
+              Afternoon and evening summaries
+            </T>
+            <T v="small" muted>
+              A short report at 2 pm and 8 pm. Open one any time from Today.
+            </T>
+          </View>
+          <Switch
+            value={p.reports !== false}
+            onValueChange={async (v) => {
+              if (v && !(await askPermission())) return;
+              dispatch({ type: 'patchProfile', patch: { reports: v } });
+            }}
+            trackColor={{ true: c.mintBorder, false: c.line }}
+            thumbColor="#FFFFFF"
+            accessibilityLabel="Afternoon and evening summaries"
+          />
+        </View>
+        <View style={styles.switchRow}>
+          <View style={{ flex: 1, gap: 2 }}>
+            <T v="body" weight="semibold">
               Meal reminders
             </T>
             <T v="small" muted>

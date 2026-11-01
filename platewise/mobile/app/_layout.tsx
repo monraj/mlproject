@@ -1,6 +1,7 @@
 import 'react-native-gesture-handler';
 import React, { useEffect } from 'react';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
+import * as Notifications from 'expo-notifications';
 import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -15,6 +16,7 @@ import {
 import { ThemeProvider, useTheme } from '../src/theme/ThemeProvider';
 import { AppStateProvider, useApp } from '../src/state/AppState';
 import { syncReminders } from '../src/lib/reminders';
+import { planFasting } from '../src/state/fasting';
 import { loadServerSettings } from '../src/api/client';
 import { loadGemmaState } from '../src/ai/modelStore';
 import { WatchSync } from '../src/health/WatchSync';
@@ -27,11 +29,26 @@ SplashScreen.preventAutoHideAsync().catch(() => undefined);
 function ReminderSync() {
   const { s } = useApp();
   const reminders = s.profile?.reminders;
+  const reports = s.profile?.reports !== false;
+  const fasting = s.profile?.fasting;
+  const diabetes = !!s.profile?.health?.diabetes;
   useEffect(() => {
     if (!s.hydrated || !reminders) return;
-    const t = setTimeout(() => syncReminders(reminders, s.days, s.weights), 1500);
+    const t = setTimeout(() => syncReminders(reminders, s.days, s.weights, reports, planFasting(fasting, diabetes)), 1500);
     return () => clearTimeout(t);
-  }, [s.hydrated, reminders, s.days, s.weights]);
+  }, [s.hydrated, reminders, reports, fasting, diabetes, s.days, s.weights]);
+  return null;
+}
+
+/** Tapping a notification opens the page it's about (e.g. the evening report). */
+function NotificationLinks() {
+  const router = useRouter();
+  const { s } = useApp();
+  const last = Notifications.useLastNotificationResponse();
+  useEffect(() => {
+    const url = last?.notification.request.content.data?.url;
+    if (s.hydrated && s.profile && typeof url === 'string' && url.startsWith('/')) router.push(url as never);
+  }, [last, s.hydrated, s.profile, router]);
   return null;
 }
 
@@ -54,6 +71,9 @@ function Nav() {
       <Stack.Screen name="type" options={{ animation: 'slide_from_bottom' }} />
       <Stack.Screen name="barcode" options={{ animation: 'fade' }} />
       <Stack.Screen name="saved-meals" options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="vitals" options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="report" options={{ animation: 'fade' }} />
+      <Stack.Screen name="plan" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="weigh" options={{ presentation: 'transparentModal', animation: 'none', contentStyle: { backgroundColor: 'transparent' } }} />
     </Stack>
   );
@@ -86,6 +106,7 @@ export default function RootLayout() {
         <ThemeProvider>
           <AppStateProvider>
             <ReminderSync />
+            <NotificationLinks />
             <WatchSync />
             <WatchBridge />
             <Nav />

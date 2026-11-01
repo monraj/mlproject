@@ -2,6 +2,7 @@ import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import type { Day, MealType, Reminders, Weight } from '../state/types';
 import { dayKey, shiftKey } from './dates';
+import { REPORT_TIMES } from '../state/report';
 
 const MEALS: { key: 'breakfast' | 'lunch' | 'dinner'; type: MealType }[] = [
   { key: 'breakfast', type: 'Breakfast' },
@@ -59,7 +60,7 @@ export function learnedTimes(r: Reminders, days: Record<string, Day>, today = da
   return out;
 }
 
-export type Planned = { date: Date; title: string; body: string };
+export type Planned = { date: Date; title: string; body: string; url?: string };
 
 /** At most one meal reminder a day, plus the weigh-in nudge. Pure, so it can be tested. */
 export function planReminders(r: Reminders, days: Record<string, Day>, weights: Weight[], now = new Date()): Planned[] {
@@ -94,17 +95,37 @@ export function planReminders(r: Reminders, days: Record<string, Day>, weights: 
   return out;
 }
 
-/** Reschedules everything whenever the log changes. */
-export async function syncReminders(r: Reminders, days: Record<string, Day>, weights: Weight[]): Promise<void> {
+/** The afternoon (2 pm) and evening (8 pm) summaries for the next 3 days. They open the report. */
+export function planReports(on: boolean, now = new Date()): Planned[] {
+  if (!on) return [];
+  const out: Planned[] = [];
+  for (let i = 0; i < 3; i++) {
+    const day = new Date(now);
+    day.setDate(now.getDate() + i);
+    for (const [part, minute] of Object.entries(REPORT_TIMES) as ['afternoon' | 'evening', number][]) {
+      const when = at(day, minute);
+      if (when <= now) continue;
+      out.push(
+        part === 'afternoon'
+          ? { date: when, title: 'Your afternoon check-in', body: 'See how your day is going and what to eat next.', url: '/report?part=afternoon' }
+          : { date: when, title: 'Your day in review', body: 'Food, water, stress and blood sugar in one place.', url: '/report?part=evening' },
+      );
+    }
+  }
+  return out;
+}
+
+/** Reschedules everything whenever the log changes. `extra` carries other plans, like the fasting window. */
+export async function syncReminders(r: Reminders, days: Record<string, Day>, weights: Weight[], reports = true, extra: Planned[] = []): Promise<void> {
   if (Platform.OS === 'web') return;
   try {
     await Notifications.cancelAllScheduledNotificationsAsync();
-    if (!r.on) return;
+    if (!r.on && !reports && !extra.length) return;
     const perm = await Notifications.getPermissionsAsync();
     if (!perm.granted) return;
-    for (const p of planReminders(r, days, weights)) {
+    for (const p of [...planReminders(r, days, weights), ...planReports(reports), ...extra]) {
       await Notifications.scheduleNotificationAsync({
-        content: { title: p.title, body: p.body },
+        content: { title: p.title, body: p.body, data: p.url ? { url: p.url } : {} },
         trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: p.date },
       });
     }

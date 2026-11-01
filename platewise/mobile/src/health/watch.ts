@@ -9,13 +9,13 @@ import {
   readRecords,
   requestPermission,
 } from 'react-native-health-connect';
-import type { WatchDay, Weight } from '../state/types';
+import type { Glucose, GlucoseWhen, WatchDay, Weight } from '../state/types';
 import { dayKey, keyDate, shiftKey } from '../lib/dates';
 
 // Smartwatch data through Android's Health Connect, where Samsung Health, Fitbit / Pixel Watch and
 // most other watch apps share their data. Read-only; nothing is written back. Stays on the phone.
 
-const READ = ['Steps', 'ActiveCaloriesBurned', 'TotalCaloriesBurned', 'Distance', 'ExerciseSession', 'HeartRate', 'RestingHeartRate', 'SleepSession', 'Weight'] as const;
+const READ = ['Steps', 'ActiveCaloriesBurned', 'TotalCaloriesBurned', 'Distance', 'ExerciseSession', 'HeartRate', 'RestingHeartRate', 'SleepSession', 'Weight', 'BloodGlucose', 'HeartRateVariabilityRmssd'] as const;
 type ReadType = (typeof READ)[number];
 
 export type WatchStatus = 'unsupported' | 'unavailable' | 'needs_update' | 'ready';
@@ -87,6 +87,8 @@ export async function readWatchDay(key: string, granted: ReadType[]): Promise<Wa
   ]);
   [steps, active, total, dist, exercise, sleep, resting, hr].forEach((r) => note(r as { dataOrigins?: string[] } | null));
 
+  const [hrv, sugar] = await Promise.all([has('HeartRateVariabilityRmssd') ? readHrv(day) : null, has('BloodGlucose') ? readGlucose(day) : []]);
+
   const pos = (n: number | undefined | null) => (n != null && n > 0 ? Math.round(n) : null);
   return {
     steps: pos(steps?.COUNT_TOTAL),
@@ -97,6 +99,10 @@ export async function readWatchDay(key: string, granted: ReadType[]): Promise<Wa
     sleepMin: pos(sleep?.SLEEP_DURATION_TOTAL != null ? sleep.SLEEP_DURATION_TOTAL / 60 : null),
     restingHr: pos(resting?.BPM_AVG),
     avgHr: pos(hr?.BPM_AVG),
+    minHr: pos(hr?.BPM_MIN),
+    maxHr: pos(hr?.BPM_MAX),
+    hrvMs: hrv,
+    glucose: sugar,
     sources: [...sources].filter((s) => s !== 'app.platewise.mobile'),
     syncedAt: new Date().toISOString(),
   };
@@ -115,6 +121,33 @@ export async function readWatchWeights(sinceKey: string, granted: ReadType[]): P
       if (!prev || r.time > prev.at) byDay.set(k, { at: r.time, kg });
     }
     return [...byDay.entries()].map(([date, v]) => ({ date, kg: v.kg }));
+  } catch {
+    return [];
+  }
+}
+
+type Range = ReturnType<typeof between>;
+
+/** The day's average HRV (RMSSD). Health Connect can't sum these, so read them and average. */
+async function readHrv(range: Range): Promise<number | null> {
+  try {
+    const res = await readRecords('HeartRateVariabilityRmssd', { timeRangeFilter: range });
+    const ms = res.records.map((r) => r.heartRateVariabilityMillis).filter((n) => n > 0 && n < 300);
+    return ms.length ? Math.round(ms.reduce((a, b) => a + b, 0) / ms.length) : null;
+  } catch {
+    return null;
+  }
+}
+
+// Health Connect's relationToMeal: 2 fasting, 3 before a meal, 4 after a meal; anything else is "random".
+const RELATION: Record<number, GlucoseWhen> = { 2: 'fasting', 3: 'before', 4: 'after' };
+
+async function readGlucose(range: Range): Promise<Glucose[]> {
+  try {
+    const res = await readRecords('BloodGlucose', { timeRangeFilter: range });
+    return res.records
+      .filter((r) => r.level.inMillimolesPerLiter > 0)
+      .map((r) => ({ id: `hc${r.metadata?.id ?? r.time}`, at: r.time, mmol: Math.round(r.level.inMillimolesPerLiter * 10) / 10, when: RELATION[r.relationToMeal] ?? 'random', source: 'watch' as const }));
   } catch {
     return [];
   }

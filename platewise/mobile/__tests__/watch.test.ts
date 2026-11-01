@@ -51,3 +51,30 @@ describe('Pixel Watch payload', () => {
     expect(streak({ '2026-10-31': dayOf([meal('b', 'x', 1)]) }, '2026-11-01')).toBe(1);
   });
 });
+
+import { parseStressRef, watchSignals } from '../src/wear/signals';
+import type { Profile as P } from '../src/state/types';
+
+describe('watch signals', () => {
+  const profile = { name: 'Ama', sex: 'female', age: 30, weightKg: 70, heightCm: 165, hideNumbers: false, health: { pregnant: false, diabetes: false, bloodPressure: false } } as unknown as P;
+  const D = '2026-11-01';
+  it('sends the summary, sugar and a meal idea without the name', () => {
+    const days = { [D]: { meals: [], water: 2, greensExtra: 0, steps: 0, skipped: [], glucose: [{ id: 'g', at: '2026-11-01T10:00:00Z', mmol: 3.5, when: 'random' as const, source: 'manual' as const }] } };
+    const sig = watchSignals({ profile, days, weights: [], date: D, budget: 1800, proteinGoal: 90, now: new Date(2026, 10, 1, 13) });
+    expect(sig.sugar?.urgent).toMatch(/^Low/);
+    expect(sig.report.lines.length).toBeGreaterThan(0);
+    expect(sig.idea?.slot).toBe('Lunch');
+    expect(sig.fast).toBeNull();
+    expect(JSON.stringify(sig)).not.toContain('Ama');
+  });
+  it('sends the fasting window only when it is on and allowed', () => {
+    const fasting = { on: true, plan: '16:8' as const, eatFrom: '10:00', eatingDisorder: false, meds: 'none' as const, doctorOk: false, remind: true };
+    expect(watchSignals({ profile: { ...profile, fasting }, days: {}, weights: [], date: D, budget: 1800, proteinGoal: 90 }).fast).toEqual({ eatFrom: '10:00', eatHours: 8 });
+    expect(watchSignals({ profile: { ...profile, fasting: { ...fasting, eatingDisorder: true } }, days: {}, weights: [], date: D, budget: 1800, proteinGoal: 90 }).fast).toBeNull();
+  });
+  it('reads stress check-ins from the watch', () => {
+    expect(parseStressRef('stress:4:1761998400000')).toEqual({ level: 4, at: new Date(1761998400000).toISOString() });
+    expect(parseStressRef('stress:9:1')).toBeNull();
+    expect(parseStressRef('meal:2026-11-01:m1')).toBeNull();
+  });
+});

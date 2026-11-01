@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="pw_widget_bg">#FF161B26</color>
+    <color name="pw_widget_surface">#FF1F242F</color>
+    <color name="pw_widget_ink">#FFF5F5F6</color>
+    <color name="pw_widget_muted">#FF94969C</color>
+    <color name="pw_widget_mint_text">#FF32D583</color>
+    <color name="pw_widget_button">#FFF5F5F6</color>
+    <color name="pw_widget_button_text">#FF0C111D</color>
+    <color name="pw_widget_water">#FF102A56</color>
+    <color name="pw_widget_water_text">#FF84CAFF</color>
+    <color name="pw_widget_track">#FF333741</color>
+    <color name="pw_widget_protein">#FF32D583</color>
+    <color name="pw_widget_greens">#FFB8D86B</color>
+    <color name="pw_widget_water_bar">#FF53B1FD</color>
+</resources>

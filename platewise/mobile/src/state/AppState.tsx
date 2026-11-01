@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useReducer, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { BudgetChange, ChatMsg, Day, DraftItem, FlexPlan, Meal, MealItem, MealType, PlanDay, Product, Profile, SavedMeal, Source, WatchDay, Weight } from './types';
+import type { BudgetChange, ChatMsg, Day, DraftItem, FlexPlan, Glucose, StressCheck, Meal, MealItem, MealType, PlanDay, Product, Profile, SavedMeal, Source, WatchDay, Weight } from './types';
 import { activityBonus, dayKcal, macroTargets, mealKcal, profileBudget, toMealItem, weekLogged } from './calc';
 import { clock, mealForHour } from '../lib/format';
 import { dayKey } from '../lib/dates';
@@ -44,11 +44,13 @@ type Action =
   | { type: 'saveDraft'; mealType?: MealType; favourite?: string }
   | { type: 'logMeals'; meals: Meal[] }
   | { type: 'deleteMeal'; date: string; id: string }
+  | { type: 'restoreMeal'; date: string; meal: Meal }
   | { type: 'habit'; date: string; key: 'water' | 'greensExtra' | 'steps'; value: number }
   | { type: 'skip'; what: string }
   | { type: 'addWeight'; weight: Weight }
   | { type: 'watchSync'; days: Record<string, WatchDay>; weights: Weight[] }
   | { type: 'watchWater'; date: string; cups: number }
+  | { type: 'widgetWater'; date: string; cups: number }
   | { type: 'deleteWeight'; date: string }
   | { type: 'setLearnedTdee'; tdee: number | null; reason: string }
   | { type: 'setPlans'; plan: FlexPlan }
@@ -59,6 +61,9 @@ type Action =
   | { type: 'chat'; msg: ChatMsg }
   | { type: 'chatPatch'; id: string; patch: Partial<ChatMsg> }
   | { type: 'chatClear' }
+  | { type: 'addGlucose'; date: string; reading: Glucose }
+  | { type: 'deleteGlucose'; date: string; id: string }
+  | { type: 'stressCheck'; date: string; check: StressCheck }
   | { type: 'reset' };
 
 const emptyDay = (): Day => ({ meals: [], water: 0, greensExtra: 0, steps: 0, skipped: [] });
@@ -157,6 +162,9 @@ function reducer(s: State, a: Action): State {
     }
     case 'deleteMeal':
       return withDay(s, a.date, (d) => ({ ...d, meals: d.meals.filter((m) => m.id !== a.id) }));
+    case 'restoreMeal':
+      // Undo a delete: put the meal back where it was in the day.
+      return withDay(s, a.date, (d) => (d.meals.some((m) => m.id === a.meal.id) ? d : { ...d, meals: [...d.meals, a.meal].sort((x, y) => x.minute - y.minute) }));
     case 'habit':
       return withDay(s, a.date, (d) => ({ ...d, [a.key]: Math.max(0, a.value) }));
     case 'skip':
@@ -173,6 +181,12 @@ function reducer(s: State, a: Action): State {
         const added = Math.max(0, a.cups - (d.watchWater ?? 0));
         return added ? { ...d, water: d.water + added, watchWater: a.cups } : d;
       });
+    case 'widgetWater':
+      // Same for the home-screen widget's "+ Water" button.
+      return withDay(s, a.date, (d) => {
+        const added = Math.max(0, a.cups - (d.widgetWater ?? 0));
+        return added ? { ...d, water: d.water + added, widgetWater: a.cups } : d;
+      });
     case 'watchSync': {
       // Watch steps fill the steps habit (never lowering a higher manual entry); a weigh-in the
       // person typed for a day wins over the scale's.
@@ -185,6 +199,13 @@ function reducer(s: State, a: Action): State {
       if (!added.length) return next;
       return { ...next, weights: [...next.weights, ...added].sort((x, y) => (x.date < y.date ? -1 : 1)) };
     }
+    case 'addGlucose':
+      return withDay(s, a.date, (d) => ({ ...d, glucose: [...(d.glucose ?? []), a.reading].sort((x, y) => (x.at < y.at ? -1 : 1)) }));
+    case 'deleteGlucose':
+      return withDay(s, a.date, (d) => ({ ...d, glucose: (d.glucose ?? []).filter((g) => g.id !== a.id) }));
+    case 'stressCheck':
+      // The same moment from the phone and the watch counts once.
+      return withDay(s, a.date, (d) => (d.stress?.some((x) => x.at === a.check.at) ? d : { ...d, stress: [...(d.stress ?? []), a.check] }));
     case 'setLearnedTdee': {
       if (!s.profile) return s;
       const from = profileBudget(s.profile);
