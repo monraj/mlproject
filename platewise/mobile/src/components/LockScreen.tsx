@@ -218,7 +218,7 @@ export function LockScreen({ account, onUnlock }: { account: Account; onUnlock: 
         </Press>
         <Press onPress={() => void signOut()} accessibilityRole="button" style={styles.switch}>
           <T v="small" weight="bold" muted>
-            Not {account.name}? Switch person
+            Not {account.name}? Sign out
           </T>
         </Press>
       </Animated.View>

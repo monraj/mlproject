@@ -97,18 +97,27 @@ function ConfirmSheet({ req, onDone }: { req: ConfirmAsk | null; onDone: () => v
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [req, reduce]);
 
-  const closed = (run?: () => void) => {
+  // The chosen action waits here on the JS side: a function handed to the UI thread and back
+  // doesn't survive the trip, so the animations only say "finished" and this runs it.
+  const pending = useRef<(() => void) | undefined>(undefined);
+  const closed = () => {
+    const run = pending.current;
+    pending.current = undefined;
     setShown(null);
     onDone();
     run?.();
   };
 
   const close = (run?: () => void) => {
-    if (reduce) return closed(run);
-    enter.value = withTiming(0, { duration: duration.base, easing: easeOut }, (done) => {
-      if (done) runOnJS(closed)(run);
+    pending.current = run;
+    if (reduce) return closed();
+    enter.value = withTiming(0, { duration: duration.base, easing: easeOut }, () => {
+      runOnJS(closed)();
     });
   };
+
+  /** Slides the sheet away, then runs the action waiting in `pending`. */
+  const slideAway = () => close(pending.current);
 
   const cancel = () => {
     if (busy.current) return;
@@ -121,10 +130,11 @@ function ConfirmSheet({ req, onDone }: { req: ConfirmAsk | null; onDone: () => v
     busy.current = true;
     const go = shown.go;
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => undefined);
-    if (reduce) return closed(go);
+    pending.current = go;
+    if (reduce) return closed();
     // The picture breaks into dots, then the sheet slides away and the removal happens.
-    burst.value = withTiming(1, { duration: duration.slow + duration.fast, easing: easeOut }, (done) => {
-      if (done) runOnJS(close)(go);
+    burst.value = withTiming(1, { duration: duration.slow + duration.fast, easing: easeOut }, () => {
+      runOnJS(slideAway)();
     });
   };
 
@@ -146,14 +156,15 @@ function ConfirmSheet({ req, onDone }: { req: ConfirmAsk | null; onDone: () => v
     const password = k.password ? pw : undefined;
     const go = () => k.go(password);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
-    if (reduce) return closed(go);
+    pending.current = go;
+    if (reduce) return closed();
     // The picture gets a mint tick and tucks down into the sheet, safe for next time.
     ripple.value = 0;
     ripple.value = withTiming(1, { duration: duration.slow, easing: easeOut });
     kept.value = withSequence(
       withSpring(1, spring.pop),
-      withDelay(duration.base, withTiming(2, { duration: duration.base + duration.fast, easing: easeOut }, (done) => {
-        if (done) runOnJS(close)(go);
+      withDelay(duration.base, withTiming(2, { duration: duration.base + duration.fast, easing: easeOut }, () => {
+        runOnJS(slideAway)();
       })),
     );
   };

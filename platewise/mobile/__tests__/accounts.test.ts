@@ -40,6 +40,31 @@ test('each person keeps their own log; signing out keeps it', async () => {
   expect(await AsyncStorage.getItem(dataKey(ama.id))).toBe('ama-log');
 });
 
+test('one person at a time: signing out takes them off the list until they sign in again', async () => {
+  const ama = await addAccount('Ama', { email: 'ama@example.com', google: true });
+  await AsyncStorage.setItem(dataKey(ama.id), 'ama-log');
+  await signOut();
+  expect(getAccounts().current).toBeNull();
+  expect(shownAccounts()).toHaveLength(0);
+  const kofi = await addAccount('Kofi', { password: 'waakye' });
+  await signOut();
+  expect(shownAccounts()).toHaveLength(0);
+  expect((await signInWithPassword('kofi', 'waakye')).id).toBe(kofi.id);
+  await signOut();
+  expect((await addAccount('Ama', { email: 'ama@example.com', google: true })).id).toBe(ama.id);
+  expect(await AsyncStorage.getItem(dataKey(ama.id))).toBe('ama-log');
+});
+
+test('people already waiting on the sign-in list must sign in again after the update', async () => {
+  await AsyncStorage.setItem(
+    'platewise:accounts',
+    JSON.stringify({ list: [{ id: 'a', name: 'Ama', google: true, email: 'ama@example.com', created: '' }, { id: 'k', name: 'Kofi', created: '' }, { id: 'e', name: 'Efua', created: '' }], current: 'e' }),
+  );
+  await loadAccounts();
+  // Ama signs in with Google; Kofi has no Google and no password, so he stays tappable.
+  expect(shownAccounts().map((a) => a.id)).toEqual(['k', 'e']);
+});
+
 test('the same Google email signs back in to the same person', async () => {
   const a = await addAccount('Ama', { email: 'Ama@Example.com', google: true });
   await signOut();

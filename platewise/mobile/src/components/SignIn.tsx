@@ -22,7 +22,7 @@ function Avatar({ name }: { name: string }) {
   );
 }
 
-/** Shown when nobody is signed in: pick who you are, or add a new person to this phone. */
+/** Shown when nobody is signed in. One person is signed in at a time: Google, or a name and password. */
 export function SignIn() {
   const { c } = useTheme();
   const all = useAccounts();
@@ -131,12 +131,12 @@ export function SignIn() {
         {mode === 'pick' ? null : (
           <Card order={2} style={{ gap: 10 }}>
             <T v="label" muted>
-              {mode === 'return' ? 'Welcome back' : googleAvailable ? 'Or use a name and password' : list.length ? 'Add a person' : 'Get started'}
+              {mode === 'return' ? 'Welcome back' : googleAvailable ? 'Or use a name and password' : 'Create an account'}
             </T>
             <T v="small" muted>
               {mode === 'return'
                 ? 'Sign in with your name and password to carry on with your meals, weigh-ins and chats.'
-                : 'Each person gets their own meals, weigh-ins and coach chat on this phone. The password lets you sign back in later.'}
+                : 'Your meals, weigh-ins and coach chat are kept on this phone under your name. The password lets you sign back in later.'}
             </T>
             <TextInput
               value={name}
@@ -176,7 +176,7 @@ export function SignIn() {
           </Card>
         )}
         {canReturn && mode !== 'return' ? <Button label="Sign in with name and password" kind="secondary" icon="me" onPress={() => show('return')} /> : null}
-        {mode !== 'add' ? <Button label="Add a person without Google" kind="secondary" icon="plus" onPress={() => show('add')} /> : null}
+        {mode !== 'add' ? <Button label="Create an account without Google" kind="secondary" icon="plus" onPress={() => show('add')} /> : null}
 
         <T v="small" muted center>
           Your log stays on this phone. Signing out keeps it safe for next time.

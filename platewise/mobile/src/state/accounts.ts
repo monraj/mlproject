@@ -76,7 +76,10 @@ export async function loadAccounts(): Promise<void> {
   try {
     const raw = await AsyncStorage.getItem(KEY);
     if (raw) {
-      state = { list: [], current: null, ...(JSON.parse(raw) as Partial<Accounts>) };
+      const saved: Accounts = { list: [], current: null, ...(JSON.parse(raw) as Partial<Accounts>) };
+      // From when several people could sit on the sign-in list: everyone not signed in now, who
+      // can sign back in, signs in again instead of being one tap away.
+      state = { ...saved, list: saved.list.map((a) => (a.id !== saved.current && !needsPasswordToKeep(a) ? { ...a, hidden: true } : a)) };
     } else {
       const legacy = await AsyncStorage.getItem(LEGACY_DATA);
       if (legacy) {
@@ -141,7 +144,13 @@ export async function keepAccount(id: string, password?: string): Promise<void> 
 
 export const switchAccount = (id: string) => save({ ...state, current: state.list.some((a) => a.id === id) ? id : state.current });
 
-export const signOut = () => save({ ...state, current: null });
+/**
+ * One person is signed in at a time. Signing out keeps their log on the phone but takes them off the
+ * sign-in screen, so the next person can't just tap their name: they sign back in with Google or
+ * their password. Someone with neither stays on the list, so they're never locked out.
+ */
+export const signOut = () =>
+  save({ list: state.list.map((a) => (a.id === state.current && !needsPasswordToKeep(a) ? { ...a, hidden: true } : a)), current: null });
 
 export async function renameAccount(id: string, name: string): Promise<void> {
   if (!name.trim()) return;
