@@ -106,6 +106,12 @@ while they are read and are never stored by PlateWise. While PlateWise uses Gemi
 receives to improve its services, under Google's own terms. Without AI, you can still log meals from the food table
 on the phone, and an optional on-device model can read photos without sending them anywhere.</p>
 
+<h2>Your own AI key</h2>
+<p>You can use your own Gemini, ChatGPT (OpenAI) or Claude (Anthropic) API key instead of PlateWise's AI, in Me → Your
+own AI key. The key is kept in your phone's secure storage. It is sent to our server only with AI requests, used for
+that one request to reach the AI company you chose, and never stored or logged. What you send is then handled under
+that company's terms and billed to your account with them.</p>
+
 <h2>Health Connect and watches</h2>
 <p>If you connect Health Connect or a watch, PlateWise reads steps, active calories, exercise, sleep and heart rate on
 the phone to set your daily target and suggest meals. These readings are only sent off the phone as part of the

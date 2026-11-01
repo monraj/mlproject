@@ -18,17 +18,23 @@ from app.products.openfoodfacts import LookupUnavailable, lookup
 from app.safety.rules import calorie_floor
 from app.vision.pipeline import build_scan, prepare_image
 from app.vision.prompts import LABEL_PROMPT, PROMPT_VERSION, coach_system, ideas_prompt, photo_prompt, scan_system, text_prompt
-from app.vision.provider import ProviderError, Turn, get_provider, parse_json
+from app.vision.provider import ProviderError, Turn, get_provider, parse_json, using_own_key
 from app.vision.schema import COACH_SCHEMA, IDEAS_SCHEMA, LABEL_SCHEMA, CoachAnswer, Ideas, LabelRead, MealAnalysis, meal_schema
 
 router = APIRouter()
+
+
+def _no_answer() -> HTTPException:
+    if using_own_key():
+        return HTTPException(502, "Your own AI key didn't work. Check it in Me → Your own AI key, or switch back to PlateWise's AI.")
+    return HTTPException(502, "The AI service didn't answer. Try again in a moment.")
 
 
 def _ai(system: str, turns: list[Turn], schema: dict[str, Any], image: bytes | None = None) -> dict[str, Any]:
     try:
         return get_provider().generate_json(system=system, turns=turns, schema=schema, image=image)
     except ProviderError as e:
-        raise HTTPException(502, "The AI service didn't answer. Try again in a moment.") from e
+        raise _no_answer() from e
 
 
 async def _read_image(image: UploadFile) -> bytes:
@@ -39,6 +45,17 @@ async def _read_image(image: UploadFile) -> bytes:
         return prepare_image(data)
     except Exception as e:
         raise HTTPException(400, "That file isn't a photo we can read.") from e
+
+
+@router.post("/ai/check")
+def ai_check() -> dict[str, Any]:
+    """Tries the person's own AI key (sent in the headers) with a tiny request, so the app can say
+    whether it works before they rely on it."""
+    if not using_own_key():
+        raise HTTPException(400, "No AI key was sent.")
+    schema = {"type": "object", "properties": {"ok": {"type": "boolean"}}, "required": ["ok"]}
+    out = _ai('Reply with {"ok": true}.', [Turn("user", "Check")], schema)
+    return {"ok": bool(out.get("ok", True)), "provider": get_provider().name}
 
 
 @router.get("/health")
@@ -74,13 +91,14 @@ async def scan_stream(image: UploadFile = File(...), meal: str | None = Form(Non
     moment it's named. After the raw text comes FINAL_MARK and the finished scan as JSON (or
     {"error": ...}). Calories are still counted here, from the food table, never by the model."""
     jpeg = await _read_image(image)  # held in memory only; never stored (CLAUDE.md rule 6)
-    pieces = get_provider().stream_json(system=scan_system(photo=True), turns=[Turn("user", photo_prompt(meal, note))], schema=meal_schema(), image=jpeg)
+    ai = get_provider()  # held here: the body is sent after the request's own-key setting is cleared
+    pieces = ai.stream_json(system=scan_system(photo=True), turns=[Turn("user", photo_prompt(meal, note))], schema=meal_schema(), image=jpeg)
     try:
         first = next(pieces)
     except StopIteration:
         first = ""
     except ProviderError as e:
-        raise HTTPException(502, "The AI service didn't answer. Try again in a moment.") from e
+        raise _no_answer() from e
 
     def body() -> Iterator[str]:
         text = first
@@ -90,7 +108,7 @@ async def scan_stream(image: UploadFile = File(...), meal: str | None = Form(Non
                 text += piece
                 yield piece
             analysis = MealAnalysis.model_validate(parse_json(text))
-            yield FINAL_MARK + json.dumps(build_scan(analysis, get_provider().last_used, PROMPT_VERSION))
+            yield FINAL_MARK + json.dumps(build_scan(analysis, ai.last_used, PROMPT_VERSION))
         except (ProviderError, ValidationError, ValueError):
             yield FINAL_MARK + json.dumps({"error": "The AI answer was unreadable. Try again."})
 
@@ -132,7 +150,7 @@ def coach_stream(req: CoachRequest) -> StreamingResponse:
     except StopIteration:
         first = ""
     except ProviderError as e:
-        raise HTTPException(502, "The AI service didn't answer. Try again in a moment.") from e
+        raise _no_answer() from e
 
     def body() -> Iterator[str]:
         text = first

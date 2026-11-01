@@ -92,7 +92,8 @@
         {
           "faceIDPermission": "PlateWise uses Face ID to unlock your food log."
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": false

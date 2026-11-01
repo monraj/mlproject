@@ -14,6 +14,7 @@ from app.admin.routes import router as admin_router
 from app.api.routes import router
 from app.config import get_settings
 from app.site import router as site_router
+from app.vision.provider import USER_PROVIDERS, reset_user_provider, use_user_provider, user_provider
 
 logging.basicConfig(level=logging.INFO)
 
@@ -23,7 +24,7 @@ app.include_router(admin_router)
 app.include_router(site_router)
 
 OPEN_PATHS = {"/health", "/docs", "/openapi.json", "/", "/privacy", "/terms"}
-AI_PATHS = ("/scans", "/parse", "/coach", "/ideas", "/products/label")
+AI_PATHS = ("/scans", "/parse", "/coach", "/ideas", "/products/label", "/ai/check")
 _hits: dict[str, deque[float]] = defaultdict(deque)
 
 
@@ -45,6 +46,17 @@ async def guard(request: Request, call_next: Callable[[Request], Awaitable[Respo
         code = s.app_access_code
         if code and not hmac.compare_digest(request.headers.get("x-platewise-code", ""), code) and not (s.admin_password and is_admin(request)):
             return done(JSONResponse({"detail": "Wrong or missing access code. Enter it in the app under Me → PlateWise server."}, status_code=401))
+        # A person's own AI key: their quota, so no hourly limit; used for this request only.
+        own_name = request.headers.get("x-ai-provider", "").strip().lower()
+        own_key = request.headers.get("x-ai-key", "").strip()
+        if own_name or own_key:
+            if own_name not in USER_PROVIDERS or not own_key:
+                return done(JSONResponse({"detail": "Choose Gemini, ChatGPT or Claude and paste its key in Me → Your own AI key."}, status_code=400))
+            token = use_user_provider(user_provider(own_name, own_key))
+            try:
+                return done(await call_next(request))
+            finally:
+                reset_user_provider(token)
         if s.ai_requests_per_hour and path.startswith(AI_PATHS) and not (s.admin_password and is_admin(request)):
             ip = request.headers.get("x-forwarded-for", request.client.host if request.client else "?").split(",")[0].strip()
             now = time.monotonic()

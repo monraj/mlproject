@@ -6,6 +6,7 @@ import { GemmaError } from '../ai/gemma';
 import * as onDevice from '../ai/local';
 import { getGemmaState, installedModel, isGemmaReady } from '../ai/modelStore';
 import { getPrivacy } from './privacy';
+import { activeOwnKey, type OwnKey } from './ownKey';
 import { parseWithoutAI } from '../ai/quickParse';
 
 const SERVER_KEY = 'platewise:server';
@@ -49,6 +50,13 @@ export function wakeServer(): void {
 
 const accessCode = () => (saved.url ? saved.code : saved.code || BUILT_IN.code);
 
+/** The person's own AI key goes only with requests that use AI, never with anything else. */
+const AI_PATHS = ['/scans', '/parse', '/coach', '/ideas', '/products/label', '/ai/check'];
+function ownKeyHeaders(path: string, key: OwnKey | null = activeOwnKey()): Record<string, string> {
+  if (!key || !AI_PATHS.some((p) => path.startsWith(p))) return {};
+  return { 'X-AI-Provider': key.provider, 'X-AI-Key': key.key };
+}
+
 export function serverSettings(): { url: string; code: string } {
   return saved;
 }
@@ -90,6 +98,7 @@ async function call<T>(path: string, init: RequestInit = {}, timeoutMs = 90000):
   try {
     const headers = new Headers(init.headers);
     if (accessCode()) headers.set('X-PlateWise-Code', accessCode());
+    if (!headers.has('X-AI-Key')) Object.entries(ownKeyHeaders(path)).forEach(([k, v]) => headers.set(k, v));
     res = await fetch(`${apiBase()}${path}`, { ...init, headers, signal: ctl.signal });
   } catch {
     throw new ApiError(
@@ -206,6 +215,7 @@ function streamSend(path: string, body: string | FormData, onText: (soFar: strin
     xhr.open('POST', `${apiBase()}${path}`);
     if (contentType) xhr.setRequestHeader('Content-Type', contentType);
     if (accessCode()) xhr.setRequestHeader('X-PlateWise-Code', accessCode());
+    Object.entries(ownKeyHeaders(path)).forEach(([k, v]) => xhr.setRequestHeader(k, v));
     xhr.timeout = timeoutMs;
     const shown = () => xhr.responseText.split(FINAL_MARK)[0];
     xhr.onprogress = () => {
@@ -354,6 +364,8 @@ async function route<T>(online: () => Promise<T>, offline: () => Promise<T>, nee
 
 export const api = {
   health: () => call<Health>('/health', {}, 70000),
+  /** Tries a person's own AI key with a tiny request, before they switch to it. */
+  checkOwnKey: (key: OwnKey) => call<{ ok: boolean; provider: string }>('/ai/check', { method: 'POST', headers: ownKeyHeaders('/ai/check', key) }, 45000),
   /** Checks the access code too (health doesn't need one). */
   check: async () => {
     const h = await call<Health>('/health', {}, 70000);

@@ -3,6 +3,7 @@
 import json
 import logging
 from collections.abc import Iterator
+from contextvars import ContextVar, Token
 from dataclasses import dataclass
 from typing import Any, Protocol
 
@@ -157,8 +158,46 @@ def build_providers(s: Settings) -> list[VisionProvider]:
 
 _provider: FallbackProvider | None = None
 
+# A person's own AI key, sent by the app with a request ("bring your own key"). Used for that request
+# only: never stored, never logged, and never mixed with PlateWise's own keys.
+USER_PROVIDERS = ("gemini", "openai", "anthropic")
+_user_provider: ContextVar[FallbackProvider | None] = ContextVar("user_provider", default=None)
+
+
+def user_provider(name: str, key: str, s: Settings | None = None) -> FallbackProvider:
+    from app.vision.anthropic_p import AnthropicProvider
+    from app.vision.gemini import GeminiProvider
+    from app.vision.openai_p import OpenAIProvider
+
+    s = s or get_settings()
+    p: VisionProvider
+    if name == "gemini":
+        p = GeminiProvider(key, s.gemini_model, s.request_timeout_s, s.gemini_fallback_model)
+    elif name == "openai":
+        p = OpenAIProvider(key, s.openai_model, s.request_timeout_s)
+    elif name == "anthropic":
+        p = AnthropicProvider(key, s.anthropic_model, s.request_timeout_s)
+    else:
+        raise ValueError(name)
+    return FallbackProvider([p])
+
+
+def use_user_provider(p: FallbackProvider | None) -> Token[FallbackProvider | None]:
+    return _user_provider.set(p)
+
+
+def reset_user_provider(token: Token[FallbackProvider | None]) -> None:
+    _user_provider.reset(token)
+
+
+def using_own_key() -> bool:
+    return _user_provider.get() is not None
+
 
 def get_provider() -> FallbackProvider:
+    own = _user_provider.get()
+    if own is not None:
+        return own
     global _provider
     if _provider is None:
         _provider = FallbackProvider(build_providers(get_settings()))

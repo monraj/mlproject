@@ -9,6 +9,8 @@ import { Press } from '../../src/components/Press';
 import { OnDeviceAi } from '../../src/components/OnDeviceAi';
 import { useConfirm } from '../../src/components/ConfirmSheet';
 import { PrivacyCard } from '../../src/components/PrivacyCard';
+import { OwnAiKeyCard } from '../../src/components/OwnAiKeyCard';
+import { forgetOwnKey } from '../../src/api/ownKey';
 import { SmartwatchCard } from '../../src/components/SmartwatchCard';
 import { Icon, type IconName } from '../../src/components/Icon';
 import { useTheme, type ThemePref } from '../../src/theme/ThemeProvider';
@@ -19,7 +21,7 @@ import { askPermission } from '../../src/lib/reminders';
 import { WEEKDAYS } from '../../src/lib/dates';
 import { font } from '../../src/theme/tokens';
 import type { Reminders } from '../../src/state/types';
-import { currentAccount, keepAccount, needsPasswordToKeep, passwordProblem, removeAccount, setLock, shownAccounts, signOut, useAccounts } from '../../src/state/accounts';
+import { currentAccount, keepAccount, needsPasswordToKeep, passwordProblem, removeAccount, setLock, useAccounts } from '../../src/state/accounts';
 import { biometricKind, kindWords, unlock, type BiometricKind } from '../../src/lib/biometric';
 
 function Row({ icon, label, detail, onPress }: { icon: IconName; label: string; detail?: string; onPress: () => void }) {
@@ -45,7 +47,7 @@ export default function Me() {
   const { s, dispatch, target, targetBasis } = useApp();
   const router = useRouter();
   const p = s.profile!;
-  const list = shownAccounts(useAccounts());
+  useAccounts(); // re-render when the name, lock or sign-in changes
   const me = currentAccount();
   const [bio, setBio] = useState<BiometricKind>(null);
   useEffect(() => {
@@ -162,22 +164,22 @@ export default function Me() {
             <Switch value={!!me.lock} onValueChange={(v) => void toggleLock(v)} trackColor={{ true: c.mintBorder, false: c.line }} thumbColor="#FFFFFF" accessibilityLabel={`Unlock with ${kindWords(bio)}`} />
           </View>
         ) : null}
-        <Row icon="back" label={list.length > 1 ? 'Sign out or switch person' : 'Sign out'} detail={list.length > 1 ? `${list.length} on this phone` : undefined} onPress={() => void signOut()} />
         {me ? (
           <Row
-            icon="close"
-            label={`Remove ${me.name} from this phone`}
+            icon="back"
+            label="Sign out"
+            detail={me.email}
             onPress={() =>
               ask({
-                title: `Remove ${me.name} from this phone?`,
+                title: `Sign ${me.name} out?`,
                 body: me.google
-                  ? `Keep ${me.name}’s meals, weigh-ins and chats here, and they come back when ${me.name} continues with Google. Or delete them for good.`
-                  : `Keep ${me.name}’s meals, weigh-ins and chats here, and they come back when ${me.name} signs in with their name and password. Or delete them for good.`,
-                action: 'Delete for good',
+                  ? `Keep ${me.name}’s meals, weigh-ins and chats on this phone, and they come back when ${me.name} continues with Google. Or delete them for good.`
+                  : `Keep ${me.name}’s meals, weigh-ins and chats on this phone, and they come back when ${me.name} signs in with their name and password. Or delete them for good.`,
+                action: 'Sign out and delete my data',
                 initial: (me.name || 'M')[0].toUpperCase(),
-                go: () => void removeAccount(me.id),
+                go: () => void forgetOwnKey(me.id).then(() => removeAccount(me.id)),
                 keep: {
-                  label: 'Keep my data on this phone',
+                  label: 'Sign out, keep my data',
                   password: needsPasswordToKeep(me) ? { prompt: `Choose a password. ${me.name} signs back in with the name “${me.name}” and this password.`, check: (pw) => passwordProblem(me.name, pw, me.id) } : undefined,
                   go: (pw) => void keepAccount(me.id, pw),
                 },
@@ -328,6 +330,8 @@ export default function Me() {
       <SmartwatchCard order={4} />
 
       <PrivacyCard order={5} />
+
+      <OwnAiKeyCard order={5} />
 
       <OnDeviceAi order={6} />
 

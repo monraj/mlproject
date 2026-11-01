@@ -22,6 +22,7 @@ import { loadGemmaState } from '../src/ai/modelStore';
 import { WatchSync } from '../src/health/WatchSync';
 import { WatchBridge } from '../src/wear/WatchBridge';
 import { loadPrivacy } from '../src/api/privacy';
+import { loadOwnKey } from '../src/api/ownKey';
 import { dataKey, loadAccounts, privacyKey, useAccounts } from '../src/state/accounts';
 import { LockScreen } from '../src/components/LockScreen';
 import { AppState as RNAppState, View } from 'react-native';
@@ -119,7 +120,7 @@ function Accounts() {
   useEffect(() => {
     let live = true;
     setReady(null);
-    loadPrivacy(current ? privacyKey(current) : null).finally(() => live && setReady(current ?? ''));
+    Promise.all([loadPrivacy(current ? privacyKey(current) : null), loadOwnKey(current)]).finally(() => live && setReady(current ?? ''));
     if (!current) {
       Notifications.cancelAllScheduledNotificationsAsync().catch(() => undefined);
       WearSync?.sendToday('{}').catch(() => undefined);
