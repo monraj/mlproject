@@ -7,7 +7,7 @@ import { Press } from './Press';
 import { Button } from './Button';
 import { Icon } from './Icon';
 import { useTheme } from '../theme/ThemeProvider';
-import { addAccount, switchAccount, useAccounts, type Account } from '../state/accounts';
+import { AccountError, addAccount, passwordProblem, shownAccounts, signInWithPassword, switchAccount, useAccounts, type Account } from '../state/accounts';
 import { font } from '../theme/tokens';
 import { googleAvailable, signInWithGoogle } from '../auth/google';
 
@@ -25,14 +25,40 @@ function Avatar({ name }: { name: string }) {
 /** Shown when nobody is signed in: pick who you are, or add a new person to this phone. */
 export function SignIn() {
   const { c } = useTheme();
-  const { list } = useAccounts();
-  const [adding, setAdding] = useState(list.length === 0);
+  const all = useAccounts();
+  const list = shownAccounts(all);
+  // People who can sign in with a name and password (including those whose log was kept).
+  const canReturn = all.list.some((a) => a.passHash);
+  const [mode, setMode] = useState<'pick' | 'add' | 'return'>(list.length === 0 ? (canReturn ? 'return' : 'add') : 'pick');
   const [name, setName] = useState('');
+  const [password, setPassword] = useState('');
+  const [formError, setFormError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const pick = (a: Account) => void switchAccount(a.id);
-  const add = () => void addAccount(name);
+  const show = (m: typeof mode) => {
+    setMode(m);
+    setFormError(null);
+    setPassword('');
+  };
+  const add = async () => {
+    if (!name.trim()) return setFormError('Type your first name.');
+    const problem = passwordProblem(name, password);
+    if (problem) return setFormError(problem);
+    try {
+      await addAccount(name, { password });
+    } catch (e) {
+      setFormError(e instanceof AccountError ? e.message : 'Something went wrong. Try again.');
+    }
+  };
+  const back = async () => {
+    try {
+      await signInWithPassword(name, password);
+    } catch (e) {
+      setFormError(e instanceof AccountError ? e.message : 'Something went wrong. Try again.');
+    }
+  };
   const google = async () => {
     if (busy) return;
     setBusy(true);
@@ -102,31 +128,55 @@ export function SignIn() {
           </Card>
         ) : null}
 
-        {adding ? (
+        {mode === 'pick' ? null : (
           <Card order={2} style={{ gap: 10 }}>
             <T v="label" muted>
-              {googleAvailable ? 'Or use just a name' : list.length ? 'Add a person' : 'Get started'}
+              {mode === 'return' ? 'Welcome back' : googleAvailable ? 'Or use a name and password' : list.length ? 'Add a person' : 'Get started'}
             </T>
             <T v="small" muted>
-              Each person gets their own meals, weigh-ins and coach chat on this phone.
+              {mode === 'return'
+                ? 'Sign in with your name and password to carry on with your meals, weigh-ins and chats.'
+                : 'Each person gets their own meals, weigh-ins and coach chat on this phone. The password lets you sign back in later.'}
             </T>
             <TextInput
               value={name}
-              onChangeText={setName}
+              onChangeText={(t) => {
+                setName(t);
+                setFormError(null);
+              }}
               placeholder="First name, e.g. Ama"
               placeholderTextColor={c.faint}
               autoCapitalize="words"
               autoFocus={list.length > 0}
-              returnKeyType="done"
-              onSubmitEditing={add}
+              returnKeyType="next"
               accessibilityLabel="First name"
               style={[styles.input, { backgroundColor: c.bg, color: c.ink }]}
             />
-            <Button label="Continue" onPress={add} />
+            <TextInput
+              value={password}
+              onChangeText={(t) => {
+                setPassword(t);
+                setFormError(null);
+              }}
+              placeholder={mode === 'return' ? 'Password' : 'Choose a password'}
+              placeholderTextColor={c.faint}
+              secureTextEntry
+              autoCapitalize="none"
+              returnKeyType="done"
+              onSubmitEditing={() => void (mode === 'return' ? back() : add())}
+              accessibilityLabel="Password"
+              style={[styles.input, { backgroundColor: c.bg, color: c.ink }]}
+            />
+            {formError ? (
+              <T v="small" weight="semibold" color={c.amberText}>
+                {formError}
+              </T>
+            ) : null}
+            <Button label={mode === 'return' ? 'Sign in' : 'Continue'} onPress={() => void (mode === 'return' ? back() : add())} />
           </Card>
-        ) : (
-          <Button label="Add a person without Google" kind="secondary" icon="plus" onPress={() => setAdding(true)} />
         )}
+        {canReturn && mode !== 'return' ? <Button label="Sign in with name and password" kind="secondary" icon="me" onPress={() => show('return')} /> : null}
+        {mode !== 'add' ? <Button label="Add a person without Google" kind="secondary" icon="plus" onPress={() => show('add')} /> : null}
 
         <T v="small" muted center>
           Your log stays on this phone. Signing out keeps it safe for next time.

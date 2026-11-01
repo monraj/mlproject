@@ -7,6 +7,7 @@ import { T } from '../../src/components/T';
 import { Card, Rise } from '../../src/components/Card';
 import { Press } from '../../src/components/Press';
 import { OnDeviceAi } from '../../src/components/OnDeviceAi';
+import { useConfirm } from '../../src/components/ConfirmSheet';
 import { PrivacyCard } from '../../src/components/PrivacyCard';
 import { SmartwatchCard } from '../../src/components/SmartwatchCard';
 import { Icon, type IconName } from '../../src/components/Icon';
@@ -18,7 +19,7 @@ import { askPermission } from '../../src/lib/reminders';
 import { WEEKDAYS } from '../../src/lib/dates';
 import { font } from '../../src/theme/tokens';
 import type { Reminders } from '../../src/state/types';
-import { currentAccount, removeAccount, setLock, signOut, useAccounts } from '../../src/state/accounts';
+import { currentAccount, keepAccount, needsPasswordToKeep, passwordProblem, removeAccount, setLock, shownAccounts, signOut, useAccounts } from '../../src/state/accounts';
 import { biometricKind, kindWords, unlock, type BiometricKind } from '../../src/lib/biometric';
 
 function Row({ icon, label, detail, onPress }: { icon: IconName; label: string; detail?: string; onPress: () => void }) {
@@ -44,7 +45,7 @@ export default function Me() {
   const { s, dispatch, target, targetBasis } = useApp();
   const router = useRouter();
   const p = s.profile!;
-  const { list } = useAccounts();
+  const list = shownAccounts(useAccounts());
   const me = currentAccount();
   const [bio, setBio] = useState<BiometricKind>(null);
   useEffect(() => {
@@ -96,13 +97,8 @@ export default function Me() {
     }
     dispatch({ type: 'patchProfile', patch: { reminders: next } });
   };
-  const confirm = (title: string, body: string, action: string, go: () => void) => {
-    if (Platform.OS === 'web') return go();
-    Alert.alert(title, body, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: action, style: 'destructive', onPress: go },
-    ]);
-  };
+  const [ask, confirmSheet] = useConfirm();
+  const confirm = (title: string, body: string, action: string, go: () => void, look: { icon?: IconName; initial?: string } = {}) => ask({ title, body, action, go, ...look });
   const planned = Object.keys(s.plans).length;
   const time = (key: 'breakfast' | 'lunch' | 'dinner', label: string) => (
     <View style={{ flex: 1, gap: 4 }}>
@@ -171,7 +167,22 @@ export default function Me() {
           <Row
             icon="close"
             label={`Remove ${me.name} from this phone`}
-            onPress={() => confirm(`Remove ${me.name}?`, 'Their meals, weigh-ins, chat and profile are deleted from this phone. Other people’s logs stay. This can’t be undone.', 'Remove', () => void removeAccount(me.id))}
+            onPress={() =>
+              ask({
+                title: `Remove ${me.name} from this phone?`,
+                body: me.google
+                  ? `Keep ${me.name}’s meals, weigh-ins and chats here, and they come back when ${me.name} continues with Google. Or delete them for good.`
+                  : `Keep ${me.name}’s meals, weigh-ins and chats here, and they come back when ${me.name} signs in with their name and password. Or delete them for good.`,
+                action: 'Delete for good',
+                initial: (me.name || 'M')[0].toUpperCase(),
+                go: () => void removeAccount(me.id),
+                keep: {
+                  label: 'Keep my data on this phone',
+                  password: needsPasswordToKeep(me) ? { prompt: `Choose a password. ${me.name} signs back in with the name “${me.name}” and this password.`, check: (pw) => passwordProblem(me.name, pw, me.id) } : undefined,
+                  go: (pw) => void keepAccount(me.id, pw),
+                },
+              })
+            }
           />
         ) : null}
       </Card>
@@ -300,10 +311,10 @@ export default function Me() {
             icon="chat"
             label="Coach memory"
             detail={`${s.memory.length} chats`}
-            onPress={() => confirm('Forget earlier chats?', 'The coach keeps short notes of your older chats on this phone so it can stay on your story. This removes them.', 'Forget', () => dispatch({ type: 'forgetMemory' }))}
+            onPress={() => confirm('Forget earlier chats?', 'The coach keeps short notes of your older chats on this phone so it can stay on your story. This removes them.', 'Forget', () => dispatch({ type: 'forgetMemory' }), { icon: 'chat' })}
           />
         ) : null}
-        {planned ? <Row icon="calendar" label="Clear planned days" detail={`${planned}`} onPress={() => confirm('Clear planned days?', 'Flex plans and maintenance days go back to your usual daily target.', 'Clear', () => dispatch({ type: 'clearPlans' }))} /> : null}
+        {planned ? <Row icon="calendar" label="Clear planned days" detail={`${planned}`} onPress={() => confirm('Clear planned days?', 'Flex plans and maintenance days go back to your usual daily target.', 'Clear', () => dispatch({ type: 'clearPlans' }), { icon: 'calendar' })} /> : null}
         <Row
           icon="close"
           label="Delete all my data"
@@ -376,6 +387,7 @@ export default function Me() {
       <T v="small" muted center>
         Estimates for general wellness · not medical advice · your log stays on this phone
       </T>
+      {confirmSheet}
     </Screen>
   );
 }
