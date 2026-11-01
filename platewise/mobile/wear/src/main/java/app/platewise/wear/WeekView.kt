@@ -63,7 +63,7 @@ class WeekView(context: Context) : View(context) {
             val today = i == n - 1
             // Track up to the day's plan, then the bar for what was eaten.
             r.set(x, chartH - chartH * d.budget / max, x + bw, chartH)
-            bar.color = Palette.RAISED
+            bar.color = Palette.LINE.withAlpha(0.7f)
             canvas.drawRoundRect(r, bw / 2, bw / 2, bar)
             val bh = chartH * d.kcal / max * p
             if (bh > 1f) {

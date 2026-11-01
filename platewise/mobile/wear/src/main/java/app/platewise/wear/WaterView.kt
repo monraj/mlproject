@@ -86,8 +86,9 @@ class WaterView(context: Context) : View(context) {
     override fun onDraw(canvas: Canvas) {
         val size = min(width, height).toFloat()
         val cx = width / 2f
-        val cy = height / 2f
-        val r = size * 0.36f
+        // Sits above the "+ Cup" button, which overlaps the bottom of the round screen.
+        val cy = height * 0.4f
+        val r = size * 0.27f
         clip.reset()
         clip.addCircle(cx, cy, r, Path.Direction.CW)
 

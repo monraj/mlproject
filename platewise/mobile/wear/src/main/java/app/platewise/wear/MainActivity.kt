@@ -154,7 +154,7 @@ class MainActivity : ComponentActivity() {
             }
         }
         return FrameLayout(this).apply {
-            addView(water, FrameLayout.LayoutParams(-1, -1).apply { bottomMargin = dp(30) })
+            addView(water, FrameLayout.LayoutParams(-1, -1))
             addView(add, FrameLayout.LayoutParams(-2, dp(44), Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply { bottomMargin = dp(18) })
         }
     }
