@@ -103,7 +103,9 @@ class WaterView(context: Context) : View(context) {
         val top = cy + r - 2 * r * level
         // Calm the wave as the glass gets full or empty, so it never spills over the rim.
         val amp = size * 0.022f * (0.4f + 0.6f * sin(PI.toFloat() * level.coerceIn(0.05f, 0.95f)))
-        for ((k, color) in listOf(0.55f to Palette.WATER_DEEP.withAlpha(0.55f), 0f to Palette.WATER.withAlpha(0.9f))) {
+        // Empty glass: no wave peeking over the bottom edge.
+        val waves = if (level < 0.01f) emptyList() else listOf(0.55f to Palette.WATER_DEEP.withAlpha(0.55f), 0f to Palette.WATER.withAlpha(0.9f))
+        for ((k, color) in waves) {
             path.reset()
             path.moveTo(cx - r, cy + r)
             var x = cx - r

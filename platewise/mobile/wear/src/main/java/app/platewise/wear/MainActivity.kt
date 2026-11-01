@@ -206,7 +206,7 @@ class MainActivity : ComponentActivity() {
             quickList.addView(text("Meals you log on your phone show up here, ready to log again with one tap.", 13f, Palette.MUTED))
             return
         }
-        t.quick.take(4).forEach { q ->
+        t.quick.take(3).forEach { q -> // a fourth is cut off by the round screen
             val label = if (t.hide) q.title else "${q.title} · ${kcalText(q.kcal)}"
             val chip = pill(label, Palette.SURFACE, Palette.INK, wide = true) { v -> confirmLog(v as TextView, q, label) }
             quickList.addView(chip, LinearLayout.LayoutParams(-1, dp(40)).apply { topMargin = dp(6) })
