@@ -13,7 +13,7 @@ import { useTheme, type ThemePref } from '../../src/theme/ThemeProvider';
 import { useApp } from '../../src/state/AppState';
 import { kcal } from '../../src/lib/format';
 import { profileBudget } from '../../src/state/calc';
-import { api, apiBase, saveServerSettings, serverSettings, type Health } from '../../src/api/client';
+import { api, apiBase, hasBuiltInServer, saveServerSettings, serverSettings, type Health } from '../../src/api/client';
 import { askPermission } from '../../src/lib/reminders';
 import { WEEKDAYS } from '../../src/lib/dates';
 import { font } from '../../src/theme/tokens';
@@ -47,6 +47,8 @@ export default function Me() {
   const [serverUrl, setServerUrl] = useState(serverSettings().url);
   const [serverCode, setServerCode] = useState(serverSettings().code);
   const [testing, setTesting] = useState(false);
+  // Builds with an online server hide the address fields; testers never need them.
+  const [advanced, setAdvanced] = useState(!hasBuiltInServer() || !!serverSettings().url);
   const check = () => {
     setHealth(null);
     setHealthError(null);
@@ -203,23 +205,23 @@ export default function Me() {
         </View>
         {r.on ? (
           <>
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              {time('breakfast', 'Breakfast')}
-              {time('lunch', 'Lunch')}
-              {time('dinner', 'Dinner')}
-            </View>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
-              <T v="small" muted>
-                Weigh-in day
-              </T>
-              {WEEKDAYS.map((d, i) => (
-                <Press key={d} onPress={() => setReminders({ weighDay: i })} accessibilityRole="radio" accessibilityState={{ checked: r.weighDay === i }} style={[styles.day, { backgroundColor: r.weighDay === i ? c.button : c.bg }]}>
-                  <T v="small" weight="bold" color={r.weighDay === i ? c.buttonText : c.muted}>
-                    {d.slice(0, 2)}
-                  </T>
-                </Press>
-              ))}
-            </View>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                {time('breakfast', 'Breakfast')}
+                {time('lunch', 'Lunch')}
+                {time('dinner', 'Dinner')}
+              </View>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+                <T v="small" muted>
+                  Weigh-in day
+                </T>
+                {WEEKDAYS.map((d, i) => (
+                  <Press key={d} onPress={() => setReminders({ weighDay: i })} accessibilityRole="radio" accessibilityState={{ checked: r.weighDay === i }} style={[styles.day, { backgroundColor: r.weighDay === i ? c.button : c.bg }]}>
+                    <T v="small" weight="bold" color={r.weighDay === i ? c.buttonText : c.muted}>
+                      {d.slice(0, 2)}
+                    </T>
+                  </Press>
+                ))}
+              </View>
           </>
         ) : null}
       </Card>
@@ -251,8 +253,17 @@ export default function Me() {
           PlateWise server
         </T>
         <T v="small" weight="semibold" color={health === 'down' ? c.amberText : c.mintText}>
-          {health === null ? 'Checking… (a sleeping free server can take a minute)' : health === 'down' ? healthError ?? 'Not connected.' : health.demo ? 'Connected · demo answers (no AI key on the server yet)' : `Connected · AI by ${health.ai}`}
+          {health === null ? 'Connecting… (can take up to a minute after a quiet spell)' : health === 'down' ? healthError ?? 'Not connected.' : health.demo ? 'Connected · demo answers (no AI key on the server yet)' : `Connected · AI by ${health.ai}`}
         </T>
+        {advanced ? null : (
+          <Press onPress={() => setAdvanced(true)} accessibilityRole="button" style={styles.advanced}>
+            <T v="small" weight="bold" color={c.muted}>
+              Advanced: use a different server
+            </T>
+          </Press>
+        )}
+        {advanced ? (
+          <>
         <T v="small" muted>
           Server address
         </T>
@@ -286,6 +297,8 @@ export default function Me() {
             {testing ? 'Connecting…' : 'Save and connect'}
           </T>
         </Press>
+          </>
+        ) : null}
       </Card>
 
       <T v="small" muted center>
@@ -297,6 +310,7 @@ export default function Me() {
 
 const styles = StyleSheet.create({
   profile: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  advanced: { minHeight: 44, justifyContent: 'center' },
   avatar: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
   seg: { flexDirection: 'row', padding: 4, borderRadius: 999, gap: 4 },
   segItem: { flex: 1, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },

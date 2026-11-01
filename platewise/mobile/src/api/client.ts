@@ -6,19 +6,48 @@ import { GemmaError } from '../ai/gemma';
 import * as onDevice from '../ai/local';
 import { getGemmaState, installedModel, isGemmaReady } from '../ai/modelStore';
 import { getPrivacy } from './privacy';
+import { parseWithoutAI } from '../ai/quickParse';
 
 const SERVER_KEY = 'platewise:server';
 let saved: { url: string; code: string } = { url: '', code: '' };
 
-/** Load the server address and access code the person typed in Me (call once at startup). */
+/** The online server this build talks to, set at build time (mobile/.env), so nobody types an address. */
+const BUILT_IN = { url: (process.env.EXPO_PUBLIC_API_URL ?? '').replace(/\/$/, ''), code: process.env.EXPO_PUBLIC_ACCESS_CODE ?? '' };
+export const hasBuiltInServer = () => /^https:/.test(BUILT_IN.url);
+
+const isLocalAddress = (u: string) => /^https?:\/\/(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(u);
+
+/** Load the server address and access code typed in Me, if any (call once at startup). */
 export async function loadServerSettings(): Promise<void> {
   try {
     const raw = await AsyncStorage.getItem(SERVER_KEY);
     if (raw) saved = { url: '', code: '', ...(JSON.parse(raw) as Partial<typeof saved>) };
+    // A home Wi-Fi address from testing would hide the online server once a build has one.
+    if (hasBuiltInServer() && isLocalAddress(saved.url)) {
+      saved = { url: '', code: '' };
+      await AsyncStorage.removeItem(SERVER_KEY);
+    }
   } catch {
     // keep defaults
   }
+  wakeServer();
 }
+
+/** A free server sleeps when idle and takes up to a minute to wake: start waking it at launch. */
+let waking: Promise<boolean> | null = null;
+export function wakeServer(): void {
+  if (waking) return;
+  waking = call<Health>('/health', {}, 75000)
+    .then(() => true)
+    .catch(() => false)
+    .then((ok) => {
+      reach = { at: Date.now(), ok };
+      waking = null;
+      return ok;
+    });
+}
+
+const accessCode = () => (saved.url ? saved.code : saved.code || BUILT_IN.code);
 
 export function serverSettings(): { url: string; code: string } {
   return saved;
@@ -39,8 +68,7 @@ export async function saveServerSettings(url: string, code: string): Promise<voi
  */
 export function apiBase(): string {
   if (saved.url) return saved.url;
-  const env = process.env.EXPO_PUBLIC_API_URL;
-  if (env) return env.replace(/\/$/, '');
+  if (BUILT_IN.url) return BUILT_IN.url;
   const host = Constants.expoConfig?.hostUri?.split(':')[0];
   if (host) return `http://${host}:8000`;
   return 'http://localhost:8000';
@@ -52,19 +80,20 @@ export class ApiError extends Error {
   }
 }
 
+const offlineMessage = () =>
+  saved.url || BUILT_IN.url ? "Can't reach PlateWise right now. Check your internet connection and try again in a minute." : "Can't reach the PlateWise server. Set its address in Me → PlateWise server.";
+
 async function call<T>(path: string, init: RequestInit = {}, timeoutMs = 90000): Promise<T> {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), timeoutMs);
   let res: Response;
   try {
     const headers = new Headers(init.headers);
-    if (saved.code) headers.set('X-PlateWise-Code', saved.code);
+    if (accessCode()) headers.set('X-PlateWise-Code', accessCode());
     res = await fetch(`${apiBase()}${path}`, { ...init, headers, signal: ctl.signal });
   } catch {
     throw new ApiError(
-      saved.url
-        ? "Can't reach the PlateWise server. Check your internet. A free server can take up to a minute to wake up, so try again."
-        : "Can't reach the PlateWise server. Set its address in Me → PlateWise server.",
+      offlineMessage(),
       0,
     );
   } finally {
@@ -172,7 +201,7 @@ function streamPost(path: string, body: unknown, onText: (soFar: string) => void
     const xhr = new XMLHttpRequest();
     xhr.open('POST', `${apiBase()}${path}`);
     xhr.setRequestHeader('Content-Type', 'application/json');
-    if (saved.code) xhr.setRequestHeader('X-PlateWise-Code', saved.code);
+    if (accessCode()) xhr.setRequestHeader('X-PlateWise-Code', accessCode());
     xhr.timeout = timeoutMs;
     const shown = () => xhr.responseText.split(FINAL_MARK)[0];
     xhr.onprogress = () => {
@@ -196,9 +225,7 @@ function streamPost(path: string, body: unknown, onText: (soFar: string) => void
     const offline = () =>
       reject(
         new ApiError(
-          saved.url
-            ? "Can't reach the PlateWise server. Check your internet. A free server can take up to a minute to wake up, so try again."
-            : "Can't reach the PlateWise server. Set its address in Me → PlateWise server.",
+          offlineMessage(),
           0,
         ),
       );
@@ -211,6 +238,7 @@ function streamPost(path: string, body: unknown, onText: (soFar: string) => void
 /** Is the server answering right now? Remembered for 20 s so offline use doesn't wait on every request. */
 let reach: { at: number; ok: boolean } | null = null;
 async function serverReachable(): Promise<boolean> {
+  if (waking) return waking;
   if (reach && Date.now() - reach.at < 20000) return reach.ok;
   let ok = false;
   try {
@@ -245,11 +273,24 @@ export function photosRunOnDevice(): boolean {
   return !getPrivacy().aiConsent || getGemmaState().mode === 'offline';
 }
 
-async function route<T>(online: () => Promise<T>, offline: () => Promise<T>, needsVision = false, askBeforeSlow = false): Promise<T> {
+/** noModel: works with no AI at all (typed meals matched to the food table). */
+async function route<T>(online: () => Promise<T>, offline: () => Promise<T>, needsVision = false, askBeforeSlow = false, noModel?: () => T): Promise<T> {
   const model = installedModel();
   const canRun = isGemmaReady() && (!needsVision || !!model?.vision);
   // Without consent nothing goes to the server: on-device only.
   const mode = getPrivacy().aiConsent ? getGemmaState().mode : 'offline';
+  if (noModel && !canRun) {
+    if (mode === 'offline' || !(await serverReachable())) return noModel();
+    try {
+      return await online();
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 0) {
+        reach = null;
+        return noModel();
+      }
+      throw e;
+    }
+  }
   if (mode === 'offline' && !canRun && !getPrivacy().aiConsent) {
     throw new ApiError('To use AI, allow it in Me → Privacy, or download the on-device model in Me → On-device AI.', 403);
   }
@@ -298,6 +339,9 @@ export const api = {
     route(
       async () => toScan(await call<ApiScan>('/parse', json({ text, lang, meal }))),
       () => onDevice.parseText(text, lang, meal),
+      false,
+      false,
+      () => parseWithoutAI(text),
     ),
   coach: (messages: { role: 'user' | 'assistant'; content: string }[], context: string, sex: string, hideNumbers: boolean) =>
     route(

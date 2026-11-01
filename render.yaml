@@ -20,8 +20,9 @@ services:
         value: gemini-3.5-flash
       - key: GEMINI_FALLBACK_MODEL
         value: gemini-flash-lite-latest
+      # Paste EXPO_PUBLIC_ACCESS_CODE from platewise/mobile/.env so the app and server match.
       - key: APP_ACCESS_CODE
-        generateValue: true
+        sync: false
       - key: ADMIN_PASSWORD
         generateValue: true
       - key: AI_REQUESTS_PER_HOUR

@@ -175,3 +175,21 @@ describe('number cleanup keeps paragraphs', () => {
     expect(stripUnverifiedNumbers('Tip one.\n\nPeas – they add about 180 kcal.', given)).toBe('Tip one.\n\nPeas.');
   });
 });
+
+describe('typed meals with no AI', () => {
+  const { parseWithoutAI } = require('../src/ai/quickParse') as typeof import('../src/ai/quickParse');
+
+  it('matches each food and reads stated amounts', () => {
+    const r = parseWithoutAI('two balls of kenkey with fried fish and shito');
+    const ids = r.items.map((i) => i.foodId);
+    expect(r.isFood).toBe(true);
+    expect(ids).toContain('kenkey');
+    expect(r.items.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('says so when nothing matches', () => {
+    const r = parseWithoutAI('qqq zzz');
+    expect(r.isFood).toBe(false);
+    expect(r.note).toBeTruthy();
+  });
+});
