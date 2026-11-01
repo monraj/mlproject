@@ -21,7 +21,7 @@ export function todayInsight(greens: number, protein: number, proteinGoal: numbe
   if (mealsToday === 0) return { text: 'Snap your first meal of the day. It takes about 5 seconds', link: 'Log' };
   if (greens < 1) return { text: `Greens are low today. Kontomire stew or garden egg stew fixes it`, link: 'Ideas' };
   if (protein < proteinGoal * 0.5 && leftKcal > 400) return { text: 'Protein is under half your goal. Fish, chicken, eggs or beans help', link: 'Ideas' };
-  if (leftKcal < 200) return { text: "You're close to today's budget. A light snack or warm drink is plenty", link: 'Ideas' };
+  if (leftKcal < 200) return { text: "You're close to today's target. A light snack or warm drink is plenty", link: 'Ideas' };
   return { text: "You're on track today. Keep logging as you go", link: 'Ideas' };
 }
 
@@ -53,7 +53,7 @@ export function weekStory(days: Record<string, Day>, weights: Weight[], budgetFo
   const avgProtein = logged.length ? logged.reduce((s, d) => s + d.protein, 0) / logged.length : 0;
   const tip =
     logged.length === 0 ? 'Log a meal a day next week and your story fills in here.'
-    : weekendOver ? 'Your over-budget days were weekends. Plan Saturday dinner on Friday.'
+    : weekendOver ? 'Your days over target were weekends. Plan Saturday dinner on Friday.'
     : over.length >= 3 ? 'Several days went over. Snap before you eat, and ask for less oil on top at chop bars.'
     : avgProtein < proteinGoal * 0.7 ? 'Protein was low most days. Add an egg, fish or beans to one more meal a day.'
     : logged.length < 5 ? 'Logging on more days gives you a truer picture. Try a quick snap at every meal.'
@@ -100,7 +100,7 @@ export function coachContext(profile: Profile, days: Record<string, Day>, weight
   const targets = macroTargets(budgetFor(today));
   return [
     `Person: ${profile.sex}, ${profile.age} years, ${profile.heightCm} cm, goal ${profile.goalKg} kg, pace ${profile.paceKgWeek} kg a week.`,
-    `Daily budget ${kcal(budgetFor(today))} kcal; protein target ${targets.protein} g.`,
+    `Daily calorie target ${kcal(budgetFor(today))} kcal; protein target ${targets.protein} g.`,
     ...healthNotes(profile.health).map((n) => `Health note: ${n}`),
     `Weight: ${t.length ? `trend ${t[t.length - 1].trend.toFixed(1)} kg` : `${profile.weightKg} kg at start`}${rate != null ? `, ${rate > 0 ? '+' : ''}${rate.toFixed(2)} kg a week` : ''}.`,
     'Last 7 days:',
@@ -127,10 +127,10 @@ export function wellbeingCheck(profile: Profile, days: Record<string, Day>, weig
     return 'Your weight is now below the healthy range for your height. Please talk to a doctor or someone you trust. You can set your goal to hold steady in Me → Goal and pace.';
   }
   if (veryLow >= 3) {
-    return 'Several recent days were very low. Eating too little can leave you tired and makes weight harder to manage, so your budget is there to be eaten. If food or weight is worrying you, please talk to a doctor or someone you trust.';
+    return 'Several recent days were very low. Eating too little can leave you tired and makes weight harder to manage, so your daily target is there to be eaten. If food or weight is worrying you, please talk to a doctor or someone you trust.';
   }
   if (rate != null && rate < -0.015 * now) {
-    return 'You’re losing faster than is usually safe. Slower loss is easier to keep off. Try eating closer to your budget, and talk to a doctor if this continues.';
+    return 'You’re losing faster than is usually safe. Slower loss is easier to keep off. Try eating closer to your daily target, and talk to a doctor if this continues.';
   }
   return null;
 }

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
 import * as Haptics from 'expo-haptics';
 import Animated, {
   Easing,
@@ -30,6 +31,20 @@ import type { DraftItem } from '../src/state/types';
 
 const LANGS = ['English', 'Twi', 'Pidgin'] as const;
 const CODES = { English: 'en', Twi: 'tw', Pidgin: 'pcm' } as const;
+// What the phone's speech service listens for. Twi falls back to Ghanaian English if the phone has no Twi.
+const SPEECH = { English: 'en-GH', Twi: 'ak-GH', Pidgin: 'en-NG' } as const;
+const SPEECH_FALLBACK = 'en-GH';
+
+const SPEECH_ERRORS: Record<string, string> = {
+  'not-allowed': 'Allow the microphone for PlateWise in your phone settings, or type it.',
+  'no-speech': 'I didn’t hear anything. Tap the microphone and try again.',
+  'speech-timeout': 'I didn’t hear anything. Tap the microphone and try again.',
+  network: 'Listening needs the internet on this phone. Type it instead, or try again.',
+  'service-not-allowed': 'This phone has no speech service. Install or update the Google app, or type it.',
+  'audio-capture': 'The microphone is busy in another app. Close it and try again.',
+  busy: 'The microphone is busy. Try again in a moment.',
+};
+
 const PLACEHOLDER = {
   English: 'I had two balls of kenkey with fried fish and some pepper',
   Twi: 'Medidii kenkey mmienu ne nam a wɔakye…',
@@ -68,22 +83,64 @@ export default function Voice() {
   const router = useRouter();
   const [lang, setLang] = useState<(typeof LANGS)[number]>('English');
   const [text, setText] = useState('');
-  const [focused, setFocused] = useState(false);
   const [busy, setBusy] = useState(false);
   const [heard, setHeard] = useState<DraftItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [listening, setListening] = useState(false);
   const input = useRef<TextInput>(null);
-  const listening = focused && !busy;
+  // Text typed or heard before this round of listening; new words are added after it.
+  const before = useRef('');
+  const triedLang = useRef<string>(SPEECH.English);
 
+  const listen = async (code: string = SPEECH[lang]) => {
+    setError(null);
+    input.current?.blur();
+    const perm = await ExpoSpeechRecognitionModule.requestPermissionsAsync().catch(() => null);
+    if (!perm?.granted) {
+      setError(SPEECH_ERRORS['not-allowed']);
+      return;
+    }
+    before.current = text.trim();
+    triedLang.current = code;
+    ExpoSpeechRecognitionModule.start({ lang: code, interimResults: true, continuous: false, addsPunctuation: true });
+  };
+  const stopListening = () => ExpoSpeechRecognitionModule.stop();
+
+  useSpeechRecognitionEvent('start', () => setListening(true));
+  useSpeechRecognitionEvent('end', () => setListening(false));
+  useSpeechRecognitionEvent('result', (e) => {
+    const said = e.results[0]?.transcript?.trim();
+    if (!said) return;
+    setText(before.current ? `${before.current} ${said}` : said);
+    setHeard(null);
+  });
+  useSpeechRecognitionEvent('error', (e) => {
+    setListening(false);
+    if (e.error === 'aborted') return;
+    // No Twi on this phone: listen again in Ghanaian English.
+    if (e.error === 'language-not-supported' && triedLang.current !== SPEECH_FALLBACK) {
+      setError('This phone can’t listen in that language yet, so I’m listening in English.');
+      void listen(SPEECH_FALLBACK);
+      return;
+    }
+    setError(SPEECH_ERRORS[e.error] ?? 'I couldn’t hear that. Tap the microphone and try again, or type it.');
+  });
+
+  // Start listening as soon as the screen opens; stop if the person leaves.
   useEffect(() => {
-    const t = setTimeout(() => input.current?.focus(), 400);
-    return () => clearTimeout(t);
+    const t = setTimeout(() => void listen(), 400);
+    return () => {
+      clearTimeout(t);
+      ExpoSpeechRecognitionModule.abort();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const check = async () => {
     if (!text.trim() || busy) return;
     setBusy(true);
     setError(null);
+    if (listening) stopListening();
     input.current?.blur();
     try {
       const r = await api.parseText(fixDishWords(text.trim()), CODES[lang], mealForHour(new Date().getHours()));
@@ -138,8 +195,7 @@ export default function Voice() {
             setText(v);
             setHeard(null);
           }}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
+          onFocus={() => listening && stopListening()}
           multiline
           placeholder={PLACEHOLDER[lang]}
           placeholderTextColor={c.faint}
@@ -147,7 +203,7 @@ export default function Voice() {
           style={{ fontFamily: font.semibold, fontSize: 24, lineHeight: 33, color: c.ink, minHeight: 100, textAlignVertical: 'top' }}
         />
         <T v="small" muted>
-          Tap the microphone on your keyboard and speak, or type it.
+          {listening ? 'Listening… say what you ate and how much.' : 'Tap the microphone and speak, or type it.'}
         </T>
       </View>
 
@@ -190,8 +246,8 @@ export default function Voice() {
             </>
           ) : null}
           <Press
-            onPress={() => (focused ? input.current?.blur() : input.current?.focus())}
-            accessibilityLabel={focused ? 'Done speaking' : 'Start speaking'}
+            onPress={() => (listening ? stopListening() : void listen())}
+            accessibilityLabel={listening ? 'Done speaking' : 'Start speaking'}
             style={[styles.mic, { backgroundColor: c.button }]}
           >
             {[0, 1, 2, 3, 4].map((i) => (

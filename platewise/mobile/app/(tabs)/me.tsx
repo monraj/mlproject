@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Platform, StyleSheet, Switch, TextInput, View } from 'react-native';
+import { Alert, Platform, Share, StyleSheet, Switch, TextInput, View } from 'react-native';
+import { INVITE_URL, inviteMessage } from '../../src/lib/invite';
 import { useRouter } from 'expo-router';
 import { Screen } from '../../src/components/Screen';
 import { T } from '../../src/components/T';
@@ -12,12 +13,13 @@ import { Icon, type IconName } from '../../src/components/Icon';
 import { useTheme, type ThemePref } from '../../src/theme/ThemeProvider';
 import { useApp } from '../../src/state/AppState';
 import { kcal } from '../../src/lib/format';
-import { profileBudget } from '../../src/state/calc';
 import { api, apiBase, hasBuiltInServer, saveServerSettings, serverSettings, type Health } from '../../src/api/client';
 import { askPermission } from '../../src/lib/reminders';
 import { WEEKDAYS } from '../../src/lib/dates';
 import { font } from '../../src/theme/tokens';
 import type { Reminders } from '../../src/state/types';
+import { currentAccount, removeAccount, setLock, signOut, useAccounts } from '../../src/state/accounts';
+import { biometricKind, kindWords, unlock, type BiometricKind } from '../../src/lib/biometric';
 
 function Row({ icon, label, detail, onPress }: { icon: IconName; label: string; detail?: string; onPress: () => void }) {
   const { c } = useTheme();
@@ -39,9 +41,21 @@ function Row({ icon, label, detail, onPress }: { icon: IconName; label: string; 
 
 export default function Me() {
   const { c, pref, setPref } = useTheme();
-  const { s, dispatch } = useApp();
+  const { s, dispatch, target, targetBasis } = useApp();
   const router = useRouter();
   const p = s.profile!;
+  const { list } = useAccounts();
+  const me = currentAccount();
+  const [bio, setBio] = useState<BiometricKind>(null);
+  useEffect(() => {
+    void biometricKind().then(setBio);
+  }, []);
+  const toggleLock = async (on: boolean) => {
+    if (!me) return;
+    // Confirm it works before turning it on, so nobody locks themselves out.
+    if (on && !(await unlock('Confirm it’s you'))) return;
+    await setLock(me.id, on);
+  };
   const [health, setHealth] = useState<Health | null | 'down'>(null);
   const [healthError, setHealthError] = useState<string | null>(null);
   const [serverUrl, setServerUrl] = useState(serverSettings().url);
@@ -126,11 +140,40 @@ export default function Me() {
         </View>
         <View style={{ flex: 1, gap: 2 }}>
           <T v="h2">{p.name || 'You'}</T>
+          {me?.email ? (
+            <T v="small" muted>
+              {me.email}
+            </T>
+          ) : null}
           <T v="small" muted>
             Goal {p.goalKg} kg · {p.paceKgWeek ? `${p.paceKgWeek} kg a week` : 'Keep steady'}
-            {p.hideNumbers ? '' : ` · ${kcal(profileBudget(p))} kcal a day`}
+            {p.hideNumbers ? '' : ` · ${kcal(target)} kcal a day`}
           </T>
         </View>
+      </Card>
+
+      <Card order={1} style={{ paddingVertical: 6 }}>
+        {me && bio ? (
+          <View style={[styles.switchRow, { minHeight: 56 }]}>
+            <View style={{ flex: 1, gap: 2 }}>
+              <T v="body" weight="semibold">
+                Unlock with {kindWords(bio)}
+              </T>
+              <T v="small" muted>
+                Asks when you open PlateWise and after a minute away.
+              </T>
+            </View>
+            <Switch value={!!me.lock} onValueChange={(v) => void toggleLock(v)} trackColor={{ true: c.mintBorder, false: c.line }} thumbColor="#FFFFFF" accessibilityLabel={`Unlock with ${kindWords(bio)}`} />
+          </View>
+        ) : null}
+        <Row icon="back" label={list.length > 1 ? 'Sign out or switch person' : 'Sign out'} detail={list.length > 1 ? `${list.length} on this phone` : undefined} onPress={() => void signOut()} />
+        {me ? (
+          <Row
+            icon="close"
+            label={`Remove ${me.name} from this phone`}
+            onPress={() => confirm(`Remove ${me.name}?`, 'Their meals, weigh-ins, chat and profile are deleted from this phone. Other people’s logs stay. This can’t be undone.', 'Remove', () => void removeAccount(me.id))}
+          />
+        ) : null}
       </Card>
 
       <Card order={2} style={{ gap: 12 }}>
@@ -247,11 +290,20 @@ export default function Me() {
       </Card>
 
       <Card order={4} style={{ paddingVertical: 6 }}>
+        {INVITE_URL ? <Row icon="share" label="Invite friends and family" detail="Google Drive link" onPress={() => void Share.share({ message: inviteMessage(p.name) })} /> : null}
         <Row icon="calendar" label="Week in review" onPress={() => router.push('/week')} />
         <Row icon="progress" label="Weekly check-in" onPress={() => router.push('/checkin')} />
         <Row icon="today" label="Goal and pace" detail={`${p.weightKg} → ${p.goalKg} kg`} onPress={() => router.push('/onboarding')} />
         <Row icon="bookmark" label="Saved meals" detail={`${s.saved.length}`} onPress={() => router.push('/saved-meals')} />
-        {planned ? <Row icon="calendar" label="Clear planned days" detail={`${planned}`} onPress={() => confirm('Clear planned days?', 'Flex plans and maintenance days go back to your normal budget.', 'Clear', () => dispatch({ type: 'clearPlans' }))} /> : null}
+        {s.memory.length ? (
+          <Row
+            icon="chat"
+            label="Coach memory"
+            detail={`${s.memory.length} chats`}
+            onPress={() => confirm('Forget earlier chats?', 'The coach keeps short notes of your older chats on this phone so it can stay on your story. This removes them.', 'Forget', () => dispatch({ type: 'forgetMemory' }))}
+          />
+        ) : null}
+        {planned ? <Row icon="calendar" label="Clear planned days" detail={`${planned}`} onPress={() => confirm('Clear planned days?', 'Flex plans and maintenance days go back to your usual daily target.', 'Clear', () => dispatch({ type: 'clearPlans' }))} /> : null}
         <Row
           icon="close"
           label="Delete all my data"

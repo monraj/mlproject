@@ -197,10 +197,14 @@ const FINAL_MARK = '\u001eFINAL\u001e';
  * XHR reports progress). Resolves with the server's cleaned final text.
  */
 function streamPost(path: string, body: unknown, onText: (soFar: string) => void, timeoutMs = 90000): Promise<string> {
+  return streamSend(path, JSON.stringify(body), onText, timeoutMs, 'application/json');
+}
+
+function streamSend(path: string, body: string | FormData, onText: (soFar: string) => void, timeoutMs: number, contentType?: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', `${apiBase()}${path}`);
-    xhr.setRequestHeader('Content-Type', 'application/json');
+    if (contentType) xhr.setRequestHeader('Content-Type', contentType);
     if (accessCode()) xhr.setRequestHeader('X-PlateWise-Code', accessCode());
     xhr.timeout = timeoutMs;
     const shown = () => xhr.responseText.split(FINAL_MARK)[0];
@@ -231,8 +235,39 @@ function streamPost(path: string, body: unknown, onText: (soFar: string) => void
       );
     xhr.onerror = offline;
     xhr.ontimeout = offline;
-    xhr.send(JSON.stringify(body));
+    xhr.send(body);
   });
+}
+
+/** Food names in a scan answer that is still being written, in order, e.g. from '"food_name": "Waakye"'. */
+export function namesSoFar(partial: string): string[] {
+  return [...partial.matchAll(/"food_name"\s*:\s*"((?:[^"\\]|\\.)+)"/g)].map((m) => m[1].replace(/\\(.)/g, '$1'));
+}
+
+// Set once the server says it has no streaming scan (an older server): plain scans from then on.
+let noLiveScan = false;
+
+/** A photo scan whose food names arrive while the AI is still looking, then the counted result. */
+async function liveScan(uri: string, meal: string, note: string | undefined, onNames: (names: string[]) => void): Promise<ScanResult> {
+  if (!noLiveScan) {
+    try {
+      let seen = 0;
+      const final = await streamSend('/scans/stream', await imageForm(uri, { meal, note }), (soFar) => {
+        const names = namesSoFar(soFar);
+        if (names.length > seen) {
+          seen = names.length;
+          onNames(names);
+        }
+      }, 90000);
+      const body = JSON.parse(final) as ApiScan | { error: string };
+      if ('error' in body) throw new ApiError(body.error, 502);
+      return toScan(body);
+    } catch (e) {
+      if (!(e instanceof ApiError && (e.status === 404 || e.status === 405))) throw e;
+      noLiveScan = true;
+    }
+  }
+  return toScan(await call<ApiScan>('/scans', { method: 'POST', body: await imageForm(uri, { meal, note }) }));
 }
 
 /** Is the server answering right now? Remembered for 20 s so offline use doesn't wait on every request. */
@@ -326,11 +361,12 @@ export const api = {
     return h;
   },
   /** onDevice: the person chose to read the photo on the phone after the server couldn't be reached. */
-  scanPhoto: (uri: string, meal: string, note?: string, opts: { onDevice?: boolean } = {}) =>
+  /** onNames: called with the foods named so far while the server's AI is still looking. */
+  scanPhoto: (uri: string, meal: string, note?: string, opts: { onDevice?: boolean; onNames?: (names: string[]) => void } = {}) =>
     opts.onDevice
       ? onDeviceCall(() => onDevice.scanPhoto(uri, meal, note))
       : route(
-          async () => toScan(await call<ApiScan>('/scans', { method: 'POST', body: await imageForm(uri, { meal, note }) })),
+          () => liveScan(uri, meal, note, opts.onNames ?? (() => undefined)),
           () => onDevice.scanPhoto(uri, meal, note),
           true,
           true,

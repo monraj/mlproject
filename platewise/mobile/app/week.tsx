@@ -147,7 +147,7 @@ export default function Week() {
       <View style={{ flexDirection: 'row', gap: 8 }}>
         {[
           { t: 'Top dish', v: story.topDish?.name ?? '–', n: story.topDish ? `${story.topDish.n} ${story.topDish.n === 1 ? 'time' : 'times'}` : 'Nothing yet' },
-          { t: 'Best day', v: story.bestDay ?? '–', n: story.bestDay ? 'Closest to budget' : 'Log to see' },
+          { t: 'Best day', v: story.bestDay ?? '–', n: story.bestDay ? 'Closest to target' : 'Log to see' },
           { t: 'Trend', v: story.trend == null ? '–' : `${story.trend > 0 ? '+' : '−'}${Math.abs(story.trend).toFixed(1)} kg`, n: story.trend == null ? 'Weigh in to see' : 'Per week' },
         ].map((x, i) => (
           <Animated.View key={x.t} entering={FadeInDown.duration(duration.slow).delay(1100 + i * stagger)} style={[styles.card, { flex: 1, gap: 4, padding: 12 }]}>

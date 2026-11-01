@@ -124,7 +124,7 @@ export default function Saved() {
           </View>
           <Bar value={eatenKcal / budget} from={s.eatenBefore / budget} color={c.mint} track={c.line} height={12} delay={800} />
           <T v="small" muted>
-            {leftKcal > 0 ? `${kcal(leftKcal)} left for the rest of the day` : 'You’ve used today’s budget — that’s okay, the week evens out.'}
+            {leftKcal > 0 ? `${kcal(leftKcal)} left for the rest of the day` : 'You’ve reached today’s target — that’s okay, the week evens out.'}
           </T>
         </Card>
       )}

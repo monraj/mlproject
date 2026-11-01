@@ -205,7 +205,7 @@ export default function Fits() {
         ) : ideas.length === 0 ? (
           <Card>
             <T muted>
-              {leftKcal < 300 ? 'You’re close to today’s budget. A light snack or a warm drink is plenty — no need to skip anything.' : 'No ideas in this group yet. Try “All”.'}
+              {leftKcal < 300 ? 'You’re close to today’s target. A light snack or a warm drink is plenty — no need to skip anything.' : 'No ideas in this group yet. Try “All”.'}
             </T>
           </Card>
         ) : null}

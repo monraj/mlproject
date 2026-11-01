@@ -63,17 +63,38 @@ class GeminiProvider:
                 if started or not retryable or i == len(models) - 1:
                     raise
 
+    def _json_config(self, model: str, system: str, schema: dict[str, Any], image: bytes | None) -> types.GenerateContentConfig:
+        # Default thinking adds ~4 s to every answer. The AI only identifies foods and chats (the
+        # backend counts calories), so keep thinking minimal; photos get a little more.
+        thinking = None
+        if model == self.model:
+            thinking = types.ThinkingConfig(thinking_level=types.ThinkingLevel.LOW if image is not None else types.ThinkingLevel.MINIMAL)
+        return types.GenerateContentConfig(system_instruction=system, response_mime_type="application/json", response_json_schema=schema, thinking_config=thinking)
+
+    def stream_json(self, *, system: str, turns: list[Turn], schema: dict[str, Any], image: bytes | None = None) -> Iterator[str]:
+        """The JSON answer as it's written, so the app can show each food's name as soon as it appears."""
+        contents = self._contents(turns, image)
+        models = self._models()
+        for i, model in enumerate(models):
+            started = False
+            try:
+                for chunk in self.client.models.generate_content_stream(model=model, contents=contents, config=self._json_config(model, system, schema, image)):
+                    if chunk.text:
+                        started = True
+                        yield chunk.text
+                return
+            except (errors.ServerError, errors.ClientError) as e:
+                retryable = isinstance(e, errors.ServerError) or e.code == 429
+                if isinstance(e, errors.ClientError) and e.code == 429 and model == self.model:
+                    self._quota_hit()
+                if started or not retryable or i == len(models) - 1:
+                    raise
+
     def generate_json(self, *, system: str, turns: list[Turn], schema: dict[str, Any], image: bytes | None = None) -> dict[str, Any]:
         contents = self._contents(turns, image)
+
         def config_for(model: str) -> types.GenerateContentConfig:
-            # Default thinking adds ~4 s to every answer. The AI only identifies foods and chats (the
-            # backend counts calories), so keep thinking minimal; photos get a little more.
-            thinking = None
-            if model == self.model:
-                thinking = types.ThinkingConfig(thinking_level=types.ThinkingLevel.LOW if image is not None else types.ThinkingLevel.MINIMAL)
-            return types.GenerateContentConfig(
-                system_instruction=system, response_mime_type="application/json", response_json_schema=schema, thinking_config=thinking
-            )
+            return self._json_config(model, system, schema, image)
 
         # Gemini sometimes answers 503 when busy: retry once, then try the lighter fallback model.
         models = self._models()

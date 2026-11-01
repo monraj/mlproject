@@ -20,7 +20,7 @@ describe('summary report', () => {
   it('reviews the day in the evening', () => {
     const r = buildReport(profile, { [D]: day({ meals: [meal(900, 50, 2), meal(850, 40, 1)], water: 8 }) }, [], D, 1800, 'evening');
     expect(r.title).toBe('Your day in review');
-    expect(r.wins).toContain('You stayed close to your budget today.');
+    expect(r.wins).toContain('You stayed close to your target today.');
     expect(r.wins).toContain('You hit your water goal.');
   });
 

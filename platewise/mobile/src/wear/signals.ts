@@ -23,7 +23,7 @@ export function watchSignals(args: { profile: Profile; days: Record<string, Day>
   const f = profile.fasting;
   const fastOk = !!f?.on && !fastingBlock(profile, f);
   const slot = nextSlot(day, now);
-  const idea = suggestMeals({ profile, days, date, budget, proteinGoal, slot, limit: 1 })[0];
+  const idea = suggestMeals({ profile, days, weights, date, budget, proteinGoal, slot, limit: 1 })[0];
   return {
     stress: {
       level: stress?.level ?? null,

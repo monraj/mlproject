@@ -43,6 +43,20 @@ def test_scan_counts_from_table_with_ranges(client):
     assert body["totals"]["kcal"] == sum(i["kcal"] for i in body["items"])
 
 
+def test_scan_stream_sends_names_then_the_counted_scan(client):
+    import json
+
+    from app.api.routes import FINAL_MARK
+
+    r = client.post("/scans/stream", files={"image": ("p.jpg", _jpeg(), "image/jpeg")}, data={"meal": "Lunch"})
+    assert r.status_code == 200
+    raw, final = r.text.split(FINAL_MARK)
+    assert '"food_name"' in raw  # the app reads names from here as they arrive
+    body = json.loads(final)
+    assert body["is_food"] and len(body["items"]) == 4
+    assert all(i["kcal"] is not None for i in body["items"])  # counted by the backend, not the model
+
+
 def test_scan_rejects_non_images(client):
     r = client.post("/scans", files={"image": ("x.jpg", b"not an image", "image/jpeg")})
     assert r.status_code == 400

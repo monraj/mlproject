@@ -18,7 +18,7 @@ function sleepText(min: number) {
   return m ? `${h} h ${m} min` : `${h} h`;
 }
 
-/** Connect a smartwatch through Health Connect, see today's data, and choose whether exercise adds to the budget. */
+/** Connect a smartwatch through Health Connect, see today's data, and choose whether exercise adds to the daily target. */
 export function SmartwatchCard({ order }: { order: number }) {
   const { c } = useTheme();
   const { s, day, dispatch } = useApp();
@@ -113,7 +113,7 @@ export function SmartwatchCard({ order }: { order: number }) {
           <View style={styles.switchRow}>
             <View style={{ flex: 1, gap: 2 }}>
               <T v="body" weight="semibold">
-                Add exercise to my budget
+                Add exercise to my daily target
               </T>
               <T v="small" muted>
                 Adds half of the active calories your watch measured, up to {ACTIVITY_CAP} a day. Watches tend to overestimate, so half is safer.
@@ -124,7 +124,7 @@ export function SmartwatchCard({ order }: { order: number }) {
               onValueChange={(v) => dispatch({ type: 'patchProfile', patch: { watch: { ...watch, adjustBudget: v } } })}
               trackColor={{ true: c.mintBorder, false: c.line }}
               thumbColor="#FFFFFF"
-              accessibilityLabel="Add exercise to my budget"
+              accessibilityLabel="Add exercise to my daily target"
             />
           </View>
           <View style={{ flexDirection: 'row', gap: 16 }}>

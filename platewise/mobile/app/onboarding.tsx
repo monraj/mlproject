@@ -20,6 +20,7 @@ import { dayKey } from '../src/lib/dates';
 import { kcal } from '../src/lib/format';
 import { font } from '../src/theme/tokens';
 import { duration, stagger } from '../src/lib/motion';
+import { currentAccount, renameAccount } from '../src/state/accounts';
 
 const ACTIVITY = [
   { v: 1.2, label: 'Mostly sitting' },
@@ -74,7 +75,7 @@ export default function Onboarding() {
   const p = s.profile;
   const editing = !!p;
   const [step, setStep] = useState<1 | 2>(1);
-  const [name, setName] = useState(p?.name ?? '');
+  const [name, setName] = useState(p?.name ?? (currentAccount()?.name === 'Me' ? '' : currentAccount()?.name ?? ''));
   const [sex, setSex] = useState<Sex>(p?.sex ?? 'female');
   const [age, setAge] = useState(p ? String(p.age) : '');
   const [height, setHeight] = useState(p ? String(p.heightCm) : '');
@@ -112,6 +113,8 @@ export default function Onboarding() {
   };
 
   const finish = () => {
+    const account = currentAccount();
+    if (account && name.trim()) void renameAccount(account.id, name);
     const profile: Profile = {
       name: name.trim(),
       ...input,
@@ -208,7 +211,7 @@ export default function Onboarding() {
             ))}
           </View>
           <T v="small" muted>
-            Stays on this phone. It changes your budget and the coach’s advice.
+            Stays on this phone. It changes your daily target and the coach’s advice.
           </T>
         </View>
         {problem ? (
@@ -324,7 +327,7 @@ export default function Onboarding() {
 
       <Card tone="mint" order={5} style={{ gap: 4 }}>
         <T v="small" weight="semibold" color={c.mintDeep}>
-          Your starting daily budget
+          Your starting daily target
         </T>
         <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8 }}>
           <T v="title" size={30} color={c.mintDeep} style={{ marginBottom: 4 }}>
@@ -359,7 +362,7 @@ export default function Onboarding() {
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <Icon name="info" color={c.muted} size={18} />
         <T v="small" muted style={{ flex: 1 }}>
-          We never set a budget below {kcal(CALORIE_FLOOR[sex])} kcal, or a pace faster than 1% of your weight a week.
+          We never set a daily target below {kcal(CALORIE_FLOOR[sex])} kcal, or a pace faster than 1% of your weight a week.
         </T>
       </View>
     </Screen>

@@ -47,7 +47,7 @@ Answer in 2 to 6 short sentences or a short list. Use the person's own data belo
 Never shame food choices and never use "bad food" language. You are not a doctor: for medical conditions, pregnancy or signs of disordered eating, gently suggest seeing a health professional.
 Never suggest eating below ${floor} kcal a day or losing more than 1% of body weight a week.${numbers}
 ${when}
-Set flex_plan only when the person asks to plan around an event (a wedding, funeral, party, festival): lower budgets on a few days before and a higher budget on the day, keeping the total about the same as their normal budgets, every day at or above ${floor} kcal, dates as YYYY-MM-DD from the upcoming days listed below. Otherwise flex_plan is null. A plan only takes effect when the person taps Save in the app, so say you've suggested a plan they can save; never say you've changed their budget.
+Set flex_plan only when the person asks to plan around an event (a wedding, funeral, party, festival): lower targets on a few days before and a higher target on the day, keeping the total about the same as their usual targets, every day at or above ${floor} kcal, dates as YYYY-MM-DD from the upcoming days listed below. Otherwise flex_plan is null. A plan only takes effect when the person taps Save in the app, so say you've suggested a plan they can save; never say you've changed their budget.
 
 ${context.slice(0, 6000)}`;
 }
@@ -81,7 +81,7 @@ export function coachSystemCompact(context: string, floor: number, hideNumbers: 
   return [
     `You are PlateWise, a warm nutrition coach for people in Ghana. Reply in 2 or 3 short sentences${withPlan ? '' : ' of plain text'} with practical Ghanaian food swaps. When asked about a food, first say in a few words what it is, from the food-table facts. When you mention calories, also say it in everyday terms: a share of their day ("about a third of your day") or a familiar food ("about as much as a ball of kenkey"). Never describe food as exercise to burn off. Never shame food. Never suggest under ${floor} kcal a day or losing over 1% of body weight a week. Not a doctor: suggest a professional for medical questions.${hideNumbers ? ' Never mention calorie numbers.' : ' Only quote calorie or protein numbers that appear in the food-table facts or the person’s data below; otherwise describe portions without numbers.'}`,
     withPlan
-      ? `Today is ${iso}. They are planning around an event: set flex_plan with lower budgets on a few upcoming days and a higher one on the day, each day at least ${floor} kcal, and say it is a suggestion they can save.`
+      ? `Today is ${iso}. They are planning around an event: set flex_plan with lower targets on a few upcoming days and a higher one on the day, each day at least ${floor} kcal, and say it is a suggestion they can save.`
       : `Today is ${iso}.`,
     ...head,
     'Recent days:',

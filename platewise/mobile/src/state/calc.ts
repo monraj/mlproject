@@ -145,7 +145,7 @@ export function safePace(paceKgWeek: number, health?: Health): number {
 export function healthNotes(health?: Health): string[] {
   if (!health) return [];
   const out: string[] = [];
-  if (health.pregnant) out.push('Weight loss isn’t recommended while pregnant or breastfeeding, so your budget holds your weight steady. Your midwife or doctor can advise on how much to eat.');
+  if (health.pregnant) out.push('Weight loss isn’t recommended while pregnant or breastfeeding, so your daily target holds your weight steady. Your midwife or doctor can advise on how much to eat.');
   if (health.diabetes) out.push('With diabetes, changes to food or weight can affect your medication. Check your plan with your doctor or diabetes nurse.');
   if (health.bloodPressure) out.push('With high blood pressure, salt and seasoning cubes matter as much as calories. Keep taking your medication and check changes with your doctor.');
   return out;
@@ -230,6 +230,49 @@ export function profileTdee(p: Profile): number {
 
 export function profileBudget(p: Profile): number {
   return dailyBudget({ ...p, paceKgWeek: safePace(p.paceKgWeek, p.health) }, profileTdee(p));
+}
+
+// ---- Personal daily target: the same formula, fed with measured data where there is enough ----
+
+// Average daily steps mapped to the activity levels offered at setup (Tudor-Locke & Bassett 2004
+// step bands: under 5,000 sedentary; 5,000-7,499 low active; 7,500-9,999 somewhat active; 10,000+
+// active; 12,500+ highly active).
+const STEP_ACTIVITY: [number, number][] = [
+  [12500, 1.725],
+  [7500, 1.55],
+  [5000, 1.375],
+  [0, 1.2],
+];
+export const MEASURED_MIN_DAYS = 7;
+const MEASURED_WINDOW = 14;
+
+/** Activity level from the watch's steps over the last two weeks (today left out: it isn't over). */
+export function measuredActivity(days: Record<string, Day>, today: string): { factor: number; steps: number; days: number } | null {
+  const steps: number[] = [];
+  for (let i = 1; i <= MEASURED_WINDOW; i++) {
+    const n = days[shiftKey(today, -i)]?.watch?.steps;
+    if (n != null && n > 0) steps.push(n);
+  }
+  if (steps.length < MEASURED_MIN_DAYS) return null;
+  const avg = steps.reduce((a, b) => a + b, 0) / steps.length;
+  const factor = STEP_ACTIVITY.find(([min]) => avg >= min)![1];
+  return { factor, steps: Math.round(avg / 100) * 100, days: steps.length };
+}
+
+export type TargetBasis = { weightKg: number; weighedIn: boolean; activity: number; steps: number | null; learned: boolean };
+
+/**
+ * The daily calorie target from the person's age, height and sex, their latest weight (the weigh-in
+ * trend), and how active Health Connect shows they really are. A burn learned from their own weight
+ * trend wins over both formulas. Safety floors and pace limits still apply (dailyBudget).
+ */
+export function personalTarget(p: Profile, weights: Weight[], days: Record<string, Day>, today: string): { kcal: number; basis: TargetBasis } {
+  const t = trendLine(weights);
+  const weightKg = t.length ? Math.round(t[t.length - 1].trend * 10) / 10 : p.weightKg;
+  const measured = p.learnedTdee ? null : measuredActivity(days, today);
+  const activity = measured?.factor ?? p.activity;
+  const kcal = profileBudget({ ...p, weightKg, activity });
+  return { kcal, basis: { weightKg, weighedIn: t.length > 0, activity, steps: measured?.steps ?? null, learned: p.learnedTdee != null } };
 }
 
 export function macroTargets(budget: number): Macros {

@@ -36,6 +36,7 @@ import { Button } from '../../src/components/Button';
 import { font } from '../../src/theme/tokens';
 import { duration, easeOut } from '../../src/lib/motion';
 import { kcal } from '../../src/lib/format';
+import { memoryContext } from '../../src/state/memory';
 
 function TypingDot({ delay }: { delay: number }) {
   const { c } = useTheme();
@@ -159,10 +160,10 @@ export default function Coach() {
           return;
         }
       }
-      const history = [...completedExchanges(s.chat).slice(-12), mine];
+      const history = [...completedExchanges(s.chat).slice(-20), mine];
       const plans = Object.entries(s.plans).map(([d, p]) => `${d}: ${p.kcal} (${p.reason})`).join('; ');
       const turns = history.map((m) => ({ role: m.from === 'me' ? ('user' as const) : ('assistant' as const), content: m.text }));
-      const ctx = coachContext(s.profile, s.days, s.weights, budgetFor, plans ? `Saved plans: ${plans}` : '');
+      const ctx = [coachContext(s.profile, s.days, s.weights, budgetFor, plans ? `Saved plans: ${plans}` : ''), memoryContext(s.memory)].filter(Boolean).join('\n');
       if (isEventQuestion(v)) {
         // Event plans need the structured answer.
         const r = await api.coach(turns, ctx, s.profile.sex, s.profile.hideNumbers);
@@ -210,7 +211,7 @@ export default function Coach() {
             Ask PlateWise
           </T>
           <T v="small" size={12} muted>
-            Uses your logs and goals · not medical advice
+            {s.memory.length ? 'Remembers your earlier chats · not medical advice' : 'Uses your logs and goals · not medical advice'}
           </T>
         </View>
         {s.chat.length ? (
@@ -221,7 +222,7 @@ export default function Coach() {
           </Press>
         ) : null}
         {s.chat.length ? (
-          <Press onPress={() => dispatch({ type: 'chatClear' })} accessibilityLabel="Clear the conversation" style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 6 }}>
+          <Press onPress={() => dispatch({ type: 'chatClear' })} accessibilityLabel="Clear the conversation. The coach still remembers it; forget it in Me." style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 6 }}>
             <T v="small" weight="bold" color={c.mintText}>
               Clear
             </T>

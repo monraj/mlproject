@@ -58,16 +58,14 @@
         "expo-camera",
         {
           "cameraPermission": "PlateWise uses the camera to photograph your meals so it can estimate what's on the plate.",
-          "microphonePermission": false,
-          "recordAudioAndroid": false
+          "microphonePermission": "PlateWise uses the microphone when you tap Say it to describe a meal."
         }
       ],
       [
         "expo-image-picker",
         {
           "photosPermission": "PlateWise uses your photos so you can log a meal you already photographed.",
-          "cameraPermission": "PlateWise uses the camera to photograph your meals.",
-          "microphonePermission": false
+          "cameraPermission": "PlateWise uses the camera to photograph your meals."
         }
       ],
       "expo-notifications",
@@ -81,7 +79,20 @@
           }
         }
       ],
-      "./plugins/withWearModule.js"
+      "./plugins/withWearModule.js",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "PlateWise uses the microphone when you tap Say it to describe a meal.",
+          "speechRecognitionPermission": "PlateWise turns what you say about a meal into text so it can find the foods."
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "PlateWise uses Face ID to unlock your food log."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": false

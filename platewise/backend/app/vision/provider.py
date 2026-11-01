@@ -75,6 +75,33 @@ class FallbackProvider:
                 errors.append(f"{p.name}: {type(e).__name__}")
         raise ProviderError("; ".join(errors) or "no provider configured")
 
+    def stream_json(self, *, system: str, turns: list[Turn], schema: dict[str, Any], image: bytes | None = None) -> Iterator[str]:
+        """A JSON answer as raw text, streamed where the provider supports it; otherwise all at once.
+        Falls back to the next provider only if nothing has been sent yet."""
+        errors: list[str] = []
+        for p in self.providers:
+            started = False
+            try:
+                streamer = getattr(p, "stream_json", None)
+                if streamer is not None:
+                    for piece in streamer(system=system, turns=turns, schema=schema, image=image):
+                        started = True
+                        yield piece
+                else:
+                    out = p.generate_json(system=system, turns=turns, schema=schema, image=image)
+                    started = True
+                    yield json.dumps(out)
+                self.last_used = p.name
+                self.calls[p.name]["ok"] += 1
+                return
+            except Exception as e:  # never log prompts or images (CLAUDE.md rule 6)
+                log.warning("provider %s json stream failed: %s", p.name, type(e).__name__)
+                self.calls[p.name]["failed"] += 1
+                if started:
+                    raise ProviderError("stream broke off") from e
+                errors.append(f"{p.name}: {type(e).__name__}")
+        raise ProviderError("; ".join(errors) or "no provider configured")
+
     def stream_text(self, *, system: str, turns: list[Turn]) -> Iterator[str]:
         """Plain text, streamed where the provider supports it; otherwise the whole reply at once.
         Falls back to the next provider only if nothing has been sent yet."""

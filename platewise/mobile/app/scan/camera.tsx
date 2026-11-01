@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator';
@@ -36,6 +36,9 @@ export default function Camera() {
   const { dispatch } = useApp();
   const [permission, requestPermission] = useCameraPermissions();
   const [torch, setTorch] = useState(false);
+  // Shrinking a picked photo takes a second or two; show that, and ignore taps meanwhile.
+  const [opening, setOpening] = useState(false);
+  const [pickError, setPickError] = useState<string | null>(null);
   const cam = useRef<CameraView>(null);
   const shutter = useSharedValue(1);
   const flash = useSharedValue(0);
@@ -49,9 +52,18 @@ export default function Camera() {
   };
 
   const pickFromGallery = async () => {
-    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9, exif: false });
-    const asset = res.canceled ? null : res.assets[0];
-    if (asset) proceed(await shrink(asset.uri));
+    if (opening) return;
+    setOpening(true);
+    setPickError(null);
+    try {
+      const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 1, exif: false });
+      const asset = res.canceled ? null : res.assets[0];
+      if (asset) proceed(await shrink(asset.uri));
+    } catch {
+      setPickError('Couldn’t open that photo. If it’s only in Google Photos online, connect to the internet or pick one saved on this phone.');
+    } finally {
+      setOpening(false);
+    }
   };
 
   const take = async () => {
@@ -106,7 +118,20 @@ export default function Camera() {
           </T>
         </View>
         <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: '#FFFFFF' }, flashStyle]} />
+        {opening ? (
+          <View style={[StyleSheet.absoluteFill, styles.opening]} accessibilityLiveRegion="polite">
+            <ActivityIndicator color="#FFFFFF" size="large" />
+            <T v="body" weight="semibold" color="#FFFFFF">
+              Opening your photo…
+            </T>
+          </View>
+        ) : null}
       </View>
+      {pickError ? (
+        <T v="small" weight="semibold" color="#FEC84B" center>
+          {pickError}
+        </T>
+      ) : null}
 
       <View style={styles.modes}>
         <View style={[styles.mode, { backgroundColor: '#FFFFFF' }]}>
@@ -149,6 +174,7 @@ const cornerPos = {
 } as const;
 
 const styles = StyleSheet.create({
+  opening: { backgroundColor: 'rgba(12,17,29,0.72)', alignItems: 'center', justifyContent: 'center', gap: 12 },
   root: { flex: 1, paddingHorizontal: 18, gap: 18 },
   top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   frame: { flex: 1, borderRadius: 28, overflow: 'hidden', backgroundColor: '#1F242F' },

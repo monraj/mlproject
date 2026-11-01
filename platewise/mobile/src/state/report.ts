@@ -39,13 +39,13 @@ export function buildReport(p: Profile, days: Record<string, Day>, weights: Weig
     next.push('Log what you have eaten so far; a quick typed note is enough.');
   } else {
     const share = Math.round((eaten / budget) * 100);
-    const amount = hide ? `about ${share}% of your budget` : `${kcal(eaten)} of ${kcal(budget)} kcal`;
+    const amount = hide ? `about ${share}% of your daily target` : `${kcal(eaten)} of ${kcal(budget)} kcal`;
     const text = evening
       ? `${meals} ${meals === 1 ? 'meal' : 'meals'}, ${amount}.`
       : `${meals} ${meals === 1 ? 'meal' : 'meals'} so far, ${amount}. ${left > 0 ? (hide ? 'Room left for the rest of the day.' : `${kcal(left)} kcal left for the rest of the day.`) : 'You have used today’s budget; a light supper is plenty.'}`;
     const near = Math.abs(left) <= budget * 0.1;
     lines.push({ key: 'food', label: 'Food', text, tone: evening && near ? 'good' : 'info' });
-    if (evening && near) wins.push('You stayed close to your budget today.');
+    if (evening && near) wins.push('You stayed close to your target today.');
     if (evening && left < -budget * 0.1) next.push('Over today, and that’s okay. Start tomorrow with a protein breakfast like eggs or koko with groundnuts.');
   }
 

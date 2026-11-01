@@ -19,7 +19,7 @@ import { Card } from '../src/components/Card';
 import { Press } from '../src/components/Press';
 import { useTheme } from '../src/theme/ThemeProvider';
 import { useApp } from '../src/state/AppState';
-import { clampBudget, dailyBudget, formulaTdee, learnBurn, profileBudget, profileTdee } from '../src/state/calc';
+import { clampBudget, dailyBudget, formulaTdee, learnBurn, profileTdee } from '../src/state/calc';
 import { kcal } from '../src/lib/format';
 import { duration, easeOut, stagger } from '../src/lib/motion';
 
@@ -28,16 +28,15 @@ const MAX_STEP = 150;
 
 export default function CheckIn() {
   const { c } = useTheme();
-  const { s, dispatch } = useApp();
+  const { s, dispatch, target: current, targetBasis } = useApp();
   const router = useRouter();
   const reduce = useReducedMotion();
   const p = s.profile!;
   const learned = learnBurn(s.days, s.weights);
   const ready = !!learned && 'tdee' in learned;
-  const current = profileBudget(p);
   const guess = formulaTdee(p);
   // Limit the step so the budget changes gently.
-  const target = ready ? dailyBudget(p, learned.tdee) : current;
+  const target = ready ? dailyBudget({ ...p, weightKg: targetBasis?.weightKg ?? p.weightKg }, learned.tdee) : current;
   const proposed = clampBudget(Math.min(current + MAX_STEP, Math.max(current - MAX_STEP, target)), p.sex);
   const tdeeForProposed = ready ? profileTdee(p) + (proposed - current) : null;
   const burn = ready ? learned.tdee : profileTdee(p);
@@ -48,7 +47,7 @@ export default function CheckIn() {
         { id: 'keep', title: `Keep ${kcal(current)} kcal`, note: changed ? (proposed < current ? 'Slower pace, a bit more food' : 'Faster pace, a bit less food') : 'Still right for your pace' },
         ...(p.goalKg < p.weightKg ? [{ id: 'maint', title: 'Take a maintenance week', note: `Eat at about ${kcal(clampBudget(burn, p.sex))} for a break` }] : []),
       ]
-    : [{ id: 'keep', title: `Keep ${kcal(current)} kcal`, note: 'Your current budget' }];
+    : [{ id: 'keep', title: `Keep ${kcal(current)} kcal`, note: 'Your current daily target' }];
   const [pick, setPick] = useState(options[0].id);
   const old = changed ? current : s.budgetChange?.from ?? current;
   const shown = changed ? proposed : current;
@@ -82,7 +81,7 @@ export default function CheckIn() {
       </View>
 
       <View style={{ gap: 6 }}>
-        <T v="title">{changed ? 'Your new daily budget' : 'Your daily budget'}</T>
+        <T v="title">{changed ? 'Your new daily target' : 'Your daily target'}</T>
         <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 14 }}>
           {old !== shown ? (
             <Animated.View style={oldStyle}>
@@ -128,7 +127,7 @@ export default function CheckIn() {
             <T v="small" muted>
               Over {learned.span} days your trend moved {learned.change > 0 ? '+' : ''}
               {learned.change.toFixed(1)} kg. That means you burn {burn < guess ? 'a little less' : 'a little more'} than our first guess of {kcal(guess)}.
-              {changed ? ` We change the budget by at most ${MAX_STEP} kcal at a time.` : ''}
+              {changed ? ` We change the target by at most ${MAX_STEP} kcal at a time.` : ''}
             </T>
           </>
         ) : (

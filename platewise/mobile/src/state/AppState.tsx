@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useEffect, useMemo, useReducer, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { BudgetChange, ChatMsg, Day, DraftItem, FlexPlan, Glucose, StressCheck, Meal, MealItem, MealType, PlanDay, Product, Profile, SavedMeal, Source, WatchDay, Weight } from './types';
-import { activityBonus, dayKcal, macroTargets, mealKcal, profileBudget, toMealItem, weekLogged } from './calc';
+import { activityBonus, dayKcal, macroTargets, mealKcal, personalTarget, toMealItem, weekLogged, type TargetBasis } from './calc';
 import { clock, mealForHour } from '../lib/format';
 import { dayKey } from '../lib/dates';
 import { clockOf, minuteFor } from '../lib/mealSlots';
+import { addNotes, toNotes, type MemoryNote } from './memory';
 
-const STORAGE_KEY = 'platewise:v1';
 const SWATCHES = ['#6E3A2A', '#EADBC4', '#C9502C', '#3E6B2E', '#E08A2E', '#8A4B22', '#B23A1E'];
 
 /** Everything here is saved on the phone. */
@@ -18,6 +18,8 @@ type Saved = {
   products: Record<string, Product>;
   plans: Record<string, PlanDay>;
   chat: ChatMsg[];
+  /** What the coach remembers from older chats (see memory.ts). */
+  memory: MemoryNote[];
   budgetChange: BudgetChange | null;
   launchedOnce: boolean;
 };
@@ -61,6 +63,7 @@ type Action =
   | { type: 'chat'; msg: ChatMsg }
   | { type: 'chatPatch'; id: string; patch: Partial<ChatMsg> }
   | { type: 'chatClear' }
+  | { type: 'forgetMemory' }
   | { type: 'addGlucose'; date: string; reading: Glucose }
   | { type: 'deleteGlucose'; date: string; id: string }
   | { type: 'stressCheck'; date: string; check: StressCheck }
@@ -76,6 +79,7 @@ const initialSaved: Saved = {
   products: {},
   plans: {},
   chat: [],
+  memory: [],
   budgetChange: null,
   launchedOnce: false,
 };
@@ -208,9 +212,9 @@ function reducer(s: State, a: Action): State {
       return withDay(s, a.date, (d) => (d.stress?.some((x) => x.at === a.check.at) ? d : { ...d, stress: [...(d.stress ?? []), a.check] }));
     case 'setLearnedTdee': {
       if (!s.profile) return s;
-      const from = profileBudget(s.profile);
+      const from = personalTarget(s.profile, s.weights, s.days, today).kcal;
       const profile = { ...s.profile, learnedTdee: a.tdee };
-      return { ...s, profile, budgetChange: { from, to: profileBudget(profile), date: today, reason: a.reason } };
+      return { ...s, profile, budgetChange: { from, to: personalTarget(profile, s.weights, s.days, today).kcal, date: today, reason: a.reason } };
     }
     case 'setPlans': {
       const plans = { ...s.plans };
@@ -232,12 +236,19 @@ function reducer(s: State, a: Action): State {
       return { ...s, products: { ...s.products, [a.product.code]: a.product } };
     case 'deleteSaved':
       return { ...s, saved: s.saved.filter((m) => m.id !== a.id) };
-    case 'chat':
-      return { ...s, chat: [...s.chat, a.msg].slice(-40) };
+    case 'chat': {
+      // Messages that scroll out of the chat are kept in the coach's memory.
+      const chat = [...s.chat, a.msg];
+      const drop = Math.max(0, chat.length - 40);
+      const cut = drop && chat[drop]?.from === 'coach' ? drop + 1 : drop; // never split a question from its answer
+      return cut ? { ...s, chat: chat.slice(cut), memory: addNotes(s.memory, toNotes(chat.slice(0, cut))) } : { ...s, chat };
+    }
     case 'chatPatch':
       return { ...s, chat: s.chat.map((m) => (m.id === a.id ? { ...m, ...a.patch } : m)) };
     case 'chatClear':
-      return { ...s, chat: [] };
+      return { ...s, chat: [], memory: addNotes(s.memory, toNotes(s.chat)) };
+    case 'forgetMemory':
+      return { ...s, memory: [] };
     case 'reset':
       return { ...initial, hydrated: true, launchedOnce: true };
     default:
@@ -252,6 +263,9 @@ export type Ctx = {
   day: Day;
   budget: number;
   budgetFor: (date: string) => number;
+  /** The usual daily target and what it's based on (before planned days and exercise). */
+  target: number;
+  targetBasis: TargetBasis | null;
   /** Extra kcal added to today's budget for exercise the watch measured (0 when off). */
   activityBonus: number;
   eatenKcal: number;
@@ -265,15 +279,16 @@ export type Ctx = {
 
 const AppContext = createContext<Ctx | null>(null);
 
-export function AppStateProvider({ children }: { children: React.ReactNode }) {
+/** One person's log. `storageKey` is theirs (see accounts.ts); remount it with a `key` to switch people. */
+export function AppStateProvider({ storageKey, children }: { storageKey: string; children: React.ReactNode }) {
   const [s, dispatch] = useReducer(reducer, initial);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY)
+    AsyncStorage.getItem(storageKey)
       .then((raw) => dispatch({ type: 'hydrate', saved: raw ? (JSON.parse(raw) as Partial<Saved>) : null }))
       .catch(() => dispatch({ type: 'hydrate', saved: null }));
-  }, []);
+  }, [storageKey]);
 
   useEffect(() => {
     if (!s.hydrated) return;
@@ -287,19 +302,22 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         products: s.products,
         plans: s.plans,
         chat: s.chat,
+        memory: s.memory,
         budgetChange: s.budgetChange,
         launchedOnce: s.launchedOnce,
       };
-      AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(saved)).catch(() => undefined);
+      AsyncStorage.setItem(storageKey, JSON.stringify(saved)).catch(() => undefined);
     }, 250);
-  }, [s]);
+  }, [s, storageKey]);
 
   const value = useMemo<Ctx>(() => {
     const today = dayKey();
     const day = s.days[today] ?? emptyDay();
-    const base = s.profile ? profileBudget(s.profile) : 2000;
+    const personal = s.profile ? personalTarget(s.profile, s.weights, s.days, today) : null;
+    const base = personal?.kcal ?? 2000;
     const floor = s.profile?.sex === 'male' ? 1500 : 1200;
-    const adjust = !!s.profile?.watch?.adjustBudget;
+    // When the target already comes from measured steps, adding exercise on top would count it twice.
+    const adjust = !!s.profile?.watch?.adjustBudget && personal?.basis.steps == null;
     const bonusFor = (date: string) => activityBonus(s.days[date]?.watch?.activeKcal, adjust);
     const budgetFor = (date: string) => (s.plans[date] ? Math.max(floor, s.plans[date].kcal) : base) + bonusFor(date);
     const budget = budgetFor(today);
@@ -311,6 +329,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       day,
       budget,
       budgetFor,
+      target: base,
+      targetBasis: personal?.basis ?? null,
       activityBonus: bonusFor(today),
       eatenKcal,
       leftKcal: Math.max(0, budget - eatenKcal),

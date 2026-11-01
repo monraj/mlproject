@@ -1,4 +1,5 @@
 import datetime as dt
+import json
 import re
 from collections.abc import Iterator
 from typing import Any
@@ -17,7 +18,7 @@ from app.products.openfoodfacts import LookupUnavailable, lookup
 from app.safety.rules import calorie_floor
 from app.vision.pipeline import build_scan, prepare_image
 from app.vision.prompts import LABEL_PROMPT, PROMPT_VERSION, coach_system, ideas_prompt, photo_prompt, scan_system, text_prompt
-from app.vision.provider import ProviderError, Turn, get_provider
+from app.vision.provider import ProviderError, Turn, get_provider, parse_json
 from app.vision.schema import COACH_SCHEMA, IDEAS_SCHEMA, LABEL_SCHEMA, CoachAnswer, Ideas, LabelRead, MealAnalysis, meal_schema
 
 router = APIRouter()
@@ -65,6 +66,35 @@ async def scan(image: UploadFile = File(...), meal: str | None = Form(None), not
     except ValidationError as e:
         raise HTTPException(502, "The AI answer was unreadable. Try again.") from e
     return build_scan(analysis, get_provider().last_used, PROMPT_VERSION)
+
+
+@router.post("/scans/stream")
+async def scan_stream(image: UploadFile = File(...), meal: str | None = Form(None), note: str | None = Form(None)) -> StreamingResponse:
+    """Like /scans, but sends the AI's answer as it's written so the app can label each food the
+    moment it's named. After the raw text comes FINAL_MARK and the finished scan as JSON (or
+    {"error": ...}). Calories are still counted here, from the food table, never by the model."""
+    jpeg = await _read_image(image)  # held in memory only; never stored (CLAUDE.md rule 6)
+    pieces = get_provider().stream_json(system=scan_system(photo=True), turns=[Turn("user", photo_prompt(meal, note))], schema=meal_schema(), image=jpeg)
+    try:
+        first = next(pieces)
+    except StopIteration:
+        first = ""
+    except ProviderError as e:
+        raise HTTPException(502, "The AI service didn't answer. Try again in a moment.") from e
+
+    def body() -> Iterator[str]:
+        text = first
+        yield first
+        try:
+            for piece in pieces:
+                text += piece
+                yield piece
+            analysis = MealAnalysis.model_validate(parse_json(text))
+            yield FINAL_MARK + json.dumps(build_scan(analysis, get_provider().last_used, PROMPT_VERSION))
+        except (ProviderError, ValidationError, ValueError):
+            yield FINAL_MARK + json.dumps({"error": "The AI answer was unreadable. Try again."})
+
+    return StreamingResponse(body(), media_type="text/plain; charset=utf-8", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
 @router.post("/parse")

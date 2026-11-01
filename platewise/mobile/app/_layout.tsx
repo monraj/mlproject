@@ -22,6 +22,12 @@ import { loadGemmaState } from '../src/ai/modelStore';
 import { WatchSync } from '../src/health/WatchSync';
 import { WatchBridge } from '../src/wear/WatchBridge';
 import { loadPrivacy } from '../src/api/privacy';
+import { dataKey, loadAccounts, privacyKey, useAccounts } from '../src/state/accounts';
+import { LockScreen } from '../src/components/LockScreen';
+import { AppState as RNAppState, View } from 'react-native';
+import { SignIn } from '../src/components/SignIn';
+import { googleSignOut } from '../src/auth/google';
+import { WearSync } from '../modules/wear-sync';
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
@@ -79,6 +85,67 @@ function Nav() {
   );
 }
 
+/**
+ * The signed-in person's app, or the sign-in screen. Switching people remounts everything under the
+ * new person's saved log; signing out clears the watch, the widget and the reminders so the next
+ * person doesn't see them.
+ */
+// Back after this long away and a locked account asks for the fingerprint or face again.
+const RELOCK_MS = 60 * 1000;
+
+/** Locked until the person unlocks; locks again after a minute in the background. */
+function useLock(locked: boolean, current: string | null) {
+  const [open, setOpen] = React.useState(false);
+  const away = React.useRef<number | null>(null);
+  useEffect(() => setOpen(false), [current]);
+  useEffect(() => {
+    const sub = RNAppState.addEventListener('change', (st) => {
+      if (st === 'background') away.current = Date.now();
+      else if (st === 'active' && away.current != null) {
+        if (Date.now() - away.current >= RELOCK_MS) setOpen(false);
+        away.current = null;
+      }
+    });
+    return () => sub.remove();
+  }, []);
+  return { showLock: locked && !open, unlocked: () => setOpen(true) };
+}
+
+function Accounts() {
+  const { current, list } = useAccounts();
+  const account = list.find((a) => a.id === current) ?? null;
+  const { showLock, unlocked } = useLock(!!account?.lock, current);
+  const [ready, setReady] = React.useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    setReady(null);
+    loadPrivacy(current ? privacyKey(current) : null).finally(() => live && setReady(current ?? ''));
+    if (!current) {
+      Notifications.cancelAllScheduledNotificationsAsync().catch(() => undefined);
+      WearSync?.sendToday('{}').catch(() => undefined);
+      WearSync?.updateWidget?.('{}').catch(() => undefined);
+      void googleSignOut();
+    }
+    return () => {
+      live = false;
+    };
+  }, [current]);
+  if (ready !== (current ?? '')) return null;
+  if (!current || !account) return <SignIn />;
+  return (
+    <View style={{ flex: 1 }}>
+      <AppStateProvider key={current} storageKey={dataKey(current)}>
+        <ReminderSync />
+        <NotificationLinks />
+        <WatchSync />
+        <WatchBridge />
+        <Nav />
+      </AppStateProvider>
+      {showLock ? <LockScreen key={current} account={account} onUnlock={unlocked} /> : null}
+    </View>
+  );
+}
+
 export default function RootLayout() {
   const [loaded] = useFonts({
     PlusJakartaSans_400Regular,
@@ -91,7 +158,7 @@ export default function RootLayout() {
   const [serverReady, setServerReady] = React.useState(false);
   useEffect(() => {
     loadGemmaState().catch(() => undefined);
-    Promise.all([loadServerSettings(), loadPrivacy()]).finally(() => setServerReady(true));
+    Promise.all([loadServerSettings(), loadAccounts()]).finally(() => setServerReady(true));
   }, []);
 
   useEffect(() => {
@@ -104,13 +171,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <ThemeProvider>
-          <AppStateProvider>
-            <ReminderSync />
-            <NotificationLinks />
-            <WatchSync />
-            <WatchBridge />
-            <Nav />
-          </AppStateProvider>
+          <Accounts />
         </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

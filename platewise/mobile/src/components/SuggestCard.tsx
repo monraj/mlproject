@@ -27,8 +27,8 @@ export function SuggestCard({ order }: { order: number }) {
   const [pick, setPick] = useState(0);
   const slot = nextSlot(day);
   const list = useMemo(
-    () => (s.profile ? suggestMeals({ profile: s.profile, days: s.days, date: today, budget, proteinGoal, slot, shuffle }) : []),
-    [s.profile, s.days, today, budget, proteinGoal, slot, shuffle],
+    () => (s.profile ? suggestMeals({ profile: s.profile, days: s.days, weights: s.weights, date: today, budget, proteinGoal, slot, shuffle }) : []),
+    [s.profile, s.days, s.weights, today, budget, proteinGoal, slot, shuffle],
   );
   if (!list.length) return null;
   const sug = list[pick % list.length];

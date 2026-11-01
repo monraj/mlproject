@@ -25,13 +25,10 @@ import { PlateArt } from '../../src/components/PlateArt';
 import { useApp } from '../../src/state/AppState';
 import { useTheme } from '../../src/theme/ThemeProvider';
 import { easeOut, spring } from '../../src/lib/motion';
+import { friendlyAmount, friendlySummary } from '../../src/lib/friendly';
 
 const DARK = '#0C111D';
 const STATUS = ['Finding the foods…', 'Estimating portions…', 'Matching Ghanaian dishes…'];
-// Results show as soon as they arrive; the tags then drop in quickly (they used to be held for
-// at least 2.2 s and revealed 300 ms apart, which added 3-4 s to every scan).
-const TAG_STEP_MS = 120;
-const TAG_DONE_MS = 300;
 
 type TagT = { label: string; x: number; y: number; tone: 'sun' | 'light' | 'mint' };
 // Fallback spots for labels when the model gives no bounding box.
@@ -47,11 +44,14 @@ const SPOTS = [
 function tagsFor(r: ScanResult): TagT[] {
   return r.items.slice(0, 6).map((it, i) => {
     const b = it.bbox;
-    const x = b ? Math.min(0.7, Math.max(0.03, b[0])) : SPOTS[i][0];
+    const x = b ? Math.min(0.62, Math.max(0.03, b[0])) : SPOTS[i][0];
     const y = b ? Math.min(0.88, Math.max(0.05, (b[1] + b[3]) / 2)) : SPOTS[i][1];
-    return { label: it.name, x, y, tone: it.confidence === 'low' ? 'sun' : i % 2 ? 'light' : 'mint' };
+    return { label: `${it.name} · ${friendlyAmount(it)}`, x, y, tone: it.confidence === 'low' ? 'sun' : i % 2 ? 'light' : 'mint' };
   });
 }
+
+/** Names the AI has said so far, before it has finished looking: placed in turn, then moved to the food once known. */
+const liveTags = (names: string[]): TagT[] => names.slice(0, 6).map((label, i) => ({ label, x: SPOTS[i][0], y: SPOTS[i][1], tone: 'light' }));
 
 function Ripple({ delay, color }: { delay: number; color: string }) {
   const reduce = useReducedMotion();
@@ -69,7 +69,7 @@ function Tag({ tag, index, w, h }: { tag: TagT; index: number; w: number; h: num
   const t = useSharedValue(reduce ? 1 : 0);
   useEffect(() => {
     if (reduce) return;
-    const d = 150 + index * 300;
+    const d = 60 + index * 90;
     t.value = withDelay(d, withSpring(1, spring.drop));
     const id = setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined), d);
     return () => clearTimeout(id);
@@ -98,6 +98,8 @@ export default function Scanning() {
   const reduce = useReducedMotion();
   const [step, setStep] = useState(0);
   const [tags, setTags] = useState<TagT[]>([]);
+  // The finished scan, held on this screen until the person taps Next.
+  const [result, setResult] = useState<ScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
   // Server unreachable: ask before reading on the phone, which takes minutes, not seconds.
@@ -110,10 +112,10 @@ export default function Scanning() {
 
   useEffect(() => {
     let alive = true;
-    const timers: ReturnType<typeof setTimeout>[] = [];
     setError(null);
     setAskOffline(false);
     setTags([]);
+    setResult(null);
     settle.value = withTiming(1, { duration: 600, easing: easeOut });
     bar.value = 0.05;
     bar.value = withTiming(0.92, { duration: onDevice ? 120000 : 9000, easing: easeOut });
@@ -125,24 +127,24 @@ export default function Scanning() {
       return () => clearInterval(cycle);
     }
     api
-      .scanPhoto(uri, mealForHour(new Date().getHours()), undefined, { onDevice: onDevice && !photosRunOnDevice() })
+      .scanPhoto(uri, mealForHour(new Date().getHours()), undefined, {
+        onDevice: onDevice && !photosRunOnDevice(),
+        onNames: (names) => alive && setTags(liveTags(names)),
+      })
       .then((r) => {
         if (!alive) return;
+        clearInterval(cycle);
         if (!r.isFood) {
+          setTags([]);
           setError(r.note ? `No food found: ${r.note}` : 'No food found. Try again with the whole plate in view.');
           return;
         }
         dispatch({ type: 'startDraft', items: r.items, source: 'photo', photoUri: uri, note: r.note });
-        const t = tagsFor(r);
-        setTags(t);
-        timers.push(
-          setTimeout(() => {
-            if (!alive) return;
-            bar.value = withTiming(1, { duration: 200 });
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
-            router.replace('/scan/review');
-          }, reduce ? 150 : TAG_DONE_MS + t.length * TAG_STEP_MS),
-        );
+        setTags(tagsFor(r));
+        setResult(r);
+        bar.value = withTiming(1, { duration: 200 });
+        orbit.value = 0;
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
       })
       .catch((e: Error) => {
         if (!alive) return;
@@ -152,7 +154,6 @@ export default function Scanning() {
     return () => {
       alive = false;
       clearInterval(cycle);
-      timers.forEach(clearTimeout);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attempt]);
@@ -167,7 +168,7 @@ export default function Scanning() {
       <View style={styles.top}>
         <IconButton icon="close" label="Cancel scan" tone="dark" onPress={() => router.replace('/scan/camera')} />
         <T v="h2" color="#FFFFFF">
-          Reading your plate
+          {result ? 'Your plate' : 'Reading your plate'}
         </T>
         <View style={{ width: 44 }} />
       </View>
@@ -176,15 +177,17 @@ export default function Scanning() {
         <Animated.View style={[StyleSheet.absoluteFill, styles.center, photoStyle]}>
           {s.photoUri ? <Image source={{ uri: s.photoUri }} style={StyleSheet.absoluteFill} resizeMode="cover" /> : <PlateArt size={300} />}
         </Animated.View>
-        <View style={[StyleSheet.absoluteFill, styles.center]} pointerEvents="none">
-          <Ripple delay={0} color={c.mintLight} />
-          <Ripple delay={700} color="#FFFFFF" />
-          <Ripple delay={1400} color={c.sun} />
-          <Animated.View style={[styles.orbit, orbitStyle]}>
-            <View style={[styles.spark, { backgroundColor: c.sun }]} />
-          </Animated.View>
-        </View>
-        {box.w > 0 && tags.map((t, i) => <Tag key={`${t.label}${i}`} tag={t} index={i} w={box.w} h={box.h} />)}
+        {result ? null : (
+          <View style={[StyleSheet.absoluteFill, styles.center]} pointerEvents="none">
+            <Ripple delay={0} color={c.mintLight} />
+            <Ripple delay={700} color="#FFFFFF" />
+            <Ripple delay={1400} color={c.sun} />
+            <Animated.View style={[styles.orbit, orbitStyle]}>
+              <View style={[styles.spark, { backgroundColor: c.sun }]} />
+            </Animated.View>
+          </View>
+        )}
+        {box.w > 0 && tags.map((t, i) => <Tag key={`${t.label}${i}`} tag={t} index={result ? i : 0} w={box.w} h={box.h} />)}
       </View>
 
       {askOffline ? (
@@ -223,12 +226,25 @@ export default function Scanning() {
             <Button label="Try again" grow bgColor="#FFFFFF" fgColor="#101828" onPress={() => setAttempt((n) => n + 1)} />
           </View>
         </View>
+      ) : result ? (
+        <Animated.View entering={FadeIn.duration(250)} style={{ gap: 14 }} accessibilityLiveRegion="polite">
+          <T v="title" size={22} color="#FFFFFF">
+            Here’s what I found
+          </T>
+          <T v="body" color="#CECFD2">
+            {friendlySummary(result.items)}
+          </T>
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <Button label="Retake" kind="ghost" fgColor="#FFFFFF" onPress={() => router.replace('/scan/camera')} style={{ borderWidth: 1, borderColor: '#667085' }} />
+            <Button label="Next" icon="arrow" grow bgColor="#FFFFFF" fgColor="#101828" onPress={() => router.replace('/scan/review')} />
+          </View>
+        </Animated.View>
       ) : (
       <View style={{ gap: 12 }}>
         <View style={{ height: 30 }} accessibilityLiveRegion="polite">
-          <Animated.View key={step} entering={FadeIn.duration(250)} exiting={FadeOut.duration(200)}>
+          <Animated.View key={tags.length ? `n${tags.length}` : step} entering={FadeIn.duration(250)} exiting={FadeOut.duration(200)}>
             <T v="title" size={22} color="#FFFFFF">
-              {STATUS[step]}
+              {tags.length ? `Found ${tags.length === 1 ? tags[0].label.toLowerCase() : `${tags.length} foods`}…` : STATUS[step]}
             </T>
           </Animated.View>
         </View>

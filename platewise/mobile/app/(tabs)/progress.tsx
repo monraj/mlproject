@@ -167,7 +167,7 @@ export default function Progress() {
 
   let note: string;
   if (measured == null) note = 'Weigh in a few times a week. After about a week your trend and forecast appear here.';
-  else if (losing && measured < 0 && Math.abs(measured) < p.paceKgWeek * 0.8) note = 'A little slower than planned. That’s normal: weight loss eases as your body adapts. Keep logging and your weekly check-in adjusts the budget.';
+  else if (losing && measured < 0 && Math.abs(measured) < p.paceKgWeek * 0.8) note = 'A little slower than planned. That’s normal: weight loss eases as your body adapts. Keep logging and your weekly check-in adjusts your daily target.';
   else if (losing && measured >= 0) note = 'Your trend is flat or rising. Water and salt move the scale day to day, so look at the line, and check portions of oily dishes.';
   else note = 'Right on pace. Keep the same rhythm.';
 

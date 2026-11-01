@@ -324,7 +324,7 @@ export default function Today() {
               Plan {nextMeal.toLowerCase()}
             </T>
             <T v="small" size={12} muted>
-              {leftKcal < 300 ? 'You’re close to today’s budget' : hide ? 'Ideas that fit your day' : `Ideas that fit your last ${kcal(leftKcal)} kcal`}
+              {leftKcal < 300 ? 'You’re close to today’s target' : hide ? 'Ideas that fit your day' : `Ideas that fit your last ${kcal(leftKcal)} kcal`}
             </T>
           </View>
           <Icon name="chevron" color={c.muted} />

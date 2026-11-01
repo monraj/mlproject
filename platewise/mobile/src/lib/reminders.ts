@@ -89,7 +89,7 @@ export function planReminders(r: Reminders, days: Record<string, Day>, weights: 
     if (meal) out.push({ date: at(day, times[meal.type]), title: `${meal.type} time?`, body: 'Snap it before you eat. It takes 5 seconds.' });
     if (day.getDay() === r.weighDay && !weights.some((w) => w.date === key)) {
       const when = at(day, 7 * 60 + 30);
-      if (when > now) out.push({ date: when, title: 'Weigh-in day', body: 'Step on the scale before breakfast. Your trend keeps your budget honest.' });
+      if (when > now) out.push({ date: when, title: 'Weigh-in day', body: 'Step on the scale before breakfast. Your trend keeps your target honest.' });
     }
   }
   return out;
