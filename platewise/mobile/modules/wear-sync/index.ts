@@ -5,6 +5,9 @@ type WearSyncModule = {
   sendToday(json: string): Promise<boolean>;
   hasWatch(): Promise<boolean>;
   watchWater(date: string): Promise<number>;
+  /** Meals picked on the watch, waiting to be added. ref is "saved:<id>" or "meal:<date>:<id>". */
+  pendingLogs(): Promise<{ uri: string; ref: string }[]>;
+  clearLog(uri: string): Promise<boolean>;
   addListener(event: 'onWatchData', fn: (e: { path: string }) => void): EventSubscription;
 };
 

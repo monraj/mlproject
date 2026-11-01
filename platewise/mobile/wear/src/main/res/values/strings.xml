@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">PlateWise</string>
     <string name="tile_label">PlateWise · today</string>
+    <string name="complication_label">PlateWise · kcal left</string>
 </resources>

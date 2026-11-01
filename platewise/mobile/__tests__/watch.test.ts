@@ -31,3 +31,23 @@ describe('watch data for the coach', () => {
     expect(watchSummary(day({}))).toBe('');
   });
 });
+
+describe('Pixel Watch payload', () => {
+  const { quickMeals, resolveRef, streak } = require('../src/wear/payload') as typeof import('../src/wear/payload');
+  const meal = (id: string, title: string, kcal: number) => ({ id, title, kcal, items: [] }) as unknown as import('../src/state/types').Meal;
+  const dayOf = (meals: import('../src/state/types').Meal[]) => ({ meals, water: 0, greensExtra: 0, steps: 0, skipped: [] });
+
+  it('offers saved meals first, then recent ones without repeats', () => {
+    const days = { '2026-11-01': dayOf([meal('a', 'Waakye', 600), meal('b', 'Kenkey', 500)]), '2026-10-31': dayOf([meal('c', 'Waakye', 610)]) };
+    const q = quickMeals([{ id: 's1', name: 'My oats', kcal: 300, items: [] }], days, '2026-11-01');
+    expect(q.map((x) => x.title)).toEqual(['My oats', 'Kenkey', 'Waakye']);
+    expect(resolveRef(q[1].ref, [], days)?.source).toBe('copy');
+    expect(resolveRef('meal:2026-11-01:gone', [], days)).toBeNull();
+  });
+
+  it('counts days logged in a row', () => {
+    const days = { '2026-11-01': dayOf([meal('a', 'x', 1)]), '2026-10-31': dayOf([meal('b', 'x', 1)]), '2026-10-29': dayOf([meal('c', 'x', 1)]) };
+    expect(streak(days, '2026-11-01')).toBe(2);
+    expect(streak({ '2026-10-31': dayOf([meal('b', 'x', 1)]) }, '2026-11-01')).toBe(1);
+  });
+});

@@ -1,46 +1,13 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { AppState as RNAppState } from 'react-native';
 import { WearSync } from '../../modules/wear-sync';
-import { useApp } from '../state/AppState';
-import { SLOTS, slotOf } from '../lib/mealSlots';
+import { buildMeal, useApp } from '../state/AppState';
 import { dayKey } from '../lib/dates';
-import { shareOfDay } from '../lib/relate';
+import { resolveRef, watchPayload } from './payload';
 
-const WATER_GOAL = 8;
-
-/** What the watch shows. Kept small: the watch only displays it. */
-export function watchPayload(args: {
-  date: string;
-  budget: number;
-  eaten: number;
-  protein: number;
-  proteinGoal: number;
-  water: number;
-  hide: boolean;
-  meals: { type: Parameters<typeof slotOf>[0]; time: string; title: string; kcal: number }[];
-}) {
-  const left = Math.max(0, Math.round(args.budget - args.eaten));
-  return {
-    date: args.date,
-    left,
-    eaten: Math.round(args.eaten),
-    budget: Math.round(args.budget),
-    share: shareOfDay(args.eaten, args.budget),
-    protein: Math.round(args.protein),
-    proteinGoal: args.proteinGoal,
-    water: args.water,
-    waterGoal: WATER_GOAL,
-    hide: args.hide,
-    slots: SLOTS.map((s) => {
-      const ms = args.meals.filter((m) => slotOf(m.type).type === s.type);
-      return { label: s.label, kcal: Math.round(ms.reduce((t, m) => t + m.kcal, 0)), titles: ms.map((m) => m.title) };
-    }).filter((s) => s.titles.length),
-  };
-}
-
-/** Keeps the Pixel Watch app in step with today, and adds water tapped on the watch. */
+/** Keeps the Pixel Watch app in step with today, and adds water and meals tapped on the watch. */
 export function WatchBridge() {
-  const { s, day, today, budget, eatenKcal, protein, proteinGoal, dispatch } = useApp();
+  const { s, day, today, budget, budgetFor, eatenKcal, protein, proteinGoal, dispatch } = useApp();
 
   // Phone -> watch: send today's summary whenever it changes (debounced).
   useEffect(() => {
@@ -54,18 +21,38 @@ export function WatchBridge() {
       water: day.water,
       hide: !!s.profile.hideNumbers,
       meals: day.meals,
+      days: s.days,
+      saved: s.saved,
+      budgetFor,
+      steps: day.watch?.steps ?? day.steps,
     });
     const t = setTimeout(() => WearSync?.sendToday(JSON.stringify(payload)).catch(() => undefined), 800);
     return () => clearTimeout(t);
-  }, [s.hydrated, s.profile, today, budget, eatenKcal, protein, proteinGoal, day.water, day.meals]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [s.hydrated, s.profile, s.days, s.saved, today, budget, eatenKcal, protein, proteinGoal, day.water]);
 
-  // Watch -> phone: cups added on the watch (a running count per day; the reducer adds the new ones).
+  // Watch -> phone: cups added on the watch (a running count per day; the reducer adds the new
+  // ones) and meals picked on the watch (each added once, then removed from the Data Layer).
+  const latest = useRef({ saved: s.saved, days: s.days });
+  latest.current = { saved: s.saved, days: s.days };
   useEffect(() => {
     if (!WearSync || !s.hydrated) return;
+    let busy = false;
     const pull = async () => {
-      const date = dayKey();
-      const cups = await WearSync!.watchWater(date);
-      if (cups > 0) dispatch({ type: 'watchWater', date, cups });
+      if (busy) return;
+      busy = true;
+      try {
+        const date = dayKey();
+        const cups = await WearSync!.watchWater(date);
+        if (cups > 0) dispatch({ type: 'watchWater', date, cups });
+        for (const log of await WearSync!.pendingLogs()) {
+          const found = resolveRef(log.ref, latest.current.saved, latest.current.days);
+          if (found) dispatch({ type: 'logMeals', meals: [buildMeal(found.items, found.source)] });
+          await WearSync!.clearLog(log.uri);
+        }
+      } finally {
+        busy = false;
+      }
     };
     pull().catch(() => undefined);
     const sub = WearSync.addListener('onWatchData', () => pull().catch(() => undefined));
