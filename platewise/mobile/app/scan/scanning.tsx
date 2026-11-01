@@ -18,7 +18,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { T } from '../../src/components/T';
 import { Button } from '../../src/components/Button';
-import { api, type ScanResult } from '../../src/api/client';
+import { SlowOfflineError, api, photosRunOnDevice, type ScanResult } from '../../src/api/client';
 import { mealForHour } from '../../src/lib/format';
 import { IconButton } from '../../src/components/IconButton';
 import { PlateArt } from '../../src/components/PlateArt';
@@ -28,7 +28,10 @@ import { easeOut, spring } from '../../src/lib/motion';
 
 const DARK = '#0C111D';
 const STATUS = ['Finding the foods…', 'Estimating portions…', 'Matching Ghanaian dishes…'];
-const MIN_MS = 2200;
+// Results show as soon as they arrive; the tags then drop in quickly (they used to be held for
+// at least 2.2 s and revealed 300 ms apart, which added 3-4 s to every scan).
+const TAG_STEP_MS = 120;
+const TAG_DONE_MS = 300;
 
 type TagT = { label: string; x: number; y: number; tone: 'sun' | 'light' | 'mint' };
 // Fallback spots for labels when the model gives no bounding box.
@@ -97,6 +100,9 @@ export default function Scanning() {
   const [tags, setTags] = useState<TagT[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
+  // Server unreachable: ask before reading on the phone, which takes minutes, not seconds.
+  const [askOffline, setAskOffline] = useState(false);
+  const [onDevice, setOnDevice] = useState(photosRunOnDevice());
   const [box, setBox] = useState({ w: 0, h: 0 });
   const settle = useSharedValue(reduce ? 1 : 1.08);
   const bar = useSharedValue(0.05);
@@ -105,12 +111,12 @@ export default function Scanning() {
   useEffect(() => {
     let alive = true;
     const timers: ReturnType<typeof setTimeout>[] = [];
-    const started = Date.now();
     setError(null);
+    setAskOffline(false);
     setTags([]);
     settle.value = withTiming(1, { duration: 600, easing: easeOut });
     bar.value = 0.05;
-    bar.value = withTiming(0.92, { duration: 9000, easing: easeOut });
+    bar.value = withTiming(0.92, { duration: onDevice ? 120000 : 9000, easing: easeOut });
     if (!reduce) orbit.value = withRepeat(withTiming(1, { duration: 2400, easing: Easing.linear }), -1);
     const cycle = setInterval(() => setStep((n) => (n + 1) % STATUS.length), 1200);
     const uri = s.photoUri;
@@ -119,7 +125,7 @@ export default function Scanning() {
       return () => clearInterval(cycle);
     }
     api
-      .scanPhoto(uri, mealForHour(new Date().getHours()))
+      .scanPhoto(uri, mealForHour(new Date().getHours()), undefined, { onDevice: onDevice && !photosRunOnDevice() })
       .then((r) => {
         if (!alive) return;
         if (!r.isFood) {
@@ -128,18 +134,21 @@ export default function Scanning() {
         }
         dispatch({ type: 'startDraft', items: r.items, source: 'photo', photoUri: uri, note: r.note });
         const t = tagsFor(r);
-        const wait = Math.max(0, MIN_MS - (Date.now() - started));
-        timers.push(setTimeout(() => alive && setTags(t), wait));
+        setTags(t);
         timers.push(
           setTimeout(() => {
             if (!alive) return;
             bar.value = withTiming(1, { duration: 200 });
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
             router.replace('/scan/review');
-          }, wait + (reduce ? 300 : 500 + t.length * 300)),
+          }, reduce ? 150 : TAG_DONE_MS + t.length * TAG_STEP_MS),
         );
       })
-      .catch((e: Error) => alive && setError(e.message));
+      .catch((e: Error) => {
+        if (!alive) return;
+        if (e instanceof SlowOfflineError) setAskOffline(true);
+        else setError(e.message);
+      });
     return () => {
       alive = false;
       clearInterval(cycle);
@@ -178,7 +187,30 @@ export default function Scanning() {
         {box.w > 0 && tags.map((t, i) => <Tag key={`${t.label}${i}`} tag={t} index={i} w={box.w} h={box.h} />)}
       </View>
 
-      {error ? (
+      {askOffline ? (
+        <View style={{ gap: 12 }} accessibilityLiveRegion="polite">
+          <T v="title" size={22} color="#FFFFFF">
+            Can’t reach the PlateWise server
+          </T>
+          <T v="small" color="#CECFD2">
+            Check your internet. You can also read this photo on your phone without internet, but it takes 1–3 minutes.
+          </T>
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <Button label="Type it instead" kind="ghost" fgColor="#FFFFFF" onPress={() => router.replace('/type')} style={{ borderWidth: 1, borderColor: '#667085' }} />
+            <Button
+              label="Scan on this phone"
+              grow
+              bgColor="#FFFFFF"
+              fgColor="#101828"
+              onPress={() => {
+                setOnDevice(true);
+                setAttempt((n) => n + 1);
+              }}
+            />
+          </View>
+          <Button label="Try the server again" kind="ghost" fgColor="#FFFFFF" onPress={() => setAttempt((n) => n + 1)} />
+        </View>
+      ) : error ? (
         <View style={{ gap: 12 }} accessibilityLiveRegion="polite">
           <T v="title" size={22} color="#FFFFFF">
             Couldn’t read the plate
@@ -204,7 +236,9 @@ export default function Scanning() {
           <Animated.View style={[styles.fill, { backgroundColor: c.mintLight }, barStyle]} />
         </View>
         <T v="small" color="#94969C">
-          Usually a few seconds. Your photo is used for this scan only and isn’t stored.
+          {onDevice
+            ? 'Reading on this phone, without internet. This takes 1–3 minutes; keep the app open.'
+            : 'Usually a few seconds. Your photo is used for this scan only and isn’t stored.'}
         </T>
       </View>
       )}

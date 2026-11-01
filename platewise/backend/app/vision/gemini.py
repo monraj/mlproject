@@ -9,6 +9,10 @@ from google.genai import errors, types
 
 from app.vision.provider import ProviderError, Turn, parse_json
 
+# After the main model says its quota is used up (429), skip it for this long and go straight to
+# the lighter model, instead of paying an extra round trip on every request.
+QUOTA_COOLDOWN_S = 15 * 60
+
 
 class GeminiProvider:
     name = "gemini"
@@ -17,6 +21,14 @@ class GeminiProvider:
         self.client = genai.Client(api_key=api_key, http_options=types.HttpOptions(timeout=int(timeout_s * 1000)))
         self.model = model
         self.fallback_model = fallback_model
+        self.main_blocked_until = 0.0
+
+    def _models(self) -> list[str]:
+        main_ok = time.monotonic() >= self.main_blocked_until or not self.fallback_model
+        return ([self.model] if main_ok else []) + ([self.fallback_model] if self.fallback_model else [])
+
+    def _quota_hit(self) -> None:
+        self.main_blocked_until = time.monotonic() + QUOTA_COOLDOWN_S
 
     @staticmethod
     def _contents(turns: list[Turn], image: bytes | None = None) -> list[types.Content]:
@@ -32,7 +44,7 @@ class GeminiProvider:
     def stream_text(self, *, system: str, turns: list[Turn]) -> Iterator[str]:
         """A plain-text answer, piece by piece, so the app can show it as it's written."""
         contents = self._contents(turns)
-        models = [self.model] + ([self.fallback_model] if self.fallback_model else [])
+        models = self._models()
         for i, model in enumerate(models):
             thinking = types.ThinkingConfig(thinking_level=types.ThinkingLevel.MINIMAL) if model == self.model else None
             config = types.GenerateContentConfig(system_instruction=system, thinking_config=thinking)
@@ -46,6 +58,8 @@ class GeminiProvider:
             except (errors.ServerError, errors.ClientError) as e:
                 # Busy (5xx) or quota used up (429) before anything was sent: try the lighter model.
                 retryable = isinstance(e, errors.ServerError) or e.code == 429
+                if isinstance(e, errors.ClientError) and e.code == 429 and model == self.model:
+                    self._quota_hit()
                 if started or not retryable or i == len(models) - 1:
                     raise
 
@@ -62,7 +76,8 @@ class GeminiProvider:
             )
 
         # Gemini sometimes answers 503 when busy: retry once, then try the lighter fallback model.
-        attempts = [self.model, self.model] + ([self.fallback_model] if self.fallback_model else [])
+        models = self._models()
+        attempts = ([self.model, self.model] if self.model in models else []) + ([self.fallback_model] if self.fallback_model else [])
         for i, model in enumerate(attempts):
             try:
                 resp = self.client.models.generate_content(model=model, contents=contents, config=config_for(model))
@@ -76,6 +91,7 @@ class GeminiProvider:
                 # has its own quota, instead of failing the request.
                 if e.code != 429 or model == attempts[-1] or not self.fallback_model:
                     raise
+                self._quota_hit()
                 resp = self.client.models.generate_content(model=self.fallback_model, contents=contents, config=config_for(self.fallback_model))
                 break
         if not resp.text:

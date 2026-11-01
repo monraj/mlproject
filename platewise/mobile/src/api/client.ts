@@ -236,7 +236,16 @@ async function onDeviceCall<T>(run: () => Promise<T>): Promise<T> {
  * Online or on the phone. Auto mode uses the server when it answers and Gemma on the phone when it
  * doesn't (no signal, server asleep or down). Without a downloaded model it behaves as before.
  */
-async function route<T>(online: () => Promise<T>, offline: () => Promise<T>, needsVision = false): Promise<T> {
+/** The server can't be reached and the job would be slow on the phone (reading a photo takes
+ * minutes on a phone's CPU): the screen asks before running it on the phone. */
+export class SlowOfflineError extends ApiError {}
+
+/** True when photos will be read on the phone (Offline mode, or online AI not allowed). */
+export function photosRunOnDevice(): boolean {
+  return !getPrivacy().aiConsent || getGemmaState().mode === 'offline';
+}
+
+async function route<T>(online: () => Promise<T>, offline: () => Promise<T>, needsVision = false, askBeforeSlow = false): Promise<T> {
   const model = installedModel();
   const canRun = isGemmaReady() && (!needsVision || !!model?.vision);
   // Without consent nothing goes to the server: on-device only.
@@ -250,12 +259,17 @@ async function route<T>(online: () => Promise<T>, offline: () => Promise<T>, nee
     return onDeviceCall(offline);
   }
   if (mode === 'online' || !canRun) return online();
-  if (!(await serverReachable())) return onDeviceCall(offline);
+  const slowOffline = () => new SlowOfflineError("Can't reach the PlateWise server right now.", 0);
+  if (!(await serverReachable())) {
+    if (askBeforeSlow) throw slowOffline();
+    return onDeviceCall(offline);
+  }
   try {
     return await online();
   } catch (e) {
     if (e instanceof ApiError && (e.status === 0 || e.status >= 500)) {
       reach = null;
+      if (askBeforeSlow) throw slowOffline();
       return onDeviceCall(offline);
     }
     throw e;
@@ -270,12 +284,16 @@ export const api = {
     await call<unknown>('/foods/search?q=egg', {}, 20000);
     return h;
   },
-  scanPhoto: (uri: string, meal: string, note?: string) =>
-    route(
-      async () => toScan(await call<ApiScan>('/scans', { method: 'POST', body: await imageForm(uri, { meal, note }) })),
-      () => onDevice.scanPhoto(uri, meal, note),
-      true,
-    ),
+  /** onDevice: the person chose to read the photo on the phone after the server couldn't be reached. */
+  scanPhoto: (uri: string, meal: string, note?: string, opts: { onDevice?: boolean } = {}) =>
+    opts.onDevice
+      ? onDeviceCall(() => onDevice.scanPhoto(uri, meal, note))
+      : route(
+          async () => toScan(await call<ApiScan>('/scans', { method: 'POST', body: await imageForm(uri, { meal, note }) })),
+          () => onDevice.scanPhoto(uri, meal, note),
+          true,
+          true,
+        ),
   parseText: (text: string, lang: 'en' | 'tw' | 'pcm', meal: string) =>
     route(
       async () => toScan(await call<ApiScan>('/parse', json({ text, lang, meal }))),
