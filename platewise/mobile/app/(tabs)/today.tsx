@@ -14,6 +14,7 @@ import { useTheme } from '../../src/theme/ThemeProvider';
 import { useApp } from '../../src/state/AppState';
 import { approx, greeting, kcal, longDate, mealForHour } from '../../src/lib/format';
 import { todayInsight, wellbeingCheck } from '../../src/state/insights';
+import { SLOTS, chooseSlot, slotOf } from '../../src/lib/mealSlots';
 import { WEEKDAYS, keyDate } from '../../src/lib/dates';
 import type { Meal } from '../../src/state/types';
 import { duration, stagger } from '../../src/lib/motion';
@@ -193,31 +194,66 @@ export default function Today() {
             Nothing logged yet today. Tap + to snap, say or type your first meal.
           </T>
         ) : null}
-        {day.meals.map((m) => (
-          <Animated.View
-            key={m.id}
-            layout={LinearTransition}
-            entering={m.id === s.lastSavedId ? ZoomIn.springify().damping(14) : FadeInDown.duration(duration.slow)}
-            style={{ borderRadius: 20 }}
-          >
-            <Press onLongPress={() => removeMeal(m)} accessibilityHint="Hold to delete" style={[styles.meal, { backgroundColor: c.surface }]}>
-            <View style={[styles.thumb, { backgroundColor: m.swatch }]} />
-            <View style={{ flex: 1, gap: 2 }}>
-              <T v="small" size={12} weight="semibold" muted>
-                {m.type} · {m.time}
-              </T>
-              <T v="body" weight="bold" numberOfLines={1}>
-                {m.title}
-              </T>
+        {SLOTS.map((slot) => {
+          const meals = day.meals.filter((m) => slotOf(m.type).type === slot.type).sort((a, b) => a.minute - b.minute);
+          const passed = slot.minute == null || slot.minute <= now.getHours() * 60 + now.getMinutes() + 60;
+          if (!meals.length && (slot.minute == null || !passed)) return null;
+          const total = meals.reduce((t, m) => t + m.kcal, 0);
+          return (
+            <View key={slot.type} style={{ gap: 6 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
+                <T v="small" weight="bold" muted style={{ flex: 1 }}>
+                  {slot.label}
+                </T>
+                {meals.length && !hide ? (
+                  <T v="small" muted>
+                    {approx(total)} kcal
+                  </T>
+                ) : null}
+              </View>
+              {meals.map((m) => (
+                <Animated.View
+                  key={m.id}
+                  layout={LinearTransition}
+                  entering={m.id === s.lastSavedId ? ZoomIn.springify().damping(14) : FadeInDown.duration(duration.slow)}
+                  style={{ borderRadius: 20 }}
+                >
+                  <Press onLongPress={() => removeMeal(m)} accessibilityHint="Hold to delete" style={[styles.meal, { backgroundColor: c.surface }]}>
+                    <View style={[styles.thumb, { backgroundColor: m.swatch }]} />
+                    <View style={{ flex: 1, gap: 2 }}>
+                      <T v="small" size={12} weight="semibold" muted>
+                        {m.time}
+                      </T>
+                      <T v="body" weight="bold" numberOfLines={1}>
+                        {m.title}
+                      </T>
+                    </View>
+                    {!hide && (
+                      <T v="body" weight="bold">
+                        {approx(m.kcal)}
+                      </T>
+                    )}
+                  </Press>
+                </Animated.View>
+              ))}
+              {!meals.length ? (
+                <Press
+                  onPress={() => {
+                    chooseSlot(slot.type);
+                    router.push('/log');
+                  }}
+                  accessibilityLabel={`Log what you ate in the ${slot.label.toLowerCase()}`}
+                  style={[styles.meal, styles.plan, { borderColor: c.line, minHeight: 52 }]}
+                >
+                  <Icon name="plus" color={c.muted} />
+                  <T v="small" weight="semibold" muted style={{ flex: 1 }}>
+                    Log what you ate in the {slot.label.toLowerCase()}
+                  </T>
+                </Press>
+              ) : null}
             </View>
-            {!hide && (
-              <T v="body" weight="bold">
-                {approx(m.kcal)}
-              </T>
-            )}
-            </Press>
-          </Animated.View>
-        ))}
+          );
+        })}
         <Press onPress={() => router.push('/fits')} style={[styles.meal, styles.plan, { borderColor: c.line }]} accessibilityLabel="Plan your next meal">
           <View style={[styles.thumb, { backgroundColor: c.surface, alignItems: 'center', justifyContent: 'center' }]}>
             <Icon name="plus" color={c.ink} />

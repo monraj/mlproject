@@ -115,7 +115,16 @@ export type WatchDay = {
   syncedAt: string;
 };
 
-export type Day = { meals: Meal[]; water: number; greensExtra: number; steps: number; skipped: string[]; watch?: WatchDay };
+export type Day = {
+  meals: Meal[];
+  water: number;
+  greensExtra: number;
+  steps: number;
+  skipped: string[];
+  watch?: WatchDay;
+  /** Cups of water added from the Pixel Watch app so far (so they're never added twice). */
+  watchWater?: number;
+};
 export type Weight = { date: string; kg: number };
 export type SavedMeal = { id: string; name: string; kcal: number; items: MealItem[] };
 export type Product = { code: string; name: string; per100: Per100; servingG: number; servingLabel: string; source: string };

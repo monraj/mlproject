@@ -4,6 +4,7 @@ import type { BudgetChange, ChatMsg, Day, DraftItem, FlexPlan, Meal, MealItem, M
 import { activityBonus, dayKcal, macroTargets, mealKcal, profileBudget, toMealItem, weekLogged } from './calc';
 import { clock, mealForHour } from '../lib/format';
 import { dayKey } from '../lib/dates';
+import { clockOf, minuteFor } from '../lib/mealSlots';
 
 const STORAGE_KEY = 'platewise:v1';
 const SWATCHES = ['#6E3A2A', '#EADBC4', '#C9502C', '#3E6B2E', '#E08A2E', '#8A4B22', '#B23A1E'];
@@ -47,6 +48,7 @@ type Action =
   | { type: 'skip'; what: string }
   | { type: 'addWeight'; weight: Weight }
   | { type: 'watchSync'; days: Record<string, WatchDay>; weights: Weight[] }
+  | { type: 'watchWater'; date: string; cups: number }
   | { type: 'deleteWeight'; date: string }
   | { type: 'setLearnedTdee'; tdee: number | null; reason: string }
   | { type: 'setPlans'; plan: FlexPlan }
@@ -94,14 +96,16 @@ export function newId(prefix: string): string {
 
 export function buildMeal(items: MealItem[], source: Source, type?: MealType): Meal {
   const now = new Date();
+  // A meal filed under an earlier part of the day gets that part's usual time.
+  const minute = type ? minuteFor(type, now) : now.getHours() * 60 + now.getMinutes();
   const kcal = items.reduce((s, i) => s + i.kcal, 0);
   const sum = (k: 'protein' | 'carbs' | 'fat') => Math.round(items.reduce((s, i) => s + i[k], 0) * 10) / 10;
   const seed = (items[0]?.foodId ?? items[0]?.name ?? 'x').split('').reduce((a, ch) => a + ch.charCodeAt(0), 0);
   return {
     id: newId('m'),
     type: type ?? mealForHour(now.getHours()),
-    time: clock(now),
-    minute: now.getHours() * 60 + now.getMinutes(),
+    time: clockOf(minute),
+    minute,
     title: items.map((i) => i.name).join(', '),
     kcal: Math.round(kcal),
     kcalLow: Math.round(kcal * 0.8),
@@ -163,6 +167,12 @@ function reducer(s: State, a: Action): State {
     }
     case 'deleteWeight':
       return { ...s, weights: s.weights.filter((w) => w.date !== a.date) };
+    case 'watchWater':
+      // The watch reports its running count for the day; add only cups not added before.
+      return withDay(s, a.date, (d) => {
+        const added = Math.max(0, a.cups - (d.watchWater ?? 0));
+        return added ? { ...d, water: d.water + added, watchWater: a.cups } : d;
+      });
     case 'watchSync': {
       // Watch steps fill the steps habit (never lowering a higher manual entry); a weigh-in the
       // person typed for a day wins over the scale's.

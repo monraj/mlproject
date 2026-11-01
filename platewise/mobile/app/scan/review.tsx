@@ -26,9 +26,11 @@ import { useTheme } from '../../src/theme/ThemeProvider';
 import { useApp } from '../../src/state/AppState';
 import { itemGrams, itemKcal, mealKcal, share } from '../../src/state/calc';
 import type { DraftItem } from '../../src/state/types';
-import { approx, range } from '../../src/lib/format';
+import { approx, mealForHour, range } from '../../src/lib/format';
 import { SHARES, portionPresets } from '../../src/lib/portions';
 import { pickQuestion } from '../../src/lib/clarify';
+import { SLOTS, takeChosenSlot } from '../../src/lib/mealSlots';
+import type { MealType } from '../../src/state/types';
 import { relate } from '../../src/lib/relate';
 import { wellbeingCheck } from '../../src/state/insights';
 import { food as foodById } from '../../src/data/foods';
@@ -158,6 +160,8 @@ export default function Review() {
   const { s, leftKcal, budget, dispatch } = useApp();
   const router = useRouter();
   const [fav, setFav] = useState(false);
+  // Which part of the day this was eaten (log breakfast at 2 pm and it still goes to the morning).
+  const [mealType, setMealType] = useState<MealType>(() => takeChosenSlot() ?? mealForHour(new Date().getHours()));
   const total = mealKcal(s.draft);
   const dayShare = share(total.mid, budget);
   // Walking time is opt-in and never shown when eating looks too low (see lib/relate.ts).
@@ -184,7 +188,7 @@ export default function Review() {
             grow
             onPress={() => {
               if (unmatched.length || !s.draft.length) return;
-              dispatch({ type: 'saveDraft', favourite: fav ? s.draft.map((i) => i.name).join(', ').slice(0, 60) : undefined });
+              dispatch({ type: 'saveDraft', mealType, favourite: fav ? s.draft.map((i) => i.name).join(', ').slice(0, 60) : undefined });
               router.replace('/scan/saved');
             }}
           />
@@ -272,6 +276,19 @@ export default function Review() {
             </View>
           )}
         </Animated.View>
+      ) : null}
+
+      {s.draft.length ? (
+        <View style={{ gap: 6 }}>
+          <T v="small" weight="semibold" muted>
+            Which meal?
+          </T>
+          <View style={[styles.row, { gap: 6, flexWrap: 'wrap' }]} accessibilityRole="radiogroup" accessibilityLabel="Which meal">
+            {SLOTS.map((slot) => (
+              <Chip key={slot.type} label={slot.label} selected={mealType === slot.type} onPress={() => setMealType(slot.type)} />
+            ))}
+          </View>
+        </View>
       ) : null}
 
       {s.draft.length ? (

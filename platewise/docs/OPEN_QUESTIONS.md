@@ -19,3 +19,8 @@ Decisions taken to get a working app quickly, against CLAUDE.md / ROADMAP.md.
 6. **Stack differences:** plain React context instead of Zustand/TanStack Query; no Docker Compose yet.
 7. **Barcode** uses Open Food Facts (`off:<barcode>` source). Label photos are read by the AI and always
    shown to the person to check before saving.
+
+## Before Play release: turn off plain HTTP (2026-10-31)
+`mobile/app.json` sets `expo-build-properties` → `android.usesCleartextTraffic: true` so the app can
+reach a development server on the local Wi-Fi (`http://192.168.x.x:8100`). Production uses the
+HTTPS server on Render, so remove this setting before publishing.
